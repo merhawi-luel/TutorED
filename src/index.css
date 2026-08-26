@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #3A56E8;
+  --color-primary-light: #5B7AF8;
+  --color-primary-dark: #2A42C5;
+  --color-accent: #7C3AED;
+  --color-surface: #F7F9FC;
+  --color-dark: #0D1B2A;
+  --color-dark-light: #0F1F3D;
+}
+
+body {
+  font-family: "Outfit", system-ui, -apple-system, sans-serif;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Fraunces", serif;
+}
