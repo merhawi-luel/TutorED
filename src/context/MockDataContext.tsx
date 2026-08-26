@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, useMemo, type ReactNode } from "react";
+import { useAuth } from "@/context/AuthContext";
 import type {
   User,
   TutorProfile,
@@ -12,18 +13,6 @@ import type {
   VacancyStatus,
   ApplicationStatus,
 } from "@/types";
-
-// ─── Mock Users ────────────────────────────────────────────────
-
-const MOCK_USERS: User[] = [
-  { id: "u1", name: "Merhawi Luel", email: "merhawi@example.com", role: "tutor", createdAt: "2026-06-15" },
-  { id: "u2", name: "Hana Tesfaye", email: "hana@example.com", role: "tutor", createdAt: "2026-07-01" },
-  { id: "u3", name: "Daniel Mengistu", email: "daniel@example.com", role: "tutor", createdAt: "2026-07-10" },
-  { id: "u4", name: "Sara Ahmed", email: "sara@example.com", role: "tutor", createdAt: "2026-07-22" },
-  { id: "u5", name: "Yonas Bekele", email: "yonas@example.com", role: "tutor", createdAt: "2026-08-01" },
-  { id: "u6", name: "Admin User", email: "admin@eduverify.com", role: "admin", createdAt: "2026-06-01" },
-  { id: "u7", name: "Bright Futures Admin", email: "admin@brightfutures.com", role: "agency", createdAt: "2026-06-10" },
-];
 
 // ─── Mock Tutor Profiles ───────────────────────────────────────
 
@@ -73,22 +62,27 @@ const MOCK_ORGANIZATIONS: Organization[] = [
   { id: "org4", name: "TechKids Education", description: "Teaching coding and robotics to the next generation.", location: "Addis Ababa", subjects: ["Computer Science"], isVerified: true },
 ];
 
+// ─── Org map for agency users ──────────────────────────────────
+
+const AGENCY_ORG_MAP: Record<string, string> = {
+  u7: "org1",
+};
+
 // ─── Mock Vacancies ────────────────────────────────────────────
 
 const MOCK_VACANCIES: Vacancy[] = [
-  { id: "v1", organizationId: "org1", organizationName: "Bright Futures Academy", title: "Grade 12 Mathematics Tutor", description: "Looking for an experienced mathematics tutor for Grade 12 final exam preparation. Must have strong knowledge of calculus and statistics.", subject: "Mathematics", grade: "Grade 12", requiredEducation: "Bachelor's in Mathematics", requiredExperience: 2, location: "Addis Ababa", teachingMode: "in-person", salary: "$400–$600/mo", availability: "Weekends", deadline: "2026-09-15", status: "open", applicantCount: 8, createdAt: "2026-08-01" },
+  { id: "v1", organizationId: "org1", organizationName: "Bright Futures Academy", title: "Grade 12 Mathematics Tutor", description: "Looking for an experienced mathematics tutor for Grade 12 final exam preparation.", subject: "Mathematics", grade: "Grade 12", requiredEducation: "Bachelor's in Mathematics", requiredExperience: 2, location: "Addis Ababa", teachingMode: "in-person", salary: "$400–$600/mo", availability: "Weekends", deadline: "2026-09-15", status: "open", applicantCount: 8, createdAt: "2026-08-01" },
   { id: "v2", organizationId: "org2", organizationName: "EduPath Institute", title: "Physics Tutor — Grades 10 & 11", description: "Physics tutor comfortable with theoretical and practical concepts.", subject: "Physics", grade: "Grade 10-11", requiredEducation: "BSc in Physics", requiredExperience: 1, location: "Addis Ababa", teachingMode: "hybrid", salary: "$350–$500/mo", availability: "Weekday evenings", deadline: "2026-09-20", status: "open", applicantCount: 5, createdAt: "2026-08-05" },
   { id: "v3", organizationId: "org3", organizationName: "Sunrise Learning Centre", title: "Primary Science Teacher", description: "Engaging science tutor for primary school students.", subject: "Science", grade: "Grade 5-8", requiredEducation: "Diploma in Education", requiredExperience: 1, location: "Addis Ababa", teachingMode: "in-person", salary: "$250–$400/mo", availability: "Monday-Friday", deadline: "2026-09-10", status: "open", applicantCount: 12, createdAt: "2026-07-28" },
   { id: "v4", organizationId: "org4", organizationName: "TechKids Education", title: "Coding & Robotics Tutor", description: "Teach coding fundamentals to children aged 8-14.", subject: "Computer Science", grade: "Grade 5-9", requiredEducation: "CS background", requiredExperience: 2, location: "Addis Ababa", teachingMode: "in-person", salary: "$500–$700/mo", availability: "Saturdays", deadline: "2026-09-25", status: "open", applicantCount: 3, createdAt: "2026-08-10" },
   { id: "v5", organizationId: "org2", organizationName: "EduPath Institute", title: "English Language Instructor", description: "IELTS preparation and general English courses.", subject: "English", grade: "Grade 11-12", requiredEducation: "BA in English or TESOL", requiredExperience: 3, location: "Addis Ababa", teachingMode: "online", salary: "$450–$650/mo", availability: "Flexible", deadline: "2026-09-30", status: "open", applicantCount: 7, createdAt: "2026-08-12" },
-  { id: "v6", organizationId: "org1", organizationName: "Bright Futures Academy", title: "Mathematics Tutor — Grades 9 & 10", description: "Patient tutor for foundational mathematics. Help students build confidence in algebra and geometry.", subject: "Mathematics", grade: "Grade 9-10", requiredEducation: "Bachelor's degree", requiredExperience: 1, location: "Addis Ababa", teachingMode: "in-person", salary: "$300–$450/mo", availability: "Weekday afternoons", deadline: "2026-09-05", status: "open", applicantCount: 15, createdAt: "2026-07-20" },
-  { id: "v7", organizationId: "org1", organizationName: "Bright Futures Academy", title: "Physics Tutor — Grade 12", description: "Experienced physics tutor needed for Grade 12 students preparing for university entrance exams.", subject: "Physics", grade: "Grade 12", requiredEducation: "BSc Physics", requiredExperience: 3, location: "Addis Ababa", teachingMode: "hybrid", salary: "$450–$650/mo", availability: "Weekends", deadline: "2026-09-10", status: "closed", applicantCount: 11, createdAt: "2026-07-15" },
+  { id: "v6", organizationId: "org1", organizationName: "Bright Futures Academy", title: "Mathematics Tutor — Grades 9 & 10", description: "Patient tutor for foundational mathematics.", subject: "Mathematics", grade: "Grade 9-10", requiredEducation: "Bachelor's degree", requiredExperience: 1, location: "Addis Ababa", teachingMode: "in-person", salary: "$300–$450/mo", availability: "Weekday afternoons", deadline: "2026-09-05", status: "open", applicantCount: 15, createdAt: "2026-07-20" },
+  { id: "v7", organizationId: "org1", organizationName: "Bright Futures Academy", title: "Physics Tutor — Grade 12", description: "Experienced physics tutor for Grade 12 university entrance exam preparation.", subject: "Physics", grade: "Grade 12", requiredEducation: "BSc Physics", requiredExperience: 3, location: "Addis Ababa", teachingMode: "hybrid", salary: "$450–$650/mo", availability: "Weekends", deadline: "2026-09-10", status: "closed", applicantCount: 11, createdAt: "2026-07-15" },
 ];
 
 // ─── Mock Applications ─────────────────────────────────────────
 
 const MOCK_APPLICATIONS: Application[] = [
-  // Bright Futures (org1) applicants
   { id: "a1", tutorId: "u1", vacancyId: "v1", vacancyTitle: "Grade 12 Mathematics Tutor", organizationName: "Bright Futures Academy", status: "shortlisted", appliedAt: "2026-08-02", updatedAt: "2026-08-05" },
   { id: "a3", tutorId: "u1", vacancyId: "v6", vacancyTitle: "Mathematics Tutor — Grades 9 & 10", organizationName: "Bright Futures Academy", status: "applied", appliedAt: "2026-08-14", updatedAt: "2026-08-14" },
   { id: "a8", tutorId: "u2", vacancyId: "v1", vacancyTitle: "Grade 12 Mathematics Tutor", organizationName: "Bright Futures Academy", status: "applied", appliedAt: "2026-08-03", updatedAt: "2026-08-03" },
@@ -96,30 +90,27 @@ const MOCK_APPLICATIONS: Application[] = [
   { id: "a10", tutorId: "u4", vacancyId: "v6", vacancyTitle: "Mathematics Tutor — Grades 9 & 10", organizationName: "Bright Futures Academy", status: "shortlisted", appliedAt: "2026-07-30", updatedAt: "2026-08-02" },
   { id: "a11", tutorId: "u3", vacancyId: "v7", vacancyTitle: "Physics Tutor — Grade 12", organizationName: "Bright Futures Academy", status: "accepted", appliedAt: "2026-07-16", updatedAt: "2026-07-28" },
   { id: "a12", tutorId: "u1", vacancyId: "v7", vacancyTitle: "Physics Tutor — Grade 12", organizationName: "Bright Futures Academy", status: "rejected", appliedAt: "2026-07-17", updatedAt: "2026-07-25" },
-  // EduPath (org2) applicants
   { id: "a2", tutorId: "u1", vacancyId: "v2", vacancyTitle: "Physics Tutor — Grades 10 & 11", organizationName: "EduPath Institute", status: "under_review", appliedAt: "2026-08-06", updatedAt: "2026-08-06" },
   { id: "a4", tutorId: "u2", vacancyId: "v5", vacancyTitle: "English Language Instructor", organizationName: "EduPath Institute", status: "shortlisted", appliedAt: "2026-08-03", updatedAt: "2026-08-07" },
   { id: "a5", tutorId: "u3", vacancyId: "v2", vacancyTitle: "Physics Tutor — Grades 10 & 11", organizationName: "EduPath Institute", status: "applied", appliedAt: "2026-08-16", updatedAt: "2026-08-16" },
-  // Sunrise (org3) applicants
   { id: "a6", tutorId: "u4", vacancyId: "v3", vacancyTitle: "Primary Science Teacher", organizationName: "Sunrise Learning Centre", status: "accepted", appliedAt: "2026-07-30", updatedAt: "2026-08-10" },
-  // TechKids (org4) applicants
   { id: "a7", tutorId: "u5", vacancyId: "v4", vacancyTitle: "Coding & Robotics Tutor", organizationName: "TechKids Education", status: "applied", appliedAt: "2026-08-14", updatedAt: "2026-08-14" },
 ];
 
 // ─── Helpers ───────────────────────────────────────────────────
 
-function getUserName(userId: string): string {
-  return MOCK_USERS.find((u) => u.id === userId)?.name ?? "Unknown";
+function getUserName(userId: string, users: User[]): string {
+  return users.find((u) => u.id === userId)?.name ?? "Unknown";
 }
 
-function getUserEmail(userId: string): string {
-  return MOCK_USERS.find((u) => u.id === userId)?.email ?? "";
+function getUserEmail(userId: string, users: User[]): string {
+  return users.find((u) => u.id === userId)?.email ?? "";
 }
 
 // ─── Context ───────────────────────────────────────────────────
 
 interface MockDataState {
-  // Current user (tutor for tutor views)
+  // Current user (from auth)
   user: User;
   tutorProfile: TutorProfile | null;
   documents: Document[];
@@ -164,31 +155,55 @@ interface MockDataState {
 
 const MockDataContext = createContext<MockDataState | null>(null);
 
-export function MockDataProvider({ children }: { children: ReactNode }) {
-  // Tutor view state
-  const [user] = useState<User>(MOCK_USERS[0]);
-  const [tutorProfile, setTutorProfile] = useState<TutorProfile | null>(MOCK_TUTOR_PROFILES[0]);
-  const [documents, setDocuments] = useState<Document[]>(MOCK_ALL_DOCUMENTS.filter((d) => d.tutorId === "u1"));
-  const [verificationRequest, setVerificationRequest] = useState<VerificationRequest | null>(MOCK_VERIFICATION_REQUESTS[0]);
+const GUEST_USER: User = { id: "", name: "Guest", email: "", role: "tutor", createdAt: "" };
 
-  // Shared state
+export function MockDataProvider({ children }: { children: ReactNode }) {
+  const { user: authUser, allUsers } = useAuth();
+  const user = authUser ?? GUEST_USER;
+
+  // ── Derived tutor state based on logged-in user ──
+  const tutorProfileBase = useMemo(() => {
+    return MOCK_TUTOR_PROFILES.find((p) => p.userId === user.id) ?? null;
+  }, [user.id]);
+
+  const [tutorProfileOverrides, setTutorProfileOverrides] = useState<Partial<TutorProfile>>({});
+  const tutorProfile = useMemo(() => {
+    if (!tutorProfileBase) return null;
+    return { ...tutorProfileBase, ...tutorProfileOverrides };
+  }, [tutorProfileBase, tutorProfileOverrides]);
+
+  const [documents, setDocuments] = useState<Document[]>(() =>
+    MOCK_ALL_DOCUMENTS.filter((d) => d.tutorId === user.id)
+  );
+
+  const [verificationRequest, setVerificationRequest] = useState<VerificationRequest | null>(() =>
+    MOCK_VERIFICATION_REQUESTS.find((vr) => vr.tutorId === user.id) ?? null
+  );
+
+  // ── Shared state ──
   const [vacancies, setVacancies] = useState<Vacancy[]>(MOCK_VACANCIES);
   const [applications, setApplications] = useState<Application[]>(MOCK_APPLICATIONS);
 
-  // Admin state
+  // ── Admin state ──
   const [allTutorProfiles] = useState<TutorProfile[]>(MOCK_TUTOR_PROFILES);
   const [allDocuments, setAllDocuments] = useState<Document[]>(MOCK_ALL_DOCUMENTS);
   const [allVerificationRequests, setAllVerificationRequests] = useState<VerificationRequest[]>(MOCK_VERIFICATION_REQUESTS);
   const [allOrganizations, setAllOrganizations] = useState<Organization[]>(MOCK_ORGANIZATIONS);
 
-  // Agency state
-  const [agencyUser] = useState<User>(MOCK_USERS.find((u) => u.id === "u7")!);
-  const [agencyOrganization, setAgencyOrganization] = useState<Organization>(MOCK_ORGANIZATIONS[0]);
+  // ── Agency state ──
+  const agencyOrgId = AGENCY_ORG_MAP[user.id] ?? "org1";
+  const [agencyOrganization, setAgencyOrganization] = useState<Organization>(
+    MOCK_ORGANIZATIONS.find((o) => o.id === agencyOrgId) ?? MOCK_ORGANIZATIONS[0]
+  );
+
+  // ── Helper wrappers ──
+  const _getUserName = (userId: string) => getUserName(userId, allUsers);
+  const _getUserEmail = (userId: string) => getUserEmail(userId, allUsers);
 
   // ── Tutor Actions ──
 
   const updateProfile = (updates: Partial<TutorProfile>) => {
-    setTutorProfile((prev) => (prev ? { ...prev, ...updates } : null));
+    setTutorProfileOverrides((prev) => ({ ...prev, ...updates }));
   };
 
   const addDocument = (doc: Omit<Document, "id" | "status" | "submittedAt">) => {
@@ -220,20 +235,15 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       .filter((a) => a.vacancyId === vacancyId)
       .map((a) => ({
         ...a,
-        tutorName: getUserName(a.tutorId),
+        tutorName: _getUserName(a.tutorId),
         tutorProfile: allTutorProfiles.find((p) => p.userId === a.tutorId) ?? null,
       }));
   };
 
   const createVacancy = (data: Omit<Vacancy, "id" | "organizationId" | "organizationName" | "status" | "applicantCount" | "createdAt">) => {
     const newVacancy: Vacancy = {
-      ...data,
-      id: `v${Date.now()}`,
-      organizationId: agencyOrganization.id,
-      organizationName: agencyOrganization.name,
-      status: "open",
-      applicantCount: 0,
-      createdAt: new Date().toISOString().split("T")[0],
+      ...data, id: `v${Date.now()}`, organizationId: agencyOrganization.id, organizationName: agencyOrganization.name,
+      status: "open", applicantCount: 0, createdAt: new Date().toISOString().split("T")[0],
     };
     setVacancies((prev) => [newVacancy, ...prev]);
   };
@@ -286,9 +296,9 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
     <MockDataContext.Provider
       value={{
         user, tutorProfile, documents, verificationRequest, vacancies, applications,
-        allUsers: MOCK_USERS, allTutorProfiles, allDocuments, allVerificationRequests, allOrganizations,
-        getUserName, getUserEmail,
-        agencyUser, agencyOrganization, getAgencyVacancies, getVacancyApplicants,
+        allUsers, allTutorProfiles, allDocuments, allVerificationRequests, allOrganizations,
+        getUserName: _getUserName, getUserEmail: _getUserEmail,
+        agencyUser: user, agencyOrganization, getAgencyVacancies, getVacancyApplicants,
         updateProfile, addDocument, applyToVacancy, requestVerification,
         createVacancy, updateVacancy, closeVacancy, updateApplicationStatus, updateOrganization,
         approveDocument, rejectDocument, approveVerification, rejectVerification,

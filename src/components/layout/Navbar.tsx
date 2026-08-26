@@ -1,12 +1,18 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import { NAV_LINKS } from "@/data/landing";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
 
-interface NavbarProps {
-  onNavigate?: (view: string) => void;
-}
+const ROLE_LABELS: Record<string, { label: string; color: string }> = {
+  tutor: { label: "Tutor", color: "#22C55E" },
+  agency: { label: "Agency", color: "#60A5FA" },
+  admin: { label: "Admin", color: "#C084FC" },
+};
 
-export default function Navbar({ onNavigate }: NavbarProps) {
+export default function Navbar() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -15,6 +21,14 @@ export default function Navbar({ onNavigate }: NavbarProps) {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const dashboardPath = user ? (user.role === "tutor" ? "/tutor" : user.role === "agency" ? "/agency" : "/admin") : null;
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+    setMobileMenuOpen(false);
+  };
 
   return (
     <>
@@ -46,7 +60,7 @@ export default function Navbar({ onNavigate }: NavbarProps) {
           </span>
         </a>
 
-        {/* Desktop Nav Links — pill container */}
+        {/* Desktop Nav Links */}
         <div
           className="hidden md:flex items-center gap-1 px-2 py-1.5 rounded-2xl"
           style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
@@ -62,27 +76,62 @@ export default function Navbar({ onNavigate }: NavbarProps) {
           ))}
         </div>
 
-        {/* Desktop Auth Buttons */}
+        {/* Desktop Auth */}
         <div className="hidden md:flex items-center gap-3">
-          <a
-            href="/login"
-            className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:text-white transition-colors"
-          >
-            Sign In
-          </a>
-          <a
-            href="/register"
-            className="px-5 py-2.5 rounded-xl text-sm font-semibold text-black transition-all hover:opacity-90 hover:scale-105 active:scale-100"
-            style={{
-              background: "linear-gradient(135deg, #22C55E, #16A34A)",
-              boxShadow: "0 0 16px rgba(34,197,94,0.35)",
-            }}
-          >
-            Get Started
-          </a>
+          {user ? (
+            <>
+              <a
+                href={dashboardPath!}
+                className="px-4 py-2 rounded-xl text-sm font-medium text-gray-300 hover:text-white transition-colors"
+              >
+                Dashboard
+              </a>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <div
+                  className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold text-black"
+                  style={{ background: ROLE_LABELS[user.role]?.color ?? "#22C55E" }}
+                >
+                  {user.name[0]}
+                </div>
+                <span className="text-sm text-gray-300">{user.name.split(" ")[0]}</span>
+                <span
+                  className="px-1.5 py-0.5 rounded text-[9px] font-medium"
+                  style={{ background: `${ROLE_LABELS[user.role]?.color}20`, color: ROLE_LABELS[user.role]?.color ?? "#22C55E" }}
+                >
+                  {ROLE_LABELS[user.role]?.label}
+                </span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/5 transition-all"
+                title="Sign out"
+              >
+                <LogOut size={16} />
+              </button>
+            </>
+          ) : (
+            <>
+              <a
+                href="/login"
+                className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:text-white transition-colors"
+              >
+                Sign In
+              </a>
+              <a
+                href="/register"
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold text-black transition-all hover:opacity-90 hover:scale-105 active:scale-100"
+                style={{
+                  background: "linear-gradient(135deg, #22C55E, #16A34A)",
+                  boxShadow: "0 0 16px rgba(34,197,94,0.35)",
+                }}
+              >
+                Get Started
+              </a>
+            </>
+          )}
         </div>
 
-        {/* Mobile Menu Toggle */}
+        {/* Mobile Toggle */}
         <button
           className="md:hidden text-gray-300 hover:text-white p-2 rounded-lg transition-colors"
           style={{ background: "rgba(255,255,255,0.05)" }}
@@ -93,12 +142,12 @@ export default function Navbar({ onNavigate }: NavbarProps) {
         </button>
       </nav>
 
-      {/* Mobile Menu — slide down */}
+      {/* Mobile Menu */}
       <div
         className="fixed left-0 right-0 z-40 md:hidden overflow-hidden transition-all duration-300 ease-in-out"
         style={{
           top: scrolled ? "64px" : "76px",
-          maxHeight: mobileMenuOpen ? "360px" : "0px",
+          maxHeight: mobileMenuOpen ? "400px" : "0px",
           background: "rgba(5,15,7,0.98)",
           backdropFilter: "blur(16px)",
           borderBottom: mobileMenuOpen ? "1px solid rgba(34,197,94,0.12)" : "none",
@@ -116,21 +165,57 @@ export default function Navbar({ onNavigate }: NavbarProps) {
             </a>
           ))}
           <div className="mt-4 pt-4 flex flex-col gap-3" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-            <a
-              href="/login"
-              className="px-4 py-3 rounded-xl text-base text-gray-300 hover:text-white transition-colors text-center"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Sign In
-            </a>
-            <a
-              href="/register"
-              className="px-4 py-3 rounded-xl text-base font-semibold text-black text-center"
-              style={{ background: "linear-gradient(135deg, #22C55E, #16A34A)" }}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Get Started
-            </a>
+            {user ? (
+              <>
+                <div className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300">
+                  <div
+                    className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold text-black"
+                    style={{ background: ROLE_LABELS[user.role]?.color ?? "#22C55E" }}
+                  >
+                    {user.name[0]}
+                  </div>
+                  <span>{user.name}</span>
+                  <span
+                    className="px-1.5 py-0.5 rounded text-[9px] font-medium"
+                    style={{ background: `${ROLE_LABELS[user.role]?.color}20`, color: ROLE_LABELS[user.role]?.color ?? "#22C55E" }}
+                  >
+                    {ROLE_LABELS[user.role]?.label}
+                  </span>
+                </div>
+                <a
+                  href={dashboardPath!}
+                  className="px-4 py-3 rounded-xl text-base text-center font-medium transition-colors"
+                  style={{ background: "rgba(34,197,94,0.12)", color: "#22C55E" }}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Go to Dashboard
+                </a>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-3 rounded-xl text-base text-gray-400 hover:text-white text-center transition-colors"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <a
+                  href="/login"
+                  className="px-4 py-3 rounded-xl text-base text-gray-300 hover:text-white transition-colors text-center"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Sign In
+                </a>
+                <a
+                  href="/register"
+                  className="px-4 py-3 rounded-xl text-base font-semibold text-black text-center"
+                  style={{ background: "linear-gradient(135deg, #22C55E, #16A34A)" }}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Get Started
+                </a>
+              </>
+            )}
           </div>
         </div>
       </div>

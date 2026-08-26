@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import {
   LayoutDashboard,
   ShieldCheck,
@@ -34,6 +36,13 @@ const NAV_ITEMS: { tab: AdminTab; label: string; icon: typeof LayoutDashboard }[
 
 export default function AdminSidebar({ activeTab, onTabChange }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   return (
     <aside
@@ -103,7 +112,8 @@ export default function AdminSidebar({ activeTab, onTabChange }: SidebarProps) {
           {!collapsed && <span>Settings</span>}
         </button>
         <button
-          className="w-full flex items-center gap-3 rounded-xl text-sm"
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 rounded-xl text-sm hover:text-white"
           style={{
             padding: collapsed ? "10px 0" : "10px 14px",
             justifyContent: collapsed ? "center" : "flex-start",
