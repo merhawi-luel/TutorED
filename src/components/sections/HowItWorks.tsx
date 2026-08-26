@@ -1,15 +1,24 @@
 import { HOW_IT_WORKS } from "@/data/landing";
 import SectionHeader from "@/components/shared/SectionHeader";
+import { useInView } from "@/hooks/useInView";
 
 export default function HowItWorks() {
+  const { ref: sectionRef, inView } = useInView();
+
   return (
-    <section className="py-16 sm:py-24 px-4 sm:px-6 md:px-12" style={{ background: "#000000" }}>
+    <section
+      ref={sectionRef as React.RefObject<HTMLElement>}
+      className="py-16 sm:py-24 px-4 sm:px-6 md:px-12"
+      style={{ background: "linear-gradient(160deg, #000000 0%, #050F07 50%, #000000 100%)" }}
+    >
       <div className="max-w-6xl mx-auto">
-        <SectionHeader
-          label="How it Works"
-          title="One identity. Every opportunity."
-          dark
-        />
+        <div className={`fade-up ${inView ? "in-view" : ""}`}>
+          <SectionHeader
+            label="How it Works"
+            title="One identity. Every opportunity."
+            dark
+          />
+        </div>
 
         <div className="grid md:grid-cols-3 gap-6 sm:gap-8 relative">
           {/* Connector line */}
@@ -18,8 +27,11 @@ export default function HowItWorks() {
             style={{ background: "linear-gradient(to right, transparent, #22C55E, transparent)" }}
           />
 
-          {HOW_IT_WORKS.map((step) => (
-            <div key={step.step} className="relative">
+          {HOW_IT_WORKS.map((step, i) => (
+            <div
+              key={step.step}
+              className={`relative fade-up delay-${(i + 1) * 100} ${inView ? "in-view" : ""}`}
+            >
               <div
                 className="rounded-2xl p-8 h-full"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
@@ -44,7 +56,7 @@ export default function HowItWorks() {
 
         {/* Verification flow visual */}
         <div
-          className="mt-12 sm:mt-16 rounded-2xl p-6 md:p-8 flex flex-wrap items-center justify-center gap-3 text-center"
+          className={`mt-12 sm:mt-16 rounded-2xl p-6 md:p-8 flex flex-wrap items-center justify-center gap-3 text-center fade-up delay-400 ${inView ? "in-view" : ""}`}
           style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)" }}
         >
           {["Tutor Registration", "→", "Create Profile", "→", "Upload Docs", "→", "Verification Queue", "→", "✓ Verified Badge"].map(

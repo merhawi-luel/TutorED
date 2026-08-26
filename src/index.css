@@ -23,3 +23,88 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: "Fraunces", serif;
 }
+
+/* Scroll animation base states */
+.fade-up {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.65s ease, transform 0.65s ease;
+}
+
+.fade-up.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-in {
+  opacity: 0;
+  transition: opacity 0.65s ease;
+}
+
+.fade-in.in-view {
+  opacity: 1;
+}
+
+/* Directional slide animations */
+.slide-left {
+  opacity: 0;
+  transform: translateX(-48px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.slide-left.in-view {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.slide-up {
+  opacity: 0;
+  transform: translateY(56px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.slide-up.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.slide-right {
+  opacity: 0;
+  transform: translateX(48px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.slide-right.in-view {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Problem card continuous float animations */
+@keyframes floatLeft {
+  0%, 100% { transform: translateX(0px) translateY(0px); }
+  25%       { transform: translateX(-6px) translateY(-4px); }
+  75%       { transform: translateX(3px) translateY(2px); }
+}
+
+@keyframes floatUp {
+  0%, 100% { transform: translateX(0px) translateY(0px); }
+  33%       { transform: translateX(4px) translateY(-8px); }
+  66%       { transform: translateX(-3px) translateY(-3px); }
+}
+
+@keyframes floatRight {
+  0%, 100% { transform: translateX(0px) translateY(0px); }
+  25%       { transform: translateX(6px) translateY(-4px); }
+  75%       { transform: translateX(-3px) translateY(2px); }
+}
+
+.problem-card-1 { animation: floatLeft 6s ease-in-out infinite; }
+.problem-card-2 { animation: floatUp 7s ease-in-out infinite 0.8s; }
+.problem-card-3 { animation: floatRight 6.5s ease-in-out infinite 1.6s; }
+
+.delay-100 { transition-delay: 100ms; }
+.delay-200 { transition-delay: 200ms; }
+.delay-300 { transition-delay: 300ms; }
+.delay-400 { transition-delay: 400ms; }
+.delay-500 { transition-delay: 500ms; }
+.delay-600 { transition-delay: 600ms; }

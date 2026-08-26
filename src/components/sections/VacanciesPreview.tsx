@@ -1,4 +1,5 @@
 import { VACANCIES_PREVIEW } from "@/data/landing";
+import { useInView } from "@/hooks/useInView";
 
 const TAG_STYLES: Record<string, { bg: string; color: string }> = {
   Featured: { bg: "rgba(34,197,94,0.15)", color: "#22C55E" },
@@ -7,10 +8,16 @@ const TAG_STYLES: Record<string, { bg: string; color: string }> = {
 };
 
 export default function VacanciesPreview() {
+  const { ref: sectionRef, inView } = useInView();
+
   return (
-    <section className="py-16 sm:py-24 px-4 sm:px-6 md:px-12" style={{ background: "#0A0A0A" }}>
+    <section
+      ref={sectionRef as React.RefObject<HTMLElement>}
+      className="py-16 sm:py-24 px-4 sm:px-6 md:px-12"
+      style={{ background: "linear-gradient(160deg, #000000 0%, #050F07 50%, #000000 100%)" }}
+    >
       <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-10 gap-4">
+        <div className={`flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-10 gap-4 fade-up ${inView ? "in-view" : ""}`}>
           <div>
             <p className="text-xs font-medium uppercase tracking-wider mb-2" style={{ color: "#22C55E" }}>
               Open Roles
@@ -22,11 +29,13 @@ export default function VacanciesPreview() {
           <a href="/tutor" className="text-sm font-medium transition-colors" style={{ color: "#22C55E" }}>
             Browse all →
           </a>
-        </div>            <div className="grid sm:grid-cols-2 gap-4">
-          {VACANCIES_PREVIEW.map((v) => (
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          {VACANCIES_PREVIEW.map((v, i) => (
             <div
               key={v.title}
-              className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-md gap-3"
+              className={`flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-md gap-3 fade-up delay-${(i + 1) * 100} ${inView ? "in-view" : ""}`}
               style={{ border: "1px solid #1F1F1F", background: "#111111" }}
             >
               <div className="flex items-center gap-3 sm:gap-4">

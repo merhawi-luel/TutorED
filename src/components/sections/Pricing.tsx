@@ -1,21 +1,31 @@
 import { PRICING } from "@/data/landing";
 import SectionHeader from "@/components/shared/SectionHeader";
+import { useInView } from "@/hooks/useInView";
 
 export default function Pricing() {
+  const { ref: sectionRef, inView } = useInView();
+
   return (
-    <section className="py-16 sm:py-24 px-4 sm:px-6 md:px-12" style={{ background: "#0A0A0A" }}>
+    <section
+      ref={sectionRef as React.RefObject<HTMLElement>}
+      className="py-16 sm:py-24 px-4 sm:px-6 md:px-12"
+      style={{ background: "linear-gradient(160deg, #000000 0%, #050F07 50%, #000000 100%)" }}
+    >
       <div className="max-w-6xl mx-auto">
-        <SectionHeader
-          label="Pricing"
-          title="Simple, transparent pricing"
-          description="For agencies of every size."
-        />
+        <div className={`fade-up ${inView ? "in-view" : ""}`}>
+          <SectionHeader
+            label="Pricing"
+            title="Simple, transparent pricing"
+            description="For agencies of every size."
+            dark
+          />
+        </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {PRICING.map((plan) => (
+          {PRICING.map((plan, i) => (
             <div
               key={plan.name}
-              className="rounded-2xl p-8 flex flex-col relative"
+              className={`rounded-2xl p-8 flex flex-col relative fade-up delay-${(i + 1) * 100} ${inView ? "in-view" : ""}`}
               style={
                 plan.highlight
                   ? { background: "#0D2016", color: "white", border: "1px solid rgba(34,197,94,0.3)" }
@@ -32,16 +42,10 @@ export default function Pricing() {
               )}
 
               <div className="mb-6">
-                <h3 className={`font-semibold text-base mb-1 ${plan.highlight ? "text-white" : "text-white"}`}>
-                  {plan.name}
-                </h3>
-                <p className={`text-sm mb-3 ${plan.highlight ? "text-gray-400" : "text-gray-400"}`}>
-                  {plan.desc}
-                </p>
+                <h3 className="font-semibold text-base mb-1 text-white">{plan.name}</h3>
+                <p className="text-sm mb-3 text-gray-400">{plan.desc}</p>
                 <div className="flex items-baseline gap-1">
-                  <span className={`text-3xl sm:text-4xl font-bold ${plan.highlight ? "text-white" : "text-white"}`}>
-                    {plan.price}
-                  </span>
+                  <span className="text-3xl sm:text-4xl font-bold text-white">{plan.price}</span>
                   <span className="text-xs text-gray-400">/{plan.period}</span>
                 </div>
               </div>

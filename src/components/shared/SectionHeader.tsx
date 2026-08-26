@@ -15,7 +15,7 @@ export default function SectionHeader({ label, title, description, dark = false 
         {label}
       </p>
       <h2
-        className={`text-5xl md:text-7xl font-light leading-tight mb-4 ${dark ? "text-white" : "text-slate-900"}`}
+        className="text-5xl md:text-7xl font-light leading-tight mb-4 text-white"
         style={{ fontFamily: "Fraunces, serif" }}
       >
         {title}

@@ -10,7 +10,7 @@ export const STATS = [
 export const PROBLEMS = [
   {
     role: "Tutors",
-    icon: "🎓",
+    icon: "",
     pain: [
       "No centralized professional identity",
       "Repeatedly submit the same CVs and documents",
@@ -20,7 +20,7 @@ export const PROBLEMS = [
   },
   {
     role: "Agencies",
-    icon: "🏢",
+    icon: "",
     pain: [
       "Manual, time-consuming recruitment",
       "Re-request and re-check the same documents",
@@ -30,7 +30,7 @@ export const PROBLEMS = [
   },
   {
     role: "Students & Parents",
-    icon: "📚",
+    icon: "",
     pain: [
       "Hard to verify if a tutor is truly qualified",
       "Difficult to compare experience and reputation",

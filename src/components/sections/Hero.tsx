@@ -9,7 +9,7 @@ interface HeroProps {
 export default function Hero({ onNavigate }: HeroProps) {
   return (
     <section
-      className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-16 pb-8 overflow-hidden"
+      className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-32 pb-8 overflow-hidden"
       style={{ background: "linear-gradient(160deg, #000000 0%, #050F07 50%, #000000 100%)" }}
     >
       {/* Glow blobs */}

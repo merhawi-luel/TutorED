@@ -1,20 +1,28 @@
 import { useState } from "react";
 import { FEATURES_TUTOR, FEATURES_AGENCY } from "@/data/landing";
 import SectionHeader from "@/components/shared/SectionHeader";
+import { useInView } from "@/hooks/useInView";
 
 type Tab = "tutors" | "agencies";
 
 export default function Features() {
   const [activeTab, setActiveTab] = useState<Tab>("tutors");
   const features = activeTab === "tutors" ? FEATURES_TUTOR : FEATURES_AGENCY;
+  const { ref: sectionRef, inView } = useInView();
 
   return (
-    <section className="py-16 sm:py-24 px-4 sm:px-6 md:px-12" style={{ background: "#0A0A0A" }}>
+    <section
+      ref={sectionRef as React.RefObject<HTMLElement>}
+      className="py-16 sm:py-24 px-4 sm:px-6 md:px-12"
+      style={{ background: "linear-gradient(160deg, #000000 0%, #050F07 50%, #000000 100%)" }}
+    >
       <div className="max-w-6xl mx-auto">
-        <SectionHeader label="Features" title="Built for every role" />
+        <div className={`fade-up ${inView ? "in-view" : ""}`}>
+          <SectionHeader label="Features" title="Built for every role" dark />
+        </div>
 
         {/* Tab Switcher */}
-        <div className="text-center mb-10 sm:mb-12">
+        <div className={`text-center mb-10 sm:mb-12 fade-up delay-100 ${inView ? "in-view" : ""}`}>
           <div className="inline-flex rounded-xl p-1 gap-1" style={{ background: "#161616" }}>
             {(["tutors", "agencies"] as const).map((tab) => (
               <button
@@ -34,10 +42,10 @@ export default function Features() {
         </div>
 
         <div className="grid sm:grid-cols-2 gap-6 sm:gap-8">
-          {features.map((f) => (
+          {features.map((f, i) => (
             <div
               key={f.title}
-              className="flex gap-5 p-8 rounded-2xl transition-all hover:-translate-y-0.5"
+              className={`flex gap-5 p-8 rounded-2xl transition-all hover:-translate-y-0.5 fade-up delay-${(i + 2) * 100} ${inView ? "in-view" : ""}`}
               style={{ background: "#111111", border: "1px solid #1F1F1F" }}
             >
               <div

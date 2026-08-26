@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NAV_LINKS } from "@/data/landing";
+import { Menu, X } from "lucide-react";
 
 interface NavbarProps {
   onNavigate?: (view: string) => void;
@@ -7,94 +8,132 @@ interface NavbarProps {
 
 export default function Navbar({ onNavigate }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  const handleLinkClick = () => {
-    setMobileMenuOpen(false);
-  };
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <nav
-      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 md:px-12 h-16"
-      style={{
-        background: "rgba(0,0,0,0.92)",
-        backdropFilter: "blur(12px)",
-        borderBottom: "1px solid rgba(34,197,94,0.1)",
-      }}
-    >
-      {/* Logo */}
-      <div className="flex items-center gap-2">
-        <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-black text-sm font-bold"
-          style={{ background: "linear-gradient(135deg, #22C55E, #16A34A)" }}
-        >
-          E
-        </div>
-        <span className="text-white font-semibold text-lg tracking-tight">EduVerify</span>
-      </div>
-
-      {/* Desktop Nav Links */}
-      <div className="hidden md:flex items-center gap-8">
-        {NAV_LINKS.map((link) => (
-          <a key={link} href={`#${link.toLowerCase().replace(/\s+/g, "-")}`} className="text-sm text-gray-400 hover:text-white transition-colors">
-            {link}
-          </a>
-        ))}
-      </div>
-
-      {/* Desktop Auth Buttons */}
-      <div className="hidden md:flex items-center gap-3">
-        <a href="/login" className="text-sm text-gray-400 hover:text-white transition-colors px-4 py-2.5">
-          Sign in
-        </a>
-        <a
-          href="/register"
-          className="px-4 py-2.5 rounded-xl text-sm font-medium text-black transition-all hover:opacity-90"
-          style={{ background: "#22C55E" }}
-        >
-          Get Started
-        </a>
-      </div>
-
-      {/* Mobile Menu Toggle */}
-      <button
-        className="md:hidden text-white p-2 -mr-2"
-        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        aria-label="Toggle menu"
+    <>
+      <nav
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 md:px-24 transition-all duration-300"
+        style={{
+          height: scrolled ? "64px" : "76px",
+          background: scrolled ? "rgba(0,0,0,0.95)" : "rgba(0,0,0,0.6)",
+          backdropFilter: "blur(16px)",
+          borderBottom: scrolled
+            ? "1px solid rgba(34,197,94,0.15)"
+            : "1px solid rgba(255,255,255,0.04)",
+          boxShadow: scrolled ? "0 4px 32px rgba(0,0,0,0.4)" : "none",
+        }}
       >
-        {mobileMenuOpen ? "✕" : "☰"}
-      </button>
+        {/* Logo */}
+        <a href="/" className="flex items-center gap-3 group">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-black font-bold text-sm transition-transform group-hover:scale-105"
+            style={{ background: "linear-gradient(135deg, #22C55E, #16A34A)" }}
+          >
+            E
+          </div>
+          <span
+            className="font-semibold text-xl tracking-tight text-white"
+            style={{ letterSpacing: "-0.02em" }}
+          >
+            EduVerify
+          </span>
+        </a>
 
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
+        {/* Desktop Nav Links — pill container */}
         <div
-          className="absolute top-16 left-0 right-0 p-6 flex flex-col gap-4 md:hidden z-50"
-          style={{ background: "rgba(0,0,0,0.98)", borderBottom: "1px solid rgba(34,197,94,0.1)" }}
+          className="hidden md:flex items-center gap-1 px-2 py-1.5 rounded-2xl"
+          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
         >
           {NAV_LINKS.map((link) => (
             <a
               key={link}
               href={`#${link.toLowerCase().replace(/\s+/g, "-")}`}
-              className="text-sm text-gray-400 hover:text-white transition-colors"
-              onClick={handleLinkClick}
+              className="px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/8 transition-all duration-200"
             >
               {link}
             </a>
           ))}
-          <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-white/10">
-            <a href="/login" className="text-sm text-gray-400 hover:text-white transition-colors px-4 py-2.5" onClick={handleLinkClick}>
-              Sign in
+        </div>
+
+        {/* Desktop Auth Buttons */}
+        <div className="hidden md:flex items-center gap-3">
+          <a
+            href="/login"
+            className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:text-white transition-colors"
+          >
+            Sign In
+          </a>
+          <a
+            href="/register"
+            className="px-5 py-2.5 rounded-xl text-sm font-semibold text-black transition-all hover:opacity-90 hover:scale-105 active:scale-100"
+            style={{
+              background: "linear-gradient(135deg, #22C55E, #16A34A)",
+              boxShadow: "0 0 16px rgba(34,197,94,0.35)",
+            }}
+          >
+            Get Started
+          </a>
+        </div>
+
+        {/* Mobile Menu Toggle */}
+        <button
+          className="md:hidden text-gray-300 hover:text-white p-2 rounded-lg transition-colors"
+          style={{ background: "rgba(255,255,255,0.05)" }}
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </nav>
+
+      {/* Mobile Menu — slide down */}
+      <div
+        className="fixed left-0 right-0 z-40 md:hidden overflow-hidden transition-all duration-300 ease-in-out"
+        style={{
+          top: scrolled ? "64px" : "76px",
+          maxHeight: mobileMenuOpen ? "360px" : "0px",
+          background: "rgba(5,15,7,0.98)",
+          backdropFilter: "blur(16px)",
+          borderBottom: mobileMenuOpen ? "1px solid rgba(34,197,94,0.12)" : "none",
+        }}
+      >
+        <div className="px-6 py-6 flex flex-col gap-1">
+          {NAV_LINKS.map((link) => (
+            <a
+              key={link}
+              href={`#${link.toLowerCase().replace(/\s+/g, "-")}`}
+              className="px-4 py-3 rounded-xl text-base text-gray-300 hover:text-white hover:bg-white/5 transition-all"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {link}
+            </a>
+          ))}
+          <div className="mt-4 pt-4 flex flex-col gap-3" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+            <a
+              href="/login"
+              className="px-4 py-3 rounded-xl text-base text-gray-300 hover:text-white transition-colors text-center"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Sign In
             </a>
             <a
               href="/register"
-              className="px-4 py-2.5 rounded-xl text-sm font-medium text-black text-center"
-              style={{ background: "#22C55E" }}
-              onClick={handleLinkClick}
+              className="px-4 py-3 rounded-xl text-base font-semibold text-black text-center"
+              style={{ background: "linear-gradient(135deg, #22C55E, #16A34A)" }}
+              onClick={() => setMobileMenuOpen(false)}
             >
               Get Started
             </a>
           </div>
         </div>
-      )}
-    </nav>
+      </div>
+    </>
   );
 }
