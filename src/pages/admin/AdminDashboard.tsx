@@ -1,10 +1,31 @@
+import { useState } from "react";
+import AdminSidebar, { type AdminTab } from "@/components/layout/AdminSidebar";
+import AdminOverview from "./AdminOverview";
+import AdminVerifications from "./AdminVerifications";
+import AdminDocuments from "./AdminDocuments";
+import AdminTutors from "./AdminTutors";
+import AdminAgencies from "./AdminAgencies";
+
+const TAB_COMPONENTS: Record<AdminTab, React.ComponentType<{ onTabChange?: (tab: AdminTab) => void }>> = {
+  overview: AdminOverview,
+  verifications: AdminVerifications,
+  documents: AdminDocuments,
+  tutors: AdminTutors,
+  agencies: AdminAgencies,
+  settings: AdminOverview, // Placeholder
+};
+
 export default function AdminDashboard() {
+  const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+
+  const Page = TAB_COMPONENTS[activeTab];
+
   return (
-    <div className="min-h-screen" style={{ background: "#000000" }}>
-      <div className="p-6 space-y-6">
-        <h1 className="text-xl font-semibold text-white">Admin Dashboard</h1>
-        <p className="text-sm text-gray-400 mt-1">Manage verifications, users, and platform settings.</p>
-      </div>
+    <div className="flex min-h-screen" style={{ background: "#000000" }}>
+      <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <main className="flex-1 min-w-0 p-6 md:p-8 lg:p-10 overflow-y-auto">
+        <Page onTabChange={setActiveTab} />
+      </main>
     </div>
   );
 }

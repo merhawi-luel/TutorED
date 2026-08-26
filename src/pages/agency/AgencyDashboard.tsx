@@ -1,10 +1,33 @@
+import { useState } from "react";
+import AgencySidebar, { type AgencyTab } from "@/components/layout/AgencySidebar";
+import AgencyOverview from "./AgencyOverview";
+import AgencyVacancies from "./AgencyVacancies";
+import AgencyApplicants from "./AgencyApplicants";
+import AgencyTutors from "./AgencyTutors";
+import AgencyOrganization from "./AgencyOrganization";
+import { useMockData } from "@/context/MockDataContext";
+
+const TAB_COMPONENTS: Record<AgencyTab, React.ComponentType<{ onTabChange?: (tab: AgencyTab) => void }>> = {
+  overview: AgencyOverview,
+  vacancies: AgencyVacancies,
+  applicants: AgencyApplicants,
+  tutors: AgencyTutors,
+  organization: AgencyOrganization,
+  settings: AgencyOverview, // Placeholder
+};
+
 export default function AgencyDashboard() {
+  const [activeTab, setActiveTab] = useState<AgencyTab>("overview");
+  const { agencyOrganization } = useMockData();
+
+  const Page = TAB_COMPONENTS[activeTab];
+
   return (
-    <div className="min-h-screen" style={{ background: "#000000" }}>
-      <div className="p-6 space-y-6">
-        <h1 className="text-xl font-semibold text-white">Agency Dashboard</h1>
-        <p className="text-sm text-gray-400 mt-1">Manage vacancies, applicants, and recruitment.</p>
-      </div>
+    <div className="flex min-h-screen" style={{ background: "#000000" }}>
+      <AgencySidebar activeTab={activeTab} onTabChange={setActiveTab} orgName={agencyOrganization.name} />
+      <main className="flex-1 min-w-0 p-6 md:p-8 lg:p-10 overflow-y-auto">
+        <Page onTabChange={setActiveTab} />
+      </main>
     </div>
   );
 }
