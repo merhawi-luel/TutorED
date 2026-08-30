@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
-import { MockDataProvider } from "@/context/MockDataContext";
+import { DataProvider } from "@/context/DataContext";
 import Landing from "@/pages/public/Landing";
+import VacanciesBrowse from "@/pages/public/VacanciesBrowse";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
 import TutorDashboard from "@/pages/tutor/TutorDashboard";
@@ -53,6 +54,8 @@ function AppRoutes() {
       <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
       <Route path="/auth/callback" element={<Callback />} />
       <Route path="/auth/confirm" element={<Confirm />} />
+      <Route path="/vacancies" element={<VacanciesBrowse />} />
+
 
       {/* Tutor Dashboard */}
       <Route
@@ -106,9 +109,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <MockDataProvider>
+        <DataProvider>
           <AppRoutes />
-        </MockDataProvider>
+        </DataProvider>
       </AuthProvider>
     </BrowserRouter>
   );
