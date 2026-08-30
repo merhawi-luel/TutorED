@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CreditCard, CheckCircle, Clock } from "lucide-react";
+import { CreditCard, Clock } from "lucide-react";
 import AgencySidebar, { type AgencyTab } from "@/components/layout/AgencySidebar";
 import AgencyOverview from "./AgencyOverview";
 import AgencyVacancies from "./AgencyVacancies";
