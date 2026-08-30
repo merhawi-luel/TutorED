@@ -95,6 +95,13 @@ export const agencyApi = {
   updateApplicationStatus: (appId: string, status: string) =>
     request<any>(`/agency/applications/${appId}/status`, { method: "PUT", body: JSON.stringify({ status }) }),
 
+  getTutorDocuments: (tutorId: string) =>
+    request<any[]>(`/agency/tutors/${tutorId}/documents`),
+  previewTutorDocument: (docId: string) =>
+    request<{ previewUrl: string; fileName: string; type: string; title: string }>(`/agency/documents/${docId}/preview`),
+  downloadTutorDocument: (docId: string) =>
+    request<{ downloadUrl: string; fileName: string }>(`/agency/documents/${docId}/download`),
+
   getRequests: () => request<any[]>("/agency/requests"),
   updateRequestStatus: (requestId: string, status: string) =>
     request<any>(`/agency/requests/${requestId}/status`, { method: "PUT", body: JSON.stringify({ status }) }),
