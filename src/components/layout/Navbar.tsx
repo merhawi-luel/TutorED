@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { NAV_LINKS } from "@/data/landing";
 import { Menu, X, LogOut } from "lucide-react";
@@ -13,8 +13,24 @@ const ROLE_LABELS: Record<string, { label: string; color: string }> = {
 export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  const isLanding = location.pathname === "/";
+
+  const handleSectionLink = useCallback((
+    e: React.MouseEvent<HTMLAnchorElement>,
+    sectionId: string,
+  ) => {
+    if (isLanding) {
+      // On landing page: let native anchor do the scroll
+      return;
+    }
+    // On another page: navigate to landing page + hash
+    e.preventDefault();
+    navigate(`/#${sectionId}`);
+  }, [isLanding, navigate]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -65,15 +81,25 @@ export default function Navbar() {
           className="hidden md:flex items-center gap-1 px-2 py-1.5 rounded-2xl"
           style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
         >
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link}
-              href={`#${link.toLowerCase().replace(/\s+/g, "-")}`}
-              className="px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/8 transition-all duration-200"
-            >
-              {link}
-            </a>
-          ))}
+          {NAV_LINKS.map((link) => {
+            const sectionId = link.toLowerCase().replace(/\s+/g, "-");
+            return (
+              <a
+                key={link}
+                href={`#${sectionId}`}
+                className="px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/8 transition-all duration-200"
+                onClick={(e) => handleSectionLink(e, sectionId)}
+              >
+                {link}
+              </a>
+            );
+          })}
+          <a
+            href="/vacancies"
+            className="px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/8 transition-all duration-200"
+          >
+            Vacancies
+          </a>
         </div>
 
         {/* Desktop Auth */}
@@ -154,16 +180,29 @@ export default function Navbar() {
         }}
       >
         <div className="px-6 py-6 flex flex-col gap-1">
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link}
-              href={`#${link.toLowerCase().replace(/\s+/g, "-")}`}
-              className="px-4 py-3 rounded-xl text-base text-gray-300 hover:text-white hover:bg-white/5 transition-all"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              {link}
-            </a>
-          ))}
+          {NAV_LINKS.map((link) => {
+            const sectionId = link.toLowerCase().replace(/\s+/g, "-");
+            return (
+              <a
+                key={link}
+                href={`#${sectionId}`}
+                className="px-4 py-3 rounded-xl text-base text-gray-300 hover:text-white hover:bg-white/5 transition-all"
+                onClick={(e) => {
+                  handleSectionLink(e, sectionId);
+                  setMobileMenuOpen(false);
+                }}
+              >
+                {link}
+              </a>
+            );
+          })}
+          <a
+            href="/vacancies"
+            className="px-4 py-3 rounded-xl text-base text-gray-300 hover:text-white hover:bg-white/5 transition-all"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Vacancies
+          </a>
           <div className="mt-4 pt-4 flex flex-col gap-3" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
             {user ? (
               <>

@@ -7,6 +7,7 @@ import {
   FileSearch,
   Users,
   Building2,
+  Shield,
   Settings,
   LogOut,
   ChevronLeft,
@@ -19,6 +20,7 @@ export type AdminTab =
   | "documents"
   | "tutors"
   | "agencies"
+  | "admins"
   | "settings";
 
 interface SidebarProps {
@@ -32,6 +34,7 @@ const NAV_ITEMS: { tab: AdminTab; label: string; icon: typeof LayoutDashboard }[
   { tab: "documents", label: "Documents", icon: FileSearch },
   { tab: "tutors", label: "Tutors", icon: Users },
   { tab: "agencies", label: "Agencies", icon: Building2 },
+  { tab: "admins", label: "Admins", icon: Shield },
 ];
 
 export default function AdminSidebar({ activeTab, onTabChange }: SidebarProps) {
@@ -100,11 +103,13 @@ export default function AdminSidebar({ activeTab, onTabChange }: SidebarProps) {
       {/* Bottom */}
       <div className="px-3 py-4 space-y-1" style={{ borderTop: "1px solid #1F1F1F" }}>
         <button
+          onClick={() => onTabChange("settings")}
           className="w-full flex items-center gap-3 rounded-xl text-sm"
           style={{
             padding: collapsed ? "10px 0" : "10px 14px",
             justifyContent: collapsed ? "center" : "flex-start",
-            color: "#6B7280",
+            color: activeTab === "settings" ? "#22C55E" : "#6B7280",
+            background: activeTab === "settings" ? "rgba(34,197,94,0.12)" : "transparent",
           }}
           title={collapsed ? "Settings" : undefined}
         >

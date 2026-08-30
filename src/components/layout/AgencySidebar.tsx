@@ -4,7 +4,6 @@ import { useAuth } from "@/context/AuthContext";
 import {
   LayoutDashboard,
   Briefcase,
-  Users,
   Send,
   Building2,
   Search,
@@ -12,12 +11,14 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Inbox,
 } from "lucide-react";
 
 export type AgencyTab =
   | "overview"
   | "vacancies"
   | "applicants"
+  | "requests"
   | "tutors"
   | "organization"
   | "settings";
@@ -32,6 +33,7 @@ const NAV_ITEMS: { tab: AgencyTab; label: string; icon: typeof LayoutDashboard }
   { tab: "overview", label: "Overview", icon: LayoutDashboard },
   { tab: "vacancies", label: "Vacancies", icon: Briefcase },
   { tab: "applicants", label: "Applicants", icon: Send },
+  { tab: "requests", label: "Recruit Requests", icon: Inbox },
   { tab: "tutors", label: "Find Tutors", icon: Search },
   { tab: "organization", label: "Organization", icon: Building2 },
 ];
@@ -110,11 +112,13 @@ export default function AgencySidebar({ activeTab, onTabChange, orgName }: Sideb
       {/* Bottom */}
       <div className="px-3 py-4 space-y-1" style={{ borderTop: "1px solid #1F1F1F" }}>
         <button
+          onClick={() => onTabChange("settings")}
           className="w-full flex items-center gap-3 rounded-xl text-sm"
           style={{
             padding: collapsed ? "10px 0" : "10px 14px",
             justifyContent: collapsed ? "center" : "flex-start",
-            color: "#6B7280",
+            color: activeTab === "settings" ? "#22C55E" : "#6B7280",
+            background: activeTab === "settings" ? "rgba(34,197,94,0.12)" : "transparent",
           }}
           title={collapsed ? "Settings" : undefined}
         >

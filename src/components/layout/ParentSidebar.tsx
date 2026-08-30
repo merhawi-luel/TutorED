@@ -94,11 +94,13 @@ export default function ParentSidebar({ activeTab, onTabChange }: SidebarProps) 
       {/* Bottom */}
       <div className="px-3 py-4 space-y-1" style={{ borderTop: "1px solid #1F1F1F" }}>
         <button
+          onClick={() => onTabChange("settings")}
           className="w-full flex items-center gap-3 rounded-xl text-sm transition-colors"
           style={{
             padding: collapsed ? "10px 0" : "10px 14px",
             justifyContent: collapsed ? "center" : "flex-start",
-            color: "#6B7280",
+            color: activeTab === "settings" ? "#22C55E" : "#6B7280",
+            background: activeTab === "settings" ? "rgba(34,197,94,0.12)" : "transparent",
           }}
           title={collapsed ? "Settings" : undefined}
         >
