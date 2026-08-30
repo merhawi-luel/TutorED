@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useData } from "@/context/DataContext";
 import { useInView } from "@/hooks/useInView";
+import ApplyConsentModal from "@/components/shared/ApplyConsentModal";
 import {
   Search,
   MapPin,
@@ -27,6 +28,12 @@ export default function TutorVacancies() {
   const [search, setSearch] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("All");
   const [modeFilter, setModeFilter] = useState("all");
+  const [consentModal, setConsentModal] = useState<{
+    isOpen: boolean;
+    vacancyId: string;
+    agencyName: string;
+    vacancyTitle: string;
+  }>({ isOpen: false, vacancyId: "", agencyName: "", vacancyTitle: "" });
 
   const filtered = vacancies.filter((v) => {
     if (v.status !== "open") return false;
@@ -207,7 +214,12 @@ export default function TutorVacancies() {
                       </span>
                     ) : (
                       <button
-                        onClick={() => applyToVacancy(vacancy.id)}
+                        onClick={() => setConsentModal({
+                          isOpen: true,
+                          vacancyId: vacancy.id,
+                          agencyName: vacancy.organizationName,
+                          vacancyTitle: vacancy.title,
+                        })}
                         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-medium transition-all hover:opacity-90"
                         style={{ background: "#22C55E", color: "black" }}
                       >
@@ -221,6 +233,17 @@ export default function TutorVacancies() {
           })
         )}
       </div>
+      {/* Consent Modal */}
+      <ApplyConsentModal
+        isOpen={consentModal.isOpen}
+        onClose={() => setConsentModal({ ...consentModal, isOpen: false })}
+        onConfirm={() => {
+          applyToVacancy(consentModal.vacancyId);
+          setConsentModal({ ...consentModal, isOpen: false });
+        }}
+        agencyName={consentModal.agencyName}
+        vacancyTitle={consentModal.vacancyTitle}
+      />
     </div>
   );
 }
