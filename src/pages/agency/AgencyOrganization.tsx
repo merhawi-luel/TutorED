@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useMockData } from "@/context/MockDataContext";
+import { useData } from "@/context/DataContext";
 import { useInView } from "@/hooks/useInView";
-import { Save, Building2, CheckCircle2 } from "lucide-react";
+import { Save, CheckCircle2 } from "lucide-react";
 
 const SUBJECT_OPTIONS = [
   "Mathematics", "Physics", "Chemistry", "Biology", "English",
@@ -9,7 +9,7 @@ const SUBJECT_OPTIONS = [
 ];
 
 export default function AgencyOrganization() {
-  const { agencyOrganization, updateOrganization } = useMockData();
+  const { agencyOrganization, updateOrganization } = useData();
   const { ref, inView } = useInView();
 
   const [name, setName] = useState(agencyOrganization.name);

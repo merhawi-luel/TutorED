@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMockData } from "@/context/MockDataContext";
+import { useData } from "@/context/DataContext";
 import { useInView } from "@/hooks/useInView";
 import {
   Plus,
@@ -9,13 +9,12 @@ import {
   Users,
   CheckCircle2,
   XCircle,
-  Edit3,
   X,
 } from "lucide-react";
 import type { TeachingMode } from "@/types";
 
 export default function AgencyVacancies() {
-  const { getAgencyVacancies, createVacancy, closeVacancy, getVacancyApplicants } = useMockData();
+  const { getAgencyVacancies, createVacancy, closeVacancy, getVacancyApplicants } = useData();
   const { ref, inView } = useInView();
 
   const [showCreate, setShowCreate] = useState(false);

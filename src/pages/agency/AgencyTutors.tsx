@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useMockData } from "@/context/MockDataContext";
+import { useState, useEffect } from "react";
+import { adminApi } from "@/lib/api";
 import { useInView } from "@/hooks/useInView";
 import {
   Search,
@@ -22,25 +22,38 @@ const LEVEL_CONFIG: Record<VerificationLevel, { color: string; label: string }> 
 };
 
 export default function AgencyTutors() {
-  const { allUsers, allTutorProfiles, allDocuments } = useMockData();
   const { ref, inView } = useInView();
-
   const [search, setSearch] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("All");
   const [levelFilter, setLevelFilter] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [tutors, setTutors] = useState<any[]>([]);
 
-  const tutors = allUsers.filter((u) => u.role === "tutor");
+  useEffect(() => {
+    adminApi.getTutors().then(setTutors).catch(() => {});
+  }, []);
 
-  const enriched = tutors.map((t) => {
-    const profile = allTutorProfiles.find((p) => p.userId === t.id);
-    const docs = allDocuments.filter((d) => d.tutorId === t.id);
-    const verifiedDocs = docs.filter((d) => d.status === "verified").length;
-    return { ...t, profile, docs, verifiedDocs };
+  const enriched = tutors.map((t: any) => {
+    const profile = t.headline !== undefined ? {
+      userId: t.id,
+      headline: t.headline || "",
+      bio: "",
+      subjects: t.subjects || [],
+      grades: [],
+      experience: t.experience || 0,
+      education: t.education || "",
+      location: t.location || "",
+      teachingMode: "in-person" as const,
+      availability: "",
+      rating: parseFloat(t.rating) || 0,
+      applicationCount: 0,
+      verificationLevel: (t.verificationLevel || t.verification_level || "unverified") as any,
+    } : null;
+    return { ...t, profile, docs: [] as any[], verifiedDocs: 0 };
   });
 
   // Collect all unique subjects
-  const allSubjects = ["All", ...new Set(allTutorProfiles.flatMap((p) => p.subjects))];
+  const allSubjects = ["All", ...new Set(enriched.filter((t: any) => t.profile).flatMap((t: any) => t.profile!.subjects))];
 
   const filtered = enriched.filter((t) => {
     if (!t.profile) return false;
@@ -136,8 +149,8 @@ export default function AgencyTutors() {
         ) : (
           filtered.map((tutor, i) => {
             const profile = tutor.profile!;
-            const level = profile.verificationLevel;
-            const lvlCfg = LEVEL_CONFIG[level];
+            const level = profile.verificationLevel as keyof typeof LEVEL_CONFIG;
+            const lvlCfg = LEVEL_CONFIG[level] ?? LEVEL_CONFIG.unverified;
             const isExpanded = expandedId === tutor.id;
 
             return (
@@ -156,7 +169,7 @@ export default function AgencyTutors() {
                       className="w-12 h-12 rounded-xl flex items-center justify-center text-black font-bold text-sm shrink-0"
                       style={{ background: "linear-gradient(135deg, #22C55E, #16A34A)" }}
                     >
-                      {tutor.name.split(" ").map((n) => n[0]).join("")}
+                      {tutor.name.split(" ").map((n: string) => n[0]).join("")}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
@@ -193,12 +206,12 @@ export default function AgencyTutors() {
                     <p className="text-xs text-gray-400 leading-relaxed">{profile.bio}</p>
 
                     <div className="flex flex-wrap gap-1.5">
-                      {profile.subjects.map((s) => (
+                      {profile.subjects.map((s: string) => (
                         <span key={s} className="px-2.5 py-1 rounded-lg text-xs font-medium" style={{ background: "rgba(34,197,94,0.12)", color: "#22C55E" }}>
                           {s}
                         </span>
                       ))}
-                      {profile.grades.map((g) => (
+                      {profile.grades.map((g: string) => (
                         <span key={g} className="px-2.5 py-1 rounded-lg text-xs" style={{ background: "rgba(255,255,255,0.04)", color: "#9CA3AF" }}>
                           {g}
                         </span>

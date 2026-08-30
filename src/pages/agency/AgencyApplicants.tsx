@@ -1,21 +1,17 @@
-import { useState } from "react";
-import { useMockData } from "@/context/MockDataContext";
+import { useState, useEffect, useCallback } from "react";
+import { useData } from "@/context/DataContext";
+import { agencyApi } from "@/lib/api";
 import { useInView } from "@/hooks/useInView";
 import {
   Send,
   CheckCircle2,
-  Clock,
-  XCircle,
-  Eye,
   Star,
   MapPin,
   Briefcase,
   GraduationCap,
-  MessageSquare,
   ChevronDown,
-  AlertCircle,
 } from "lucide-react";
-import type { ApplicationStatus } from "@/types";
+import type { ApplicationStatus, TutorProfile } from "@/types";
 
 const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
   applied: { color: "#9CA3AF", label: "Applied" },
@@ -35,30 +31,81 @@ const ACTIONS: { status: ApplicationStatus; label: string; color: string }[] = [
   { status: "rejected", label: "Reject", color: "#F87171" },
 ];
 
+interface Applicant {
+  id: string;
+  tutorId: string;
+  vacancyId: string;
+  vacancyTitle: string;
+  organizationName: string;
+  status: string;
+  appliedAt: string;
+  updatedAt: string;
+  tutorName: string;
+  tutorProfile: TutorProfile | null;
+}
+
 export default function AgencyApplicants() {
-  const { getAgencyVacancies, getVacancyApplicants, updateApplicationStatus } = useMockData();
+  const { getAgencyVacancies, updateApplicationStatus } = useData();
   const { ref, inView } = useInView();
 
   const [selectedVacancy, setSelectedVacancy] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [allApplicants, setAllApplicants] = useState<Applicant[]>([]);
 
   const myVacancies = getAgencyVacancies();
   const vacancyMap = new Map(myVacancies.map((v) => [v.id, v]));
 
-  // Get applicants
-  let allApplicants = myVacancies.flatMap((v) => getVacancyApplicants(v.id));
+  const fetchApplicants = useCallback(async () => {
+    try {
+      const data = await agencyApi.getApplicants();
+      const mapped = data.map((a: any) => ({
+        id: a.id,
+        tutorId: a.tutorId || a.tutor_id,
+        vacancyId: a.vacancyId || a.vacancy_id,
+        vacancyTitle: a.vacancyTitle || a.vacancy_title || "Unknown",
+        organizationName: a.organizationName || a.organization_name || "Unknown",
+        status: a.status,
+        appliedAt: a.appliedAt || a.applied_at || "",
+        updatedAt: a.updatedAt || a.updated_at || "",
+        tutorName: a.tutorName || a.tutor_name || "Unknown",
+        tutorProfile: a.tutorProfile ? {
+          userId: a.tutorProfile.userId || a.tutorProfile.user_id,
+          headline: a.tutorProfile.headline || "",
+          bio: a.tutorProfile.bio || "",
+          subjects: a.tutorProfile.subjects || [],
+          grades: a.tutorProfile.grades || [],
+          experience: a.tutorProfile.experience || 0,
+          education: a.tutorProfile.education || "",
+          location: a.tutorProfile.location || "",
+          teachingMode: a.tutorProfile.teachingMode || a.tutorProfile.teaching_mode || "in-person",
+          availability: a.tutorProfile.availability || "",
+          rating: parseFloat(a.tutorProfile.rating) || 0,
+          applicationCount: a.tutorProfile.applicationCount || a.tutorProfile.application_count || 0,
+          verificationLevel: a.tutorProfile.verificationLevel || a.tutorProfile.verification_level || "unverified",
+        } : null,
+      }));
+      setAllApplicants(mapped);
+    } catch (err) {
+      console.error("Failed to fetch applicants:", err);
+    }
+  }, []);
 
+  useEffect(() => {
+    fetchApplicants();
+  }, [fetchApplicants]);
+
+  let displayApplicants = allApplicants;
   if (selectedVacancy !== "all") {
-    allApplicants = allApplicants.filter((a) => a.vacancyId === selectedVacancy);
+    displayApplicants = displayApplicants.filter((a) => a.vacancyId === selectedVacancy);
   }
   if (statusFilter !== "all") {
-    allApplicants = allApplicants.filter((a) => a.status === statusFilter);
+    displayApplicants = displayApplicants.filter((a) => a.status === statusFilter);
   }
 
   // Sort: applied/under_review first, then by date
-  allApplicants.sort((a, b) => {
+  displayApplicants.sort((a, b) => {
     const order: Record<string, number> = { applied: 0, under_review: 1, shortlisted: 2, interview: 3, accepted: 4, rejected: 5, withdrawn: 6 };
     const diff = (order[a.status] ?? 5) - (order[b.status] ?? 5);
     return diff !== 0 ? diff : b.appliedAt.localeCompare(a.appliedAt);
@@ -133,13 +180,13 @@ export default function AgencyApplicants() {
 
       {/* Applicant List */}
       <div className="space-y-3">
-        {allApplicants.length === 0 ? (
+        {displayApplicants.length === 0 ? (
           <div className="rounded-xl p-12 text-center" style={{ background: "#111111", border: "1px solid #1F1F1F" }}>
             <Send size={32} className="mx-auto mb-3 text-gray-600" />
             <p className="text-sm text-gray-400">No applicants match this filter.</p>
           </div>
         ) : (
-          allApplicants.map((applicant, i) => {
+          displayApplicants.map((applicant, i) => {
             const cfg = STATUS_CONFIG[applicant.status] ?? STATUS_CONFIG.applied;
             const isExpanded = expandedId === applicant.id;
             const vacancy = vacancyMap.get(applicant.vacancyId);

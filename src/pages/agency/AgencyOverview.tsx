@@ -1,4 +1,6 @@
-import { useMockData } from "@/context/MockDataContext";
+import { useState, useEffect } from "react";
+import { useData } from "@/context/DataContext";
+import { agencyApi } from "@/lib/api";
 import { useInView } from "@/hooks/useInView";
 import {
   Briefcase,
@@ -11,24 +13,27 @@ import {
 import type { AgencyTab } from "@/components/layout/AgencySidebar";
 
 interface OverviewProps {
-  onTabChange: (tab: AgencyTab) => void;
+  onTabChange?: (tab: AgencyTab) => void;
 }
 
 export default function AgencyOverview({ onTabChange }: OverviewProps) {
-  const { getAgencyVacancies, getVacancyApplicants, agencyOrganization } = useMockData();
+  const { getAgencyVacancies, agencyOrganization } = useData();
   const { ref, inView } = useInView();
+  const [applicants, setApplicants] = useState<any[]>([]);
+
+  useEffect(() => {
+    agencyApi.getApplicants().then(setApplicants).catch(() => {});
+  }, []);
 
   const myVacancies = getAgencyVacancies();
   const openVacancies = myVacancies.filter((v) => v.status === "open");
 
-  // Get all applicants across all agency vacancies
-  const allApplicants = myVacancies.flatMap((v) => getVacancyApplicants(v.id));
-  const totalApplicants = allApplicants.length;
-  const shortlisted = allApplicants.filter((a) => a.status === "shortlisted").length;
-  const pending = allApplicants.filter((a) => a.status === "applied" || a.status === "under_review").length;
+  const totalApplicants = applicants.length;
+  const shortlisted = applicants.filter((a: any) => a.status === "shortlisted").length;
+  const pending = applicants.filter((a: any) => a.status === "applied" || a.status === "under_review").length;
 
   // Recent applications
-  const recentApps = [...allApplicants].sort((a, b) => b.appliedAt.localeCompare(a.appliedAt)).slice(0, 5);
+  const recentApps = [...applicants].sort((a: any, b: any) => (b.appliedAt || b.applied_at || "").localeCompare(a.appliedAt || a.applied_at || "")).slice(0, 5);
 
   return (
     <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
@@ -52,7 +57,7 @@ export default function AgencyOverview({ onTabChange }: OverviewProps) {
           return (
             <button
               key={card.label}
-              onClick={() => onTabChange(card.tab)}
+              onClick={() => onTabChange?.(card.tab)}
               className={`text-left rounded-xl p-5 transition-all hover:-translate-y-0.5 fade-up delay-${(i + 1) * 100} ${inView ? "in-view" : ""}`}
               style={{ background: "#111111", border: "1px solid #1F1F1F" }}
             >
@@ -77,7 +82,7 @@ export default function AgencyOverview({ onTabChange }: OverviewProps) {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-medium text-gray-400">Recent Applications</h2>
           <button
-            onClick={() => onTabChange("applicants")}
+            onClick={() => onTabChange?.("applicants")}
             className="text-xs font-medium transition-colors"
             style={{ color: "#22C55E" }}
           >
@@ -111,9 +116,9 @@ export default function AgencyOverview({ onTabChange }: OverviewProps) {
                       {app.tutorName.split(" ").map((n: string) => n[0]).join("")}
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-white">{app.tutorName}</div>
-                      <div className="text-xs text-gray-500">{app.vacancyTitle}</div>
-                      <div className="text-xs text-gray-600 mt-0.5">Applied {app.appliedAt}</div>
+                      <div className="text-sm font-medium text-white">{app.tutorName || app.tutor_name || "Unknown"}</div>
+                      <div className="text-xs text-gray-500">{app.vacancyTitle || app.vacancy_title || "Unknown"}</div>
+                      <div className="text-xs text-gray-600 mt-0.5">Applied {app.appliedAt || app.applied_at}</div>
                     </div>
                   </div>
                   <span
