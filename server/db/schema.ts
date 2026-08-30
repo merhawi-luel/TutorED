@@ -56,6 +56,19 @@ export const vacancyStatusEnum = pgEnum("vacancy_status", [
   "draft",
 ]);
 
+export const paymentStatusEnum = pgEnum("payment_status", [
+  "unpaid",
+  "pending",
+  "paid",
+  "refunded",
+]);
+
+export const refundStatusEnum = pgEnum("refund_status", [
+  "none",
+  "pending",
+  "refunded",
+]);
+
 export const applicationStatusEnum = pgEnum("application_status", [
   "applied",
   "under_review",
@@ -125,6 +138,10 @@ export const organizations = pgTable("organizations", {
   logoUrl: text("logo_url"),
   ownerUserId: uuid("owner_user_id")
     .references(() => users.id, { onDelete: "set null" }),
+  paymentStatus: paymentStatusEnum("payment_status").default("unpaid").notNull(),
+  chapaTxRef: text("chapa_tx_ref"),
+  paidAt: timestamp("paid_at"),
+  refundStatus: refundStatusEnum("refund_status").default("none").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

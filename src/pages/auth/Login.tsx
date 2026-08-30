@@ -26,22 +26,23 @@ export default function Login() {
     setError(null);
     setLoading(true);
 
-    const err = await login(email, password);
-    if (err) {
+    const result = await login(email, password);
+    if (result.error) {
       // Check if it's an email verification error
-      if (err.includes("verify your email")) {
+      if (result.error.includes("verify your email")) {
         setVerifyEmailAddr(email);
         setShowVerify(true);
         setLoading(false);
         return;
       }
-      setError(err);
+      setError(result.error);
       setLoading(false);
       return;
     }
 
-    // Redirect to role-specific dashboard
-    const redirect = user?.role === "agency" ? "/agency" : user?.role === "parent" ? "/parent" : user?.role === "admin" ? "/admin" : "/tutor";
+    // Redirect to role-specific dashboard using the user returned from login
+    const loginUser = result.user;
+    const redirect = loginUser?.role === "agency" ? "/agency" : loginUser?.role === "parent" ? "/parent" : loginUser?.role === "admin" ? "/admin" : "/tutor";
     navigate(redirect);
   };
 

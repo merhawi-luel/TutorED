@@ -9,7 +9,7 @@ interface AuthState {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<string | null>;
+  login: (email: string, password: string) => Promise<{ error: string | null; user: User | null }>;
   register: (name: string, email: string, password: string, role: UserRole) => Promise<string | null>;
   loginWithGoogle: (role?: UserRole) => Promise<string | null>;
   logout: () => Promise<void>;
@@ -118,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // Login with email/password
-  const login = async (email: string, password: string): Promise<string | null> => {
+  const login = async (email: string, password: string): Promise<{ error: string | null; user: User | null }> => {
     try {
       const API_BASE = import.meta.env.VITE_API_URL || "/api";
       const res = await fetch(`${API_BASE}/auth/login`, {
@@ -130,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await res.json();
 
       if (!res.ok) {
-        return data.error || "Login failed";
+        return { error: data.error || "Login failed", user: null };
       }
 
       // Set the session in Supabase client
@@ -139,9 +139,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setUser(data.user);
-      return null;
+      return { error: null, user: data.user };
     } catch (err) {
-      return "Network error. Please try again.";
+      return { error: "Network error. Please try again.", user: null };
     }
   };
 

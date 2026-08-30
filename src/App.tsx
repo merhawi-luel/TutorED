@@ -11,6 +11,7 @@ import AdminDashboard from "@/pages/admin/AdminDashboard";
 import ParentDashboard from "@/pages/parent/ParentDashboard";
 import Callback from "@/pages/auth/Callback";
 import Confirm from "@/pages/auth/Confirm";
+import PaymentStatus from "@/pages/agency/PaymentStatus";
 import type { ReactNode } from "react";
 
 // ─── Protected Route ───────────────────────────────────────────
@@ -68,6 +69,14 @@ function AppRoutes() {
       />
 
       {/* Agency Dashboard */}
+      <Route
+        path="/agency/payment-status"
+        element={
+          <ProtectedRoute allowedRoles={["agency"]}>
+            <PaymentStatus />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/agency/*"
         element={
