@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { createClient } from "@supabase/supabase-js";
 import { db } from "../db";
 import {
   organizations,
@@ -7,9 +8,16 @@ import {
   tutorProfiles,
   users,
   recruitmentRequests,
+  documents,
 } from "../db/schema";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { eq, and, desc } from "drizzle-orm";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+const BUCKET_NAME = "documents";
 
 const router = Router();
 
@@ -498,6 +506,185 @@ router.put("/requests/:id/status", requireAuth, requireRole("agency"), async (re
     res.json(updated);
   } catch (error) {
     console.error("Update request status error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── GET /api/agency/tutors/:tutorId/documents ─────────────
+// Get documents for a specific tutor (for agency to view)
+
+router.get("/tutors/:tutorId/documents", requireAuth, requireRole("agency"), async (req, res) => {
+  try {
+    const org = await getAgencyOrg(req.user!.userId);
+    if (!org) {
+      return res.status(404).json({ error: "Organization not found" });
+    }
+
+    // Verify this tutor has applied to at least one of our vacancies
+    const myVacancies = await db
+      .select({ id: vacancies.id })
+      .from(vacancies)
+      .where(eq(vacancies.organizationId, org.id));
+
+    const vacancyIds = myVacancies.map((v) => v.id);
+    
+    if (vacancyIds.length === 0) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    // Check if tutor has applied to any of our vacancies
+    const hasApplied = await db
+      .select()
+      .from(applications)
+      .where(eq(applications.tutorId, req.params.tutorId));
+
+    const appliedToUs = hasApplied.some(a => vacancyIds.includes(a.vacancyId));
+    
+    if (!appliedToUs) {
+      return res.status(403).json({ error: "Not authorized to view this tutor's documents" });
+    }
+
+    // Get tutor's documents
+    const tutorDocs = await db
+      .select()
+      .from(documents)
+      .where(eq(documents.tutorId, req.params.tutorId))
+      .orderBy(desc(documents.submittedAt));
+
+    res.json(tutorDocs);
+  } catch (error) {
+    console.error("Get tutor documents error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── GET /api/agency/documents/:id/preview ──────────────────
+// Preview a document (agency can only view verified documents)
+
+router.get("/documents/:id/preview", requireAuth, requireRole("agency"), async (req, res) => {
+  try {
+    const [doc] = await db
+      .select()
+      .from(documents)
+      .where(eq(documents.id, req.params.id));
+
+    if (!doc) {
+      return res.status(404).json({ error: "Document not found" });
+    }
+
+    // Only allow preview of verified documents
+    if (doc.status !== "verified") {
+      return res.status(403).json({ error: "Can only preview verified documents" });
+    }
+
+    // Verify agency has access (tutor applied to their vacancy)
+    const org = await getAgencyOrg(req.user!.userId);
+    if (!org) {
+      return res.status(404).json({ error: "Organization not found" });
+    }
+
+    const myVacancies = await db
+      .select({ id: vacancies.id })
+      .from(vacancies)
+      .where(eq(vacancies.organizationId, org.id));
+
+    const vacancyIds = myVacancies.map((v) => v.id);
+
+    const hasApplied = await db
+      .select()
+      .from(applications)
+      .where(eq(applications.tutorId, doc.tutorId));
+
+    const appliedToUs = hasApplied.some(a => vacancyIds.includes(a.vacancyId));
+    
+    if (!appliedToUs) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    if (!doc.fileKey) {
+      return res.status(404).json({ error: "File not available" });
+    }
+
+    const { data, error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .createSignedUrl(doc.fileKey, 7200);
+
+    if (error) {
+      console.error("Supabase signed URL error:", error);
+      return res.status(500).json({ error: "Failed to generate preview URL" });
+    }
+
+    res.json({
+      previewUrl: data.signedUrl,
+      fileName: doc.fileName,
+      type: doc.type,
+      title: doc.title,
+    });
+  } catch (error) {
+    console.error("Preview document error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── GET /api/agency/documents/:id/download ─────────────────
+// Download a document (agency can only download verified documents)
+
+router.get("/documents/:id/download", requireAuth, requireRole("agency"), async (req, res) => {
+  try {
+    const [doc] = await db
+      .select()
+      .from(documents)
+      .where(eq(documents.id, req.params.id));
+
+    if (!doc) {
+      return res.status(404).json({ error: "Document not found" });
+    }
+
+    // Only allow download of verified documents
+    if (doc.status !== "verified") {
+      return res.status(403).json({ error: "Can only download verified documents" });
+    }
+
+    // Verify agency has access
+    const org = await getAgencyOrg(req.user!.userId);
+    if (!org) {
+      return res.status(404).json({ error: "Organization not found" });
+    }
+
+    const myVacancies = await db
+      .select({ id: vacancies.id })
+      .from(vacancies)
+      .where(eq(vacancies.organizationId, org.id));
+
+    const vacancyIds = myVacancies.map((v) => v.id);
+
+    const hasApplied = await db
+      .select()
+      .from(applications)
+      .where(eq(applications.tutorId, doc.tutorId));
+
+    const appliedToUs = hasApplied.some(a => vacancyIds.includes(a.vacancyId));
+    
+    if (!appliedToUs) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    if (!doc.fileKey) {
+      return res.status(404).json({ error: "File not available" });
+    }
+
+    const { data, error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .createSignedUrl(doc.fileKey, 3600);
+
+    if (error) {
+      console.error("Supabase signed URL error:", error);
+      return res.status(500).json({ error: "Failed to generate download URL" });
+    }
+
+    res.json({ downloadUrl: data.signedUrl, fileName: doc.fileName });
+  } catch (error) {
+    console.error("Download document error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
