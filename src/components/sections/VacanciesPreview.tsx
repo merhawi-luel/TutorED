@@ -13,7 +13,8 @@ export default function VacanciesPreview() {
   useEffect(() => {
     const fetchVacancies = async () => {
       try {
-        const res = await fetch("/api/tutor/vacancies");
+        const API_BASE = import.meta.env.VITE_API_URL || "/api";
+        const res = await fetch(`${API_BASE}/tutor/vacancies`);
         if (!res.ok) throw new Error("Failed to load vacancies");
         const data = await res.json();
         setVacancies(data.slice(0, 6)); // Show up to 6 vacancies

@@ -59,7 +59,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Try to fetch from backend API
       try {
-        const res = await fetch("/api/auth/me", {
+        const API_BASE = import.meta.env.VITE_API_URL || "/api";
+        const res = await fetch(`${API_BASE}/auth/me`, {
           headers: {
             Authorization: `Bearer ${currentSession.access_token}`,
           },
@@ -96,7 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Register with email/password
   const register = async (name: string, email: string, password: string, role: UserRole): Promise<string | null> => {
     try {
-      const res = await fetch("/api/auth/register", {
+      const API_BASE = import.meta.env.VITE_API_URL || "/api";
+      const res = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password, role }),
@@ -118,7 +120,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Login with email/password
   const login = async (email: string, password: string): Promise<string | null> => {
     try {
-      const res = await fetch("/api/auth/login", {
+      const API_BASE = import.meta.env.VITE_API_URL || "/api";
+      const res = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -174,7 +177,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Verify email with OTP
   const verifyEmail = async (email: string, token: string): Promise<string | null> => {
     try {
-      const res = await fetch("/api/auth/verify-email", {
+      const API_BASE = import.meta.env.VITE_API_URL || "/api";
+      const res = await fetch(`${API_BASE}/auth/verify-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, token, type: "signup" }),
@@ -200,7 +204,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Resend verification email
   const resendVerification = async (email: string): Promise<string | null> => {
     try {
-      const res = await fetch("/api/auth/resend-verification", {
+      const API_BASE = import.meta.env.VITE_API_URL || "/api";
+      const res = await fetch(`${API_BASE}/auth/resend-verification`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

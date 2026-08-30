@@ -50,8 +50,9 @@ export default function Callback() {
 
         // CRITICAL: Call backend to sync user to database
         try {
+          const API_BASE = import.meta.env.VITE_API_URL || "/api";
           console.log("Callback: Syncing user to backend database...");
-          const response = await fetch("/api/auth/callback", {
+          const response = await fetch(`${API_BASE}/auth/callback`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
