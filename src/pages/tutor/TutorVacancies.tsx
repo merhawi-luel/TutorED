@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMockData } from "@/context/MockDataContext";
+import { useData } from "@/context/DataContext";
 import { useInView } from "@/hooks/useInView";
 import {
   Search,
@@ -9,10 +9,8 @@ import {
   Users,
   Briefcase,
   CheckCircle2,
-  Clock as ClockIcon,
   Send,
 } from "lucide-react";
-import type { TeachingMode } from "@/types";
 
 const FILTER_SUBJECTS = ["All", "Mathematics", "Physics", "Science", "English", "Computer Science"];
 const FILTER_MODES: { value: string; label: string }[] = [
@@ -23,7 +21,7 @@ const FILTER_MODES: { value: string; label: string }[] = [
 ];
 
 export default function TutorVacancies() {
-  const { vacancies, applications, applyToVacancy } = useMockData();
+  const { vacancies, applications, applyToVacancy } = useData();
   const { ref, inView } = useInView();
 
   const [search, setSearch] = useState("");

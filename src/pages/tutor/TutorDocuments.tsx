@@ -1,6 +1,8 @@
-import { useState } from "react";
-import { useMockData } from "@/context/MockDataContext";
+import { useState, useRef } from "react";
+import { useData } from "@/context/DataContext";
+import { tutorApi, uploadApi } from "@/lib/api";
 import { useInView } from "@/hooks/useInView";
+import DocumentPreview from "@/components/shared/DocumentPreview";
 import {
   Upload,
   FileText,
@@ -10,6 +12,8 @@ import {
   Eye,
   AlertCircle,
   Trash2,
+  Download,
+  Loader2,
 } from "lucide-react";
 import type { DocumentType, DocumentStatus } from "@/types";
 
@@ -41,20 +45,145 @@ const DOC_OPTIONS: { value: DocumentType; label: string }[] = [
   { value: "experience_letter", label: "Experience Letter" },
 ];
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const ALLOWED_TYPES = ["application/pdf", "image/jpeg", "image/jpg", "image/png"];
+
 export default function TutorDocuments() {
-  const { documents, addDocument } = useMockData();
+  const { documents, addDocument, removeDocument, refetchDocuments } = useData();
   const { ref, inView } = useInView();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [showUpload, setShowUpload] = useState(false);
   const [docType, setDocType] = useState<DocumentType>("government_id");
   const [docTitle, setDocTitle] = useState("");
-  const [fileName, setFileName] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  const handleUpload = () => {
-    if (!docTitle || !fileName) return;
-    addDocument({ tutorId: "u1", type: docType, title: docTitle, fileName });
+  // Preview state
+  const [previewDoc, setPreviewDoc] = useState<{ downloadUrl: string; fileName: string; title: string } | null>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError(null);
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setError("Please select a PDF, JPG, or PNG file.");
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setError("File must be under 10MB.");
+      return;
+    }
+    setSelectedFile(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    setError(null);
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setError("Please select a PDF, JPG, or PNG file.");
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setError("File must be under 10MB.");
+      return;
+    }
+    setSelectedFile(file);
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile || !docTitle) return;
+
+    setUploading(true);
+    setError(null);
+    setUploadProgress("Generating upload URL...");
+
+    try {
+      const { signedUrl, fileKey } = await uploadApi.presign(selectedFile.name, selectedFile.type);
+
+      setUploadProgress("Uploading file...");
+      const uploadRes = await fetch(signedUrl, {
+        method: "PUT",
+        body: selectedFile,
+        headers: { "Content-Type": selectedFile.type },
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error("Failed to upload file to storage");
+      }
+
+      setUploadProgress("Saving document record...");
+      // addDocument in DataContext will handle optimistic update + API call
+      await addDocument({
+        tutorId: "",
+        type: docType,
+        title: docTitle,
+        fileName: selectedFile.name,
+        fileKey,
+      });
+
+      setSuccess("Document uploaded successfully!");
+      setShowUpload(false);
+      setDocTitle("");
+      setSelectedFile(null);
+      setDocType("government_id");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      setError(err.message || "Failed to upload document. Please try again.");
+    } finally {
+      setUploading(false);
+      setUploadProgress("");
+    }
+  };
+
+  const handleDownload = async (docId: string, fileName: string) => {
+    try {
+      const { downloadUrl } = await tutorApi.downloadDocument(docId);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Download error:", err);
+      setError("Failed to download document.");
+      setTimeout(() => setError(null), 2500);
+    }
+  };
+
+  const handlePreview = async (docId: string, fileName: string, title: string) => {
+    try {
+      const { downloadUrl } = await tutorApi.downloadDocument(docId);
+      setPreviewDoc({ downloadUrl, fileName, title });
+    } catch (err) {
+      console.error("Preview error:", err);
+      setError("Failed to load preview.");
+      setTimeout(() => setError(null), 2500);
+    }
+  };
+
+  const handleDelete = async (docId: string) => {
+    removeDocument(docId);
+    setSuccess("Document removed.");
+    setTimeout(() => setSuccess(null), 2500);
+  };
+
+  const resetForm = () => {
     setShowUpload(false);
     setDocTitle("");
-    setFileName("");
+    setSelectedFile(null);
+    setDocType("government_id");
+    setError(null);
+    setUploadProgress("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
@@ -77,6 +206,24 @@ export default function TutorDocuments() {
         </button>
       </div>
 
+      {/* Success / Error Messages */}
+      {success && (
+        <div
+          className="rounded-xl px-5 py-3 flex items-center gap-3 text-sm"
+          style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", color: "#4ADE80" }}
+        >
+          <CheckCircle2 size={16} /> {success}
+        </div>
+      )}
+      {error && !showUpload && (
+        <div
+          className="rounded-xl px-5 py-3 flex items-center gap-3 text-sm"
+          style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#F87171" }}
+        >
+          <AlertCircle size={16} /> {error}
+        </div>
+      )}
+
       {/* Upload Form */}
       {showUpload && (
         <div
@@ -84,6 +231,17 @@ export default function TutorDocuments() {
           style={{ background: "#111111", border: "1px solid rgba(34,197,94,0.3)" }}
         >
           <h2 className="text-sm font-medium text-gray-300">Upload New Document</h2>
+
+          {error && (
+            <div
+              className="rounded-xl px-4 py-2.5 flex items-center gap-2 text-sm"
+              style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#F87171" }}
+            >
+              <AlertCircle size={15} />
+              {error}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-gray-500 mb-1.5">Document Type</label>
@@ -114,16 +272,54 @@ export default function TutorDocuments() {
 
           {/* File drop zone */}
           <div
-            className="rounded-xl p-8 text-center cursor-pointer transition-colors hover:border-emerald-500/30"
-            style={{ background: "#0D0D0D", border: "2px dashed #1F1F1F" }}
-            onClick={() => setFileName("uploaded_document.pdf")}
+            className={`rounded-xl p-8 text-center transition-colors ${
+              selectedFile ? "border-emerald-500/50" : "hover:border-emerald-500/30"
+            }`}
+            style={{
+              background: "#0D0D0D",
+              border: `2px dashed ${selectedFile ? "rgba(34,197,94,0.5)" : "#1F1F1F"}`,
+              cursor: uploading ? "default" : "pointer",
+            }}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleDrop}
+            onClick={() => !uploading && fileInputRef.current?.click()}
           >
-            <Upload size={24} className="mx-auto mb-3 text-gray-600" />
-            {fileName ? (
-              <p className="text-sm text-emerald-400">{fileName}</p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={handleFileSelect}
+              className="hidden"
+              disabled={uploading}
+            />
+
+            {uploading ? (
+              <>
+                <Loader2 size={24} className="mx-auto mb-3 text-emerald-400 animate-spin" />
+                <p className="text-sm text-emerald-400">{uploadProgress}</p>
+              </>
+            ) : selectedFile ? (
+              <>
+                <FileText size={24} className="mx-auto mb-3 text-emerald-400" />
+                <p className="text-sm text-emerald-400 font-medium">{selectedFile.name}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedFile(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                  className="mt-2 text-xs text-gray-500 hover:text-white transition-colors"
+                >
+                  Remove file
+                </button>
+              </>
             ) : (
               <>
-                <p className="text-sm text-gray-400">Click to select a file</p>
+                <Upload size={24} className="mx-auto mb-3 text-gray-600" />
+                <p className="text-sm text-gray-400">Click to select or drag & drop a file</p>
                 <p className="text-xs text-gray-600 mt-1">PDF, JPG, or PNG — Max 10MB</p>
               </>
             )}
@@ -132,15 +328,26 @@ export default function TutorDocuments() {
           <div className="flex gap-3">
             <button
               onClick={handleUpload}
-              disabled={!docTitle || !fileName}
-              className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-40"
+              disabled={!docTitle || !selectedFile || uploading}
+              className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-40 flex items-center gap-2"
               style={{ background: "#22C55E", color: "black" }}
             >
-              Submit Document
+              {uploading ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload size={14} />
+                  Submit Document
+                </>
+              )}
             </button>
             <button
-              onClick={() => setShowUpload(false)}
-              className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all"
+              onClick={resetForm}
+              disabled={uploading}
+              className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-40"
               style={{ background: "#161616", color: "#9CA3AF", border: "1px solid #1F1F1F" }}
             >
               Cancel
@@ -184,10 +391,13 @@ export default function TutorDocuments() {
                     <div className="text-xs text-gray-600 mt-0.5">
                       Submitted {doc.submittedAt}
                       {doc.reviewedAt && ` · Reviewed ${doc.reviewedAt}`}
+                      {doc.reviewerNote && (
+                        <span style={{ color: "#EF4444" }}> · &quot;{doc.reviewerNote}&quot;</span>
+                      )}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <span
                     className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium"
                     style={{ background: `${statusCfg.color}18`, color: statusCfg.color }}
@@ -195,9 +405,27 @@ export default function TutorDocuments() {
                     <StatusIcon size={13} />
                     {statusCfg.label}
                   </span>
+                  <button
+                    onClick={() => handlePreview(doc.id, doc.fileName, doc.title)}
+                    className="p-1.5 rounded-lg transition-colors hover:bg-white/5"
+                    title="Preview"
+                  >
+                    <Eye size={14} className="text-gray-600 hover:text-blue-400" />
+                  </button>
+                  <button
+                    onClick={() => handleDownload(doc.id, doc.fileName)}
+                    className="p-1.5 rounded-lg transition-colors hover:bg-white/5"
+                    title="Download"
+                  >
+                    <Download size={14} className="text-gray-600 hover:text-emerald-400" />
+                  </button>
                   {doc.status === "pending" && (
-                    <button className="p-1.5 rounded-lg transition-colors hover:bg-white/5" title="Remove">
-                      <Trash2 size={14} className="text-gray-600" />
+                    <button
+                      onClick={() => handleDelete(doc.id)}
+                      className="p-1.5 rounded-lg transition-colors hover:bg-white/5"
+                      title="Remove"
+                    >
+                      <Trash2 size={14} className="text-gray-600 hover:text-red-400" />
                     </button>
                   )}
                 </div>
@@ -206,6 +434,16 @@ export default function TutorDocuments() {
           })
         )}
       </div>
+
+      {/* Document Preview Modal */}
+      {previewDoc && (
+        <DocumentPreview
+          downloadUrl={previewDoc.downloadUrl}
+          fileName={previewDoc.fileName}
+          title={previewDoc.title}
+          onClose={() => setPreviewDoc(null)}
+        />
+      )}
     </div>
   );
 }

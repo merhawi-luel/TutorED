@@ -1,12 +1,14 @@
-import { useMockData } from "@/context/MockDataContext";
+import { useState } from "react";
+import { useData } from "@/context/DataContext";
 import { useInView } from "@/hooks/useInView";
 import {
-  ShieldCheck,
   CheckCircle2,
   Clock,
   AlertCircle,
   FileText,
   ArrowRight,
+  XCircle,
+  Loader2,
 } from "lucide-react";
 
 const LEVEL_CONFIG = {
@@ -24,8 +26,10 @@ const DOC_CHECKLIST = [
 ] as const;
 
 export default function TutorVerification() {
-  const { tutorProfile, documents, verificationRequest, requestVerification } = useMockData();
+  const { tutorProfile, documents, verificationRequest, requestVerification } = useData();
   const { ref, inView } = useInView();
+  const [requesting, setRequesting] = useState(false);
+  const [requestError, setRequestError] = useState<string | null>(null);
 
   const level = tutorProfile?.verificationLevel ?? "unverified";
   const cfg = LEVEL_CONFIG[level];
@@ -35,9 +39,31 @@ export default function TutorVerification() {
     return documents.find((d) => d.type === type)?.status ?? "none";
   };
 
+  // Check if all required doc types have at least one non-rejected document uploaded
+  const requiredUploaded = DOC_CHECKLIST.filter((d) => d.required).every((d) => {
+    return documents.some((doc) => doc.type === d.type && doc.status !== "rejected");
+  });
+
+  // Check if all required docs are verified
   const requiredVerified = DOC_CHECKLIST.filter((d) => d.required).every(
     (d) => getDocStatus(d.type) === "verified"
   );
+
+  const missingRequired = DOC_CHECKLIST.filter((d) => d.required).filter((d) => {
+    return !documents.some((doc) => doc.type === d.type && doc.status !== "rejected");
+  });
+
+  const handleRequestVerification = async () => {
+    setRequestError(null);
+    setRequesting(true);
+    try {
+      await requestVerification();
+    } catch (err: any) {
+      setRequestError(err.message || "Failed to submit verification request");
+    } finally {
+      setRequesting(false);
+    }
+  };
 
   return (
     <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
@@ -185,28 +211,69 @@ export default function TutorVerification() {
           style={{ background: "#111111", border: "1px solid #1F1F1F" }}
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
+            <div className="flex-1">
               <h2 className="text-sm font-medium text-white mb-1">Ready to get verified?</h2>
-              <p className="text-xs text-gray-400">
-                {verificationRequest
-                  ? `Verification request ${verificationRequest.status}. You'll be notified once reviewed.`
-                  : requiredVerified
-                  ? "All required documents are uploaded. Submit your verification request."
-                  : "Upload all required documents before requesting verification."}
-              </p>
+              {verificationRequest ? (
+                <p className="text-xs text-gray-400">
+                  Verification request <span className="capitalize font-medium" style={{
+                    color: verificationRequest.status === "approved" ? "#22C55E"
+                      : verificationRequest.status === "rejected" ? "#EF4444"
+                      : verificationRequest.status === "under_review" ? "#3B82F6"
+                      : "#F59E0B"
+                  }}>{verificationRequest.status.replace("_", " ")}</span>. You'll be notified once reviewed.
+                </p>
+              ) : !requiredUploaded ? (
+                <div>
+                  <p className="text-xs text-gray-400 mb-2">
+                    Upload all required documents before requesting verification.
+                  </p>
+                  <div className="space-y-1">
+                    {missingRequired.map((item) => (
+                      <div key={item.type} className="flex items-center gap-2 text-xs">
+                        <XCircle size={12} style={{ color: "#EF4444" }} />
+                        <span style={{ color: "#F87171" }}>{item.label} — not uploaded</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400">
+                  All required documents are uploaded. Submit your verification request for review.
+                </p>
+              )}
             </div>
             {!verificationRequest && (
               <button
-                onClick={requestVerification}
-                disabled={!requiredVerified}
+                onClick={handleRequestVerification}
+                disabled={!requiredUploaded || requesting}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-40 shrink-0"
                 style={{ background: "#22C55E", color: "black" }}
               >
-                Request Verification
-                <ArrowRight size={14} />
+                {requesting ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    Request Verification
+                    <ArrowRight size={14} />
+                  </>
+                )}
               </button>
             )}
           </div>
+
+          {/* Show error if request failed */}
+          {requestError && (
+            <div
+              className="mt-4 rounded-xl px-4 py-2.5 flex items-center gap-2 text-sm"
+              style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#F87171" }}
+            >
+              <AlertCircle size={15} />
+              {requestError}
+            </div>
+          )}
         </section>
       )}
     </div>

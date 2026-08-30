@@ -6,6 +6,7 @@ import TutorDocuments from "./TutorDocuments";
 import TutorVerification from "./TutorVerification";
 import TutorVacancies from "./TutorVacancies";
 import TutorApplications from "./TutorApplications";
+import TutorSettings from "./TutorSettings";
 
 const TAB_COMPONENTS: Record<TutorTab, React.ComponentType<{ onTabChange?: (tab: TutorTab) => void }>> = {
   overview: TutorOverview,
@@ -14,7 +15,7 @@ const TAB_COMPONENTS: Record<TutorTab, React.ComponentType<{ onTabChange?: (tab:
   verification: TutorVerification,
   vacancies: TutorVacancies,
   applications: TutorApplications,
-  settings: TutorOverview, // Placeholder
+  settings: TutorSettings,
 };
 
 export default function TutorDashboard() {

@@ -1,10 +1,9 @@
-import { useMockData } from "@/context/MockDataContext";
+import { useData } from "@/context/DataContext";
 import { useInView } from "@/hooks/useInView";
 import { useState } from "react";
 import {
   Send,
   Briefcase,
-  MapPin,
   CheckCircle2,
   Clock,
   XCircle,
@@ -35,7 +34,7 @@ const FILTER_OPTIONS: { value: string; label: string }[] = [
 ];
 
 export default function TutorApplications() {
-  const { applications } = useMockData();
+  const { applications } = useData();
   const { ref, inView } = useInView();
 
   const [filter, setFilter] = useState("all");

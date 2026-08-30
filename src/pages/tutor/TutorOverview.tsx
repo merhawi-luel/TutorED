@@ -1,4 +1,4 @@
-import { useMockData } from "@/context/MockDataContext";
+import { useData } from "@/context/DataContext";
 import { useInView } from "@/hooks/useInView";
 import {
   FileText,
@@ -13,7 +13,7 @@ import {
 import type { TutorTab } from "@/components/layout/TutorSidebar";
 
 interface OverviewProps {
-  onTabChange: (tab: TutorTab) => void;
+  onTabChange?: (tab: TutorTab) => void;
 }
 
 const STAT_CARDS = [
@@ -31,7 +31,8 @@ const VERIFICATION_INFO: Record<string, { label: string; color: string; icon: ty
 };
 
 export default function TutorOverview({ onTabChange }: OverviewProps) {
-  const { tutorProfile, documents, applications, verificationRequest } = useMockData();
+  const onTab = onTabChange ?? (() => {});
+  const { tutorProfile, documents, applications, verificationRequest } = useData();
   const { ref, inView } = useInView();
 
   const verifiedDocs = documents.filter((d) => d.status === "verified").length;
@@ -86,7 +87,7 @@ export default function TutorOverview({ onTabChange }: OverviewProps) {
         </div>
         {vLevel !== "verified" && (
           <button
-            onClick={() => onTabChange("verification")}
+            onClick={() => onTab?.("verification")}
             className="px-4 py-2 rounded-lg text-xs font-medium transition-all shrink-0"
             style={{
               background: vLevel === "partial" ? "#22C55E" : "rgba(34,197,94,0.15)",
@@ -121,7 +122,7 @@ export default function TutorOverview({ onTabChange }: OverviewProps) {
           return (
             <button
               key={card.key}
-              onClick={() => onTabChange(card.tab)}
+              onClick={() => onTab?.(card.tab as any)}
               className={`text-left rounded-xl p-5 transition-all hover:-translate-y-0.5 fade-up delay-${(i + 2) * 100} ${inView ? "in-view" : ""}`}
               style={{ background: "#111111", border: "1px solid #1F1F1F" }}
             >

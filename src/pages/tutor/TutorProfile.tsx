@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMockData } from "@/context/MockDataContext";
+import { useData } from "@/context/DataContext";
 import { useInView } from "@/hooks/useInView";
 import { Save, Plus, X } from "lucide-react";
 import type { TeachingMode } from "@/types";
@@ -33,7 +33,7 @@ const GRADE_OPTIONS = [
 ];
 
 export default function TutorProfile() {
-  const { tutorProfile, updateProfile } = useMockData();
+  const { tutorProfile, updateProfile } = useData();
   const { ref, inView } = useInView();
 
   const [headline, setHeadline] = useState(tutorProfile?.headline ?? "");
