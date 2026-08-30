@@ -7,6 +7,7 @@ export default function Pricing() {
 
   return (
     <section
+      id="pricing"
       ref={sectionRef as React.RefObject<HTMLElement>}
       className="py-16 sm:py-24 px-4 sm:px-6 md:px-12"
       style={{ background: "linear-gradient(160deg, #000000 0%, #050F07 50%, #000000 100%)" }}

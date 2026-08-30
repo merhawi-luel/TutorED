@@ -1,21 +1,38 @@
-import { useState } from "react";
 import { FEATURES_TUTOR, FEATURES_AGENCY } from "@/data/landing";
 import SectionHeader from "@/components/shared/SectionHeader";
 import { useInView } from "@/hooks/useInView";
+import { useLocation } from "react-router-dom";
 
 type Tab = "tutors" | "agencies";
 
+function getTabFromHash(hash: string): Tab {
+  return hash === "for-agencies" ? "agencies" : "tutors";
+}
+
 export default function Features() {
-  const [activeTab, setActiveTab] = useState<Tab>("tutors");
+  const location = useLocation();
+  const hash = location.hash.replace("#", "");
+  const activeTab = getTabFromHash(hash);
   const features = activeTab === "tutors" ? FEATURES_TUTOR : FEATURES_AGENCY;
   const { ref: sectionRef, inView } = useInView();
 
+  const handleTabClick = (tab: Tab) => {
+    const sectionId = tab === "tutors" ? "for-tutors" : "for-agencies";
+    // Update hash without full navigation (stays on landing page)
+    window.history.replaceState(null, "", `#${sectionId}`);
+    // Scroll into view
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <section
+      id="for-tutors"
       ref={sectionRef as React.RefObject<HTMLElement>}
       className="py-16 sm:py-24 px-4 sm:px-6 md:px-12"
       style={{ background: "linear-gradient(160deg, #000000 0%, #050F07 50%, #000000 100%)" }}
     >
+      {/* Anchor for "For Agencies" navbar link */}
+      <div id="for-agencies" style={{ height: 0, margin: 0, padding: 0 }} />
       <div className="max-w-6xl mx-auto">
         <div className={`fade-up ${inView ? "in-view" : ""}`}>
           <SectionHeader label="Features" title="Built for every role" dark />
@@ -27,7 +44,7 @@ export default function Features() {
             {(["tutors", "agencies"] as const).map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => handleTabClick(tab)}
                 className="px-4 py-2.5 rounded-lg text-sm font-medium capitalize transition-all"
                 style={
                   activeTab === tab

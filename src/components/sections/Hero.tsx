@@ -6,7 +6,7 @@ interface HeroProps {
   onNavigate?: (view: string) => void;
 }
 
-export default function Hero({ onNavigate }: HeroProps) {
+export default function Hero(_props: HeroProps) {
   return (
     <section
       className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-32 pb-8 overflow-hidden"
