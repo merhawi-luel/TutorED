@@ -49,7 +49,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_TYPES = ["application/pdf", "image/jpeg", "image/jpg", "image/png"];
 
 export default function TutorDocuments() {
-  const { documents, addDocument, removeDocument, refetchDocuments } = useData();
+  const { documents, addDocument, removeDocument } = useData();
   const { ref, inView } = useInView();
   const fileInputRef = useRef<HTMLInputElement>(null);
 

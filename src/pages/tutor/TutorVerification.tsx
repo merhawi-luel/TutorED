@@ -44,11 +44,6 @@ export default function TutorVerification() {
     return documents.some((doc) => doc.type === d.type && doc.status !== "rejected");
   });
 
-  // Check if all required docs are verified
-  const requiredVerified = DOC_CHECKLIST.filter((d) => d.required).every(
-    (d) => getDocStatus(d.type) === "verified"
-  );
-
   const missingRequired = DOC_CHECKLIST.filter((d) => d.required).filter((d) => {
     return !documents.some((doc) => doc.type === d.type && doc.status !== "rejected");
   });

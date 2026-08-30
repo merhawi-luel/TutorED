@@ -5,7 +5,6 @@ import {
   Briefcase,
   GraduationCap,
   Star,
-  Clock,
   FileText,
   CheckCircle2,
   AlertCircle,

@@ -547,20 +547,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return fetchAgencyData();
   }, [fetchAgencyData]);
 
-  const refreshApplicants = useCallback(async () => {
-    try {
-      const data = await agencyApi.getApplicants();
-      const mapped = data.map((a: any) => ({
-        ...mapApplication(a),
-        tutorName: a.tutorName || a.tutor_name || "Unknown",
-        tutorProfile: a.tutorProfile ? mapProfile(a.tutorProfile) : null,
-      }));
-      setAgencyApplicants(mapped);
-    } catch (err) {
-      console.error("Failed to refresh applicants:", err);
-    }
-  }, []);
-
   // ── Admin Actions ──
   const approveDocument = useCallback(
     async (documentId: string) => {

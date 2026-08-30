@@ -130,8 +130,6 @@ export const adminApi = {
   getAdmins: () => request<any[]>("/admin/admins"),
   createAdmin: (data: { name: string; email: string; password: string }) =>
     request<any>("/admin/create-admin", { method: "POST", body: JSON.stringify(data) }),
-  downloadDocument: (id: string) =>
-    request<{ downloadUrl: string; fileName: string }>(`/admin/documents/${id}/download`),
 };
 
 // ─── Parent ────────────────────────────────────────────────────
