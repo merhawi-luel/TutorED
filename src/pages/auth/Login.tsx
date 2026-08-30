@@ -12,6 +12,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState<"tutor" | "agency" | "parent">("tutor");
 
   // Email verification state
   const [showVerify, setShowVerify] = useState(false);
@@ -45,7 +46,7 @@ export default function Login() {
   const handleGoogleLogin = async () => {
     setError(null);
     setLoading(true);
-    const err = await loginWithGoogle("tutor");
+    const err = await loginWithGoogle(role);
     if (err) {
       setError(err);
       setLoading(false);
@@ -212,6 +213,35 @@ export default function Login() {
               {error}
             </div>
           )}
+
+          {/* Role Selector */}
+          <div className="mb-4">
+            <label className="block text-sm text-gray-400 mb-2">I am a</label>
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                { value: "tutor" as const, label: "Tutor" },
+                { value: "agency" as const, label: "Agency" },
+                { value: "parent" as const, label: "Parent" },
+              ]).map((opt) => {
+                const isActive = role === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setRole(opt.value)}
+                    className="px-3 py-2 rounded-lg text-xs font-medium transition-all"
+                    style={{
+                      background: isActive ? "rgba(34,197,94,0.1)" : "rgba(255,255,255,0.03)",
+                      border: `1px solid ${isActive ? "rgba(34,197,94,0.35)" : "rgba(255,255,255,0.08)"}`,
+                      color: isActive ? "#22C55E" : "#9CA3AF",
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           {/* Google Login Button */}
           <button

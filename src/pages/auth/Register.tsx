@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { UserPlus, AlertCircle, Eye, EyeOff, GraduationCap, Building2, Users, CheckCircle, Mail } from "lucide-react";
+import { UserPlus, AlertCircle, Eye, EyeOff, GraduationCap, Building2, Users, Mail } from "lucide-react";
 
 export default function Register() {
   const { register, loginWithGoogle } = useAuth();
-  const navigate = useNavigate();
 
   const [role, setRole] = useState<"tutor" | "agency" | "parent">("tutor");
   const [name, setName] = useState("");
