@@ -34,7 +34,21 @@ const allowedOrigins = [
 if (process.env.FRONTEND_URL) {
   allowedOrigins.push(process.env.FRONTEND_URL);
 }
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    // In production, also allow the frontend URL
+    if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) {
+      return callback(null, true);
+    }
+    callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+}));
 app.use(express.json({ limit: "10mb" }));
 
 // ─── Routes ──────────────────────────────────────────────────
@@ -90,6 +104,7 @@ const server = app.listen(PORT, () => {
   console.log(`   PUT  /api/admin/documents/:id/approve`);
   console.log(`   PUT  /api/admin/documents/:id/reject`);
   console.log(`\n✅ Server is ready and listening for requests...`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
 });
 
 // Server error handling
