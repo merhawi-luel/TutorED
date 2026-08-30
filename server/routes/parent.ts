@@ -63,40 +63,33 @@ router.put("/profile", requireAuth, async (req, res) => {
 router.get("/vacancies", requireAuth, async (req, res) => {
   try {
     const openVacancies = await db
-      .select({
-        id: vacancies.id,
-        title: vacancies.title,
-        description: vacancies.description,
-        subject: vacancies.subject,
-        grade: vacancies.grade,
-        requiredEducation: vacancies.requiredEducation,
-        requiredExperience: vacancies.requiredExperience,
-        location: vacancies.location,
-        teachingMode: vacancies.teachingMode,
-        salary: vacancies.salary,
-        availability: vacancies.availability,
-        deadline: vacancies.deadline,
-        status: vacancies.status,
-        applicantCount: vacancies.applicantCount,
-        createdAt: vacancies.createdAt,
-        organizationId: vacancies.organizationId,
-        parentId: vacancies.parentId,
-        organizationName: organizations.name,
-        parentName: users.name,
-      })
+      .select()
       .from(vacancies)
-      .leftJoin(organizations, eq(vacancies.organizationId, organizations.id))
-      .leftJoin(users, eq(vacancies.parentId, users.id))
       .where(eq(vacancies.status, "open"))
       .orderBy(desc(vacancies.createdAt));
 
-    // Resolve organizationName: use org name if present, else parent name
-    const resolved = openVacancies.map((v) => ({
-      ...v,
-      organizationName: v.organizationName || v.parentName || "Unknown",
-    }));
+    // Enrich with organization name
+    const enriched = await Promise.all(
+      openVacancies.map(async (v) => {
+        let organizationName = "Unknown";
+        if (v.organizationId) {
+          const [org] = await db
+            .select({ name: organizations.name })
+            .from(organizations)
+            .where(eq(organizations.id, v.organizationId));
+          organizationName = org?.name ?? "Unknown";
+        } else if (v.parentId) {
+          const [parent] = await db
+            .select({ name: users.name })
+            .from(users)
+            .where(eq(users.id, v.parentId));
+          organizationName = parent?.name ?? "Parent";
+        }
+        return { ...v, organizationName };
+      })
+    );
 
-    res.json(resolved);
+    res.json(enriched);
   } catch (error) {
     console.error("Get parent vacancies error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -234,25 +227,27 @@ router.post("/contact-agency", requireAuth, async (req, res) => {
 router.get("/requests", requireAuth, async (req, res) => {
   try {
     const myRequests = await db
-      .select({
-        id: recruitmentRequests.id,
-        subject: recruitmentRequests.subject,
-        grade: recruitmentRequests.grade,
-        location: recruitmentRequests.location,
-        notes: recruitmentRequests.notes,
-        status: recruitmentRequests.status,
-        parentName: recruitmentRequests.parentName,
-        parentEmail: recruitmentRequests.parentEmail,
-        parentPhone: recruitmentRequests.parentPhone,
-        createdAt: recruitmentRequests.createdAt,
-        organizationName: organizations.name,
-      })
+      .select()
       .from(recruitmentRequests)
-      .leftJoin(organizations, eq(recruitmentRequests.organizationId, organizations.id))
       .where(eq(recruitmentRequests.parentId, req.user!.userId))
       .orderBy(desc(recruitmentRequests.createdAt));
 
-    res.json(myRequests);
+    // Enrich with organization name
+    const enriched = await Promise.all(
+      myRequests.map(async (r) => {
+        let organizationName = null;
+        if (r.organizationId) {
+          const [org] = await db
+            .select({ name: organizations.name })
+            .from(organizations)
+            .where(eq(organizations.id, r.organizationId));
+          organizationName = org?.name ?? null;
+        }
+        return { ...r, organizationName };
+      })
+    );
+
+    res.json(enriched);
   } catch (error) {
     console.error("Get parent requests error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -273,6 +268,39 @@ router.get("/agencies", requireAuth, async (req, res) => {
     res.json(verifiedAgencies);
   } catch (error) {
     console.error("Get agencies error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── GET /api/parent/tutors ─────────────────────────────────
+// Browse verified tutor profiles (for self-recruitment)
+
+router.get("/tutors", requireAuth, async (req, res) => {
+  try {
+    // Get all tutor profiles with user info
+    const profiles = await db
+      .select()
+      .from(tutorProfiles)
+      .orderBy(desc(tutorProfiles.rating));
+
+    // Enrich with user name and email
+    const enriched = await Promise.all(
+      profiles.map(async (p) => {
+        const [user] = await db
+          .select({ name: users.name, email: users.email })
+          .from(users)
+          .where(eq(users.id, p.userId));
+        return {
+          ...p,
+          tutorName: user?.name ?? "Unknown",
+          tutorEmail: user?.email ?? "",
+        };
+      })
+    );
+
+    res.json(enriched);
+  } catch (error) {
+    console.error("Get tutors error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
