@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useData } from "@/context/DataContext";
 import { agencyApi } from "@/lib/api";
 import { useInView } from "@/hooks/useInView";
+import ApplicantProfileModal from "@/components/shared/ApplicantProfileModal";
 import {
   Send,
   CheckCircle2,
@@ -10,6 +11,7 @@ import {
   Briefcase,
   GraduationCap,
   ChevronDown,
+  Eye,
 } from "lucide-react";
 import type { ApplicationStatus, TutorProfile } from "@/types";
 
@@ -53,6 +55,12 @@ export default function AgencyApplicants() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [allApplicants, setAllApplicants] = useState<Applicant[]>([]);
+  const [profileModal, setProfileModal] = useState<{
+    isOpen: boolean;
+    tutorId: string;
+    tutorName: string;
+    tutorProfile: TutorProfile | null;
+  }>({ isOpen: false, tutorId: "", tutorName: "", tutorProfile: null });
 
   const myVacancies = getAgencyVacancies();
   const vacancyMap = new Map(myVacancies.map((v) => [v.id, v]));
@@ -95,6 +103,15 @@ export default function AgencyApplicants() {
   useEffect(() => {
     fetchApplicants();
   }, [fetchApplicants]);
+
+  // Check for vacancy filter from sessionStorage (when clicking View Applicants from vacancies page)
+  useEffect(() => {
+    const filterId = sessionStorage.getItem("filterVacancyId");
+    if (filterId) {
+      setSelectedVacancy(filterId);
+      sessionStorage.removeItem("filterVacancyId");
+    }
+  }, []);
 
   let displayApplicants = allApplicants;
   if (selectedVacancy !== "all") {
@@ -310,6 +327,18 @@ export default function AgencyApplicants() {
 
                     {/* Action Buttons */}
                     <div className="flex flex-wrap gap-2 pt-1">
+                      <button
+                        onClick={() => setProfileModal({
+                          isOpen: true,
+                          tutorId: applicant.tutorId,
+                          tutorName: applicant.tutorName,
+                          tutorProfile: applicant.tutorProfile,
+                        })}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                        style={{ background: "rgba(34,197,94,0.1)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.2)" }}
+                      >
+                        <Eye size={13} /> View Full Profile
+                      </button>
                       {ACTIONS.map((action) => {
                         const isActive = applicant.status === action.status;
                         return (
@@ -336,6 +365,14 @@ export default function AgencyApplicants() {
           })
         )}
       </div>
+      {/* Profile Modal */}
+      <ApplicantProfileModal
+        isOpen={profileModal.isOpen}
+        onClose={() => setProfileModal({ ...profileModal, isOpen: false })}
+        tutorId={profileModal.tutorId}
+        tutorName={profileModal.tutorName}
+        tutorProfile={profileModal.tutorProfile}
+      />
     </div>
   );
 }
