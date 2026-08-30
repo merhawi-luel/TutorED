@@ -10,10 +10,12 @@ import {
   CheckCircle2,
   XCircle,
   X,
+  Eye,
 } from "lucide-react";
 import type { TeachingMode } from "@/types";
+import type { AgencyTab } from "@/components/layout/AgencySidebar";
 
-export default function AgencyVacancies() {
+export default function AgencyVacancies({ onTabChange }: { onTabChange?: (tab: AgencyTab) => void }) {
   const { getAgencyVacancies, createVacancy, closeVacancy, getVacancyApplicants } = useData();
   const { ref, inView } = useInView();
 
@@ -201,6 +203,17 @@ export default function AgencyVacancies() {
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => {
+                        // Store the vacancy ID to filter applicants
+                        sessionStorage.setItem("filterVacancyId", vacancy.id);
+                        onTabChange?.("applicants");
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                      style={{ background: "rgba(34,197,94,0.1)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.2)" }}
+                    >
+                      <Eye size={13} /> View Applicants ({applicants.length})
+                    </button>
                     {isOpen && (
                       <button
                         onClick={() => handleClose(vacancy.id)}
