@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useMockData } from "@/context/MockDataContext";
+import { useState, useEffect } from "react";
+import { adminApi } from "@/lib/api";
 import { useInView } from "@/hooks/useInView";
 import {
   Users,
@@ -10,7 +10,6 @@ import {
   MapPin,
   Briefcase,
   Star,
-  ArrowUpRight,
 } from "lucide-react";
 import type { VerificationLevel } from "@/types";
 
@@ -29,18 +28,27 @@ const FILTER_OPTIONS: { value: string; label: string }[] = [
 ];
 
 export default function AdminTutors() {
-  const { allUsers, allTutorProfiles, allDocuments, getUserName, getUserEmail } = useMockData();
   const { ref, inView } = useInView();
-
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [tutors, setTutors] = useState<any[]>([]);
 
-  const tutors = allUsers.filter((u) => u.role === "tutor");
+  useEffect(() => {
+    adminApi.getTutors().then(setTutors).catch(() => {});
+  }, []);
 
-  const enriched = tutors.map((t) => {
-    const profile = allTutorProfiles.find((p) => p.userId === t.id);
-    const docs = allDocuments.filter((d) => d.tutorId === t.id);
-    return { ...t, profile, docs };
+  const enriched = tutors.map((t: any) => {
+    const profile = t.headline !== undefined ? {
+      userId: t.id,
+      headline: t.headline || "",
+      subjects: t.subjects || [],
+      experience: t.experience || 0,
+      education: t.education || "",
+      location: t.location || "",
+      rating: parseFloat(t.rating) || 0,
+      verificationLevel: t.verificationLevel || t.verification_level || "unverified",
+    } : null;
+    return { ...t, profile, docs: [] as any[] };
   });
 
   const filtered = enriched.filter((t) => {
@@ -51,7 +59,7 @@ export default function AdminTutors() {
         t.name.toLowerCase().includes(q) ||
         t.email.toLowerCase().includes(q) ||
         (t.profile?.headline ?? "").toLowerCase().includes(q) ||
-        (t.profile?.subjects ?? []).some((s) => s.toLowerCase().includes(q))
+        (t.profile?.subjects ?? []).some((s: string) => s.toLowerCase().includes(q))
       );
     }
     return true;
@@ -107,10 +115,10 @@ export default function AdminTutors() {
           </div>
         ) : (
           filtered.map((tutor, i) => {
-            const level = tutor.profile?.verificationLevel ?? "unverified";
-            const cfg = LEVEL_CONFIG[level];
+            const level = (tutor.profile?.verificationLevel ?? "unverified") as keyof typeof LEVEL_CONFIG;
+            const cfg = LEVEL_CONFIG[level] ?? LEVEL_CONFIG.unverified;
             const LevelIcon = cfg.icon;
-            const verifiedDocs = tutor.docs.filter((d) => d.status === "verified").length;
+            const verifiedDocs = tutor.docs.filter((d: any) => d.status === "verified").length;
 
             return (
               <div
@@ -124,7 +132,7 @@ export default function AdminTutors() {
                       className="w-12 h-12 rounded-xl flex items-center justify-center text-black font-bold text-sm shrink-0"
                       style={{ background: "linear-gradient(135deg, #22C55E, #16A34A)" }}
                     >
-                      {tutor.name.split(" ").map((n) => n[0]).join("")}
+                      {tutor.name.split(" ").map((n: string) => n[0]).join("")}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
@@ -167,7 +175,7 @@ export default function AdminTutors() {
                 {/* Subjects */}
                 {tutor.profile && (
                   <div className="flex flex-wrap gap-1.5 mt-3 ml-16">
-                    {tutor.profile.subjects.map((s) => (
+                    {tutor.profile.subjects.map((s: string) => (
                       <span
                         key={s}
                         className="px-2 py-0.5 rounded text-xs"

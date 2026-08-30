@@ -5,6 +5,8 @@ import AdminVerifications from "./AdminVerifications";
 import AdminDocuments from "./AdminDocuments";
 import AdminTutors from "./AdminTutors";
 import AdminAgencies from "./AdminAgencies";
+import AdminAdmins from "./AdminAdmins";
+import AdminSettings from "./AdminSettings";
 
 const TAB_COMPONENTS: Record<AdminTab, React.ComponentType<{ onTabChange?: (tab: AdminTab) => void }>> = {
   overview: AdminOverview,
@@ -12,7 +14,8 @@ const TAB_COMPONENTS: Record<AdminTab, React.ComponentType<{ onTabChange?: (tab:
   documents: AdminDocuments,
   tutors: AdminTutors,
   agencies: AdminAgencies,
-  settings: AdminOverview, // Placeholder
+  admins: AdminAdmins,
+  settings: AdminSettings,
 };
 
 export default function AdminDashboard() {

@@ -1,4 +1,6 @@
-import { useMockData } from "@/context/MockDataContext";
+import { useState, useEffect } from "react";
+import { useData } from "@/context/DataContext";
+import { adminApi } from "@/lib/api";
 import { useInView } from "@/hooks/useInView";
 import {
   Users,
@@ -8,24 +10,36 @@ import {
   Briefcase,
   Clock,
   CheckCircle2,
-  AlertCircle,
   ArrowUpRight,
 } from "lucide-react";
 import type { AdminTab } from "@/components/layout/AdminSidebar";
 
 interface OverviewProps {
-  onTabChange: (tab: AdminTab) => void;
+  onTabChange?: (tab: AdminTab) => void;
 }
 
 export default function AdminOverview({ onTabChange }: OverviewProps) {
-  const { allUsers, allTutorProfiles, allDocuments, allVerificationRequests, allOrganizations, getUserName } = useMockData();
+  const { allVerificationRequests, allOrganizations, getUserName } = useData();
   const { ref, inView } = useInView();
+  const [tutors, setTutors] = useState<any[]>([]);
+  const [tutorProfiles, setTutorProfiles] = useState<any[]>([]);
+  const [allDocs, setAllDocs] = useState<any[]>([]);
 
-  const tutors = allUsers.filter((u) => u.role === "tutor");
+  useEffect(() => {
+    adminApi.getTutors().then((data) => {
+      setTutors(data);
+      setTutorProfiles(data.filter((t: any) => t.headline !== undefined));
+    }).catch(() => {});
+    adminApi.getVerifications().then((data) => {
+      const docs = data.flatMap((vr: any) => (vr.documents || []));
+      setAllDocs(docs);
+    }).catch(() => {});
+  }, []);
+
   const pendingVerifications = allVerificationRequests.filter((vr) => vr.status === "pending" || vr.status === "under_review");
-  const approvedVerifications = allVerificationRequests.filter((vr) => vr.status === "approved");
-  const pendingDocs = allDocuments.filter((d) => d.status === "pending" || d.status === "under_review");
-  const verifiedTutors = allTutorProfiles.filter((p) => p.verificationLevel === "verified");
+
+  const pendingDocs = allDocs.filter((d: any) => d.status === "pending" || d.status === "under_review");
+  const verifiedTutors = tutorProfiles.filter((p: any) => (p.verificationLevel || p.verification_level) === "verified");
 
   return (
     <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
@@ -49,7 +63,7 @@ export default function AdminOverview({ onTabChange }: OverviewProps) {
           return (
             <button
               key={card.label}
-              onClick={() => onTabChange(card.tab)}
+              onClick={() => onTabChange?.(card.tab)}
               className={`text-left rounded-xl p-5 transition-all hover:-translate-y-0.5 fade-up delay-${(i + 1) * 100} ${inView ? "in-view" : ""}`}
               style={{ background: "#111111", border: "1px solid #1F1F1F" }}
             >
@@ -74,7 +88,7 @@ export default function AdminOverview({ onTabChange }: OverviewProps) {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-medium text-gray-400">Pending Verification Requests</h2>
           <button
-            onClick={() => onTabChange("verifications")}
+            onClick={() => onTabChange?.("verifications")}
             className="text-xs font-medium transition-colors"
             style={{ color: "#22C55E" }}
           >
@@ -123,7 +137,7 @@ export default function AdminOverview({ onTabChange }: OverviewProps) {
                       {vr.status.replace("_", " ")}
                     </span>
                     <button
-                      onClick={() => onTabChange("verifications")}
+                      onClick={() => onTabChange?.("verifications")}
                       className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                       style={{ background: "rgba(34,197,94,0.12)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.25)" }}
                     >

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useMockData } from "@/context/MockDataContext";
+import { useState, useEffect } from "react";
+import { adminApi } from "@/lib/api";
 import { useInView } from "@/hooks/useInView";
 import {
   Building2,
@@ -12,16 +12,23 @@ import {
 } from "lucide-react";
 
 export default function AdminAgencies() {
-  const { allOrganizations, vacancies, applications } = useMockData();
   const { ref, inView } = useInView();
-
   const [search, setSearch] = useState("");
+  const [organizations, setOrganizations] = useState<any[]>([]);
 
-  const enriched = allOrganizations.map((org) => {
-    const orgVacancies = vacancies.filter((v) => v.organizationId === org.id);
-    const applicantCount = orgVacancies.reduce((sum, v) => sum + v.applicantCount, 0);
-    return { ...org, vacancyCount: vacancies.length, applicantCount };
-  });
+  useEffect(() => {
+    adminApi.getAgencies().then(setOrganizations).catch(() => {});
+  }, []);
+
+  const enriched = organizations.map((org: any) => ({
+    ...org,
+    description: org.description || "",
+    location: org.location || "",
+    subjects: org.subjects || [],
+    isVerified: org.isVerified || org.is_verified || false,
+    vacancyCount: 0,
+    applicantCount: 0,
+  }));
 
   const filtered = enriched.filter((org) => {
     if (search) {
@@ -30,7 +37,7 @@ export default function AdminAgencies() {
         org.name.toLowerCase().includes(q) ||
         org.description.toLowerCase().includes(q) ||
         org.location.toLowerCase().includes(q) ||
-        org.subjects.some((s) => s.toLowerCase().includes(q))
+        org.subjects.some((s: string) => s.toLowerCase().includes(q))
       );
     }
     return true;
@@ -120,7 +127,7 @@ export default function AdminAgencies() {
               </div>
 
               <div className="flex flex-wrap gap-1.5">
-                {org.subjects.map((s) => (
+                {org.subjects.map((s: string) => (
                   <span
                     key={s}
                     className="px-2 py-0.5 rounded text-xs"

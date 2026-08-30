@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { useMockData } from "@/context/MockDataContext";
+import { useData } from "@/context/DataContext";
+import { adminApi } from "@/lib/api";
 import { useInView } from "@/hooks/useInView";
+import DocumentPreview from "@/components/shared/DocumentPreview";
 import {
   ShieldCheck,
   CheckCircle2,
@@ -9,6 +11,7 @@ import {
   FileText,
   AlertCircle,
   Eye,
+  Download,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -38,7 +41,7 @@ const FILTER_OPTIONS: { value: string; label: string }[] = [
 ];
 
 export default function AdminVerifications() {
-  const { allVerificationRequests, getUserName, approveDocument, rejectDocument, approveVerification, rejectVerification } = useMockData();
+  const { allVerificationRequests, getUserName, approveDocument, rejectDocument, approveVerification, rejectVerification } = useData();
   const { ref, inView } = useInView();
 
   const [filter, setFilter] = useState("all");
@@ -46,6 +49,7 @@ export default function AdminVerifications() {
   const [rejectModal, setRejectModal] = useState<{ type: "document" | "verification"; id: string; name: string } | null>(null);
   const [rejectNote, setRejectNote] = useState("");
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<{ downloadUrl: string; fileName: string; title: string } | null>(null);
 
   const filtered = filter === "all"
     ? allVerificationRequests
@@ -65,6 +69,29 @@ export default function AdminVerifications() {
     approveVerification(vrId);
     setSuccessMsg("Verification request approved. Tutor is now verified.");
     setTimeout(() => setSuccessMsg(null), 2500);
+  };
+
+  const handleDownload = async (docId: string, fileName: string) => {
+    try {
+      const { downloadUrl } = await adminApi.downloadDocument(docId);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Download error:", err);
+    }
+  };
+
+  const handlePreview = async (docId: string, fileName: string, title: string) => {
+    try {
+      const { downloadUrl } = await adminApi.downloadDocument(docId);
+      setPreviewDoc({ downloadUrl, fileName, title });
+    } catch (err) {
+      console.error("Preview error:", err);
+    }
   };
 
   const handleReject = () => {
@@ -206,6 +233,20 @@ export default function AdminVerifications() {
                               >
                                 {doc.status.replace("_", " ")}
                               </span>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handlePreview(doc.id, doc.fileName, doc.title); }}
+                                className="p-1 rounded-md transition-colors hover:bg-white/5"
+                                title="Preview"
+                              >
+                                <Eye size={13} className="text-gray-600 hover:text-blue-400" />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDownload(doc.id, doc.fileName); }}
+                                className="p-1 rounded-md transition-colors hover:bg-white/5"
+                                title="Download"
+                              >
+                                <Download size={13} className="text-gray-600 hover:text-emerald-400" />
+                              </button>
                               {canAct && (doc.status === "pending" || doc.status === "under_review") && (
                                 <div className="flex gap-1.5">
                                   <button
@@ -261,6 +302,16 @@ export default function AdminVerifications() {
           })
         )}
       </div>
+
+      {/* Document Preview Modal */}
+      {previewDoc && (
+        <DocumentPreview
+          downloadUrl={previewDoc.downloadUrl}
+          fileName={previewDoc.fileName}
+          title={previewDoc.title}
+          onClose={() => setPreviewDoc(null)}
+        />
+      )}
 
       {/* Reject Modal */}
       {rejectModal && (

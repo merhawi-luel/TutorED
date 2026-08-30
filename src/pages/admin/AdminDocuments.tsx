@@ -1,6 +1,8 @@
-import { useState } from "react";
-import { useMockData } from "@/context/MockDataContext";
+import { useState, useEffect } from "react";
+import { useData } from "@/context/DataContext";
+import { adminApi } from "@/lib/api";
 import { useInView } from "@/hooks/useInView";
+import DocumentPreview from "@/components/shared/DocumentPreview";
 import {
   FileText,
   CheckCircle2,
@@ -9,6 +11,7 @@ import {
   Eye,
   AlertCircle,
   Search,
+  Download,
 } from "lucide-react";
 import type { DocumentStatus, DocumentType } from "@/types";
 
@@ -39,16 +42,33 @@ const FILTER_OPTIONS: { value: string; label: string }[] = [
 ];
 
 export default function AdminDocuments() {
-  const { allDocuments, allUsers, getUserName, approveDocument, rejectDocument } = useMockData();
+  const { allDocuments, getUserName, approveDocument, rejectDocument } = useData();
   const { ref, inView } = useInView();
+  const [docs, setDocs] = useState(allDocuments);
+
+  useEffect(() => {
+    // Fetch fresh documents from verification data
+    adminApi.getVerifications().then((data) => {
+      const allDocs = data.flatMap((vr: any) => (vr.documents || []).map((d: any) => ({
+        ...d,
+        tutorId: d.tutorId || d.tutor_id,
+        fileName: d.fileName || d.file_name,
+        submittedAt: d.submittedAt || d.submitted_at,
+        reviewedAt: d.reviewedAt || d.reviewed_at,
+        reviewerNote: d.reviewerNote || d.reviewer_note,
+      })));
+      setDocs(allDocs);
+    }).catch(() => {});
+  }, []);
 
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [rejectTarget, setRejectTarget] = useState<{ id: string; name: string } | null>(null);
   const [rejectNote, setRejectNote] = useState("");
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<{ downloadUrl: string; fileName: string; title: string } | null>(null);
 
-  const filtered = allDocuments.filter((doc) => {
+  const filtered = docs.filter((doc) => {
     if (filter !== "all" && doc.status !== filter) return false;
     if (search) {
       const q = search.toLowerCase();
@@ -62,6 +82,29 @@ export default function AdminDocuments() {
     }
     return true;
   });
+
+  const handleDownload = async (docId: string, fileName: string) => {
+    try {
+      const { downloadUrl } = await adminApi.downloadDocument(docId);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Download error:", err);
+    }
+  };
+
+  const handlePreview = async (docId: string, fileName: string, title: string) => {
+    try {
+      const { downloadUrl } = await adminApi.downloadDocument(docId);
+      setPreviewDoc({ downloadUrl, fileName, title });
+    } catch (err) {
+      console.error("Preview error:", err);
+    }
+  };
 
   const handleApprove = (docId: string) => {
     approveDocument(docId);
@@ -173,7 +216,7 @@ export default function AdminDocuments() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <span
                     className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium"
                     style={{ background: `${cfg.color}18`, color: cfg.color }}
@@ -181,6 +224,20 @@ export default function AdminDocuments() {
                     <StatusIcon size={13} />
                     {cfg.label}
                   </span>
+                  <button
+                    onClick={() => handlePreview(doc.id, doc.fileName, doc.title)}
+                    className="p-1.5 rounded-lg transition-colors hover:bg-white/5"
+                    title="Preview"
+                  >
+                    <Eye size={14} className="text-gray-600 hover:text-blue-400" />
+                  </button>
+                  <button
+                    onClick={() => handleDownload(doc.id, doc.fileName)}
+                    className="p-1.5 rounded-lg transition-colors hover:bg-white/5"
+                    title="Download"
+                  >
+                    <Download size={14} className="text-gray-600 hover:text-emerald-400" />
+                  </button>
                   {canAct && (
                     <>
                       <button
@@ -205,6 +262,16 @@ export default function AdminDocuments() {
           })
         )}
       </div>
+
+      {/* Document Preview Modal */}
+      {previewDoc && (
+        <DocumentPreview
+          downloadUrl={previewDoc.downloadUrl}
+          fileName={previewDoc.fileName}
+          title={previewDoc.title}
+          onClose={() => setPreviewDoc(null)}
+        />
+      )}
 
       {/* Reject Modal */}
       {rejectTarget && (
