@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { LogIn, AlertCircle, Eye, EyeOff, CheckCircle, ArrowLeft } from "lucide-react";
 
 export default function Login() {
-  const { login, loginWithGoogle, verifyEmail, resendVerification } = useAuth();
+  const { login, loginWithGoogle, verifyEmail, resendVerification, user } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -40,7 +40,9 @@ export default function Login() {
       return;
     }
 
-    navigate("/tutor"); // Will be redirected based on role
+    // Redirect to role-specific dashboard
+    const redirect = user?.role === "agency" ? "/agency" : user?.role === "parent" ? "/parent" : user?.role === "admin" ? "/admin" : "/tutor";
+    navigate(redirect);
   };
 
   const handleGoogleLogin = async () => {
