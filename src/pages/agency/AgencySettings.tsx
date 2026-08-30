@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { useInView } from "@/hooks/useInView";
@@ -12,7 +12,12 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
+  Clock,
+  BadgeCheck,
+  XCircle,
 } from "lucide-react";
+
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
 export default function AgencySettings() {
   const { user, logout } = useAuth();
@@ -29,6 +34,62 @@ export default function AgencySettings() {
   const [newApplicantAlerts, setNewApplicantAlerts] = useState(true);
   const [vacancyDeadlines, setVacancyDeadlines] = useState(true);
   const [saved, setSaved] = useState(false);
+
+  // Payment state
+  const [paymentInfo, setPaymentInfo] = useState<{ paymentStatus: string; txRef: string | null; paidAt: string | null; isVerified: boolean } | null>(null);
+  const [paymentLoading, setPaymentLoading] = useState(true);
+  const [paying, setPaying] = useState(false);
+
+  useEffect(() => {
+    const fetchPaymentStatus = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/payment/status`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setPaymentInfo(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch payment status:", err);
+      } finally {
+        setPaymentLoading(false);
+      }
+    };
+    fetchPaymentStatus();
+  }, []);
+
+  const handlePayEntrance = async () => {
+    if (!user) return;
+    setPaying(true);
+    try {
+      const [firstName, ...lastNameParts] = (user.name || "").split(" ");
+      const response = await fetch(`${API_BASE}/agency/pay-entrance`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          email: user.email,
+          firstName: firstName || "Agency",
+          lastName: lastNameParts.join(" ") || "User",
+        }),
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to initialize payment");
+      }
+      const { checkoutUrl } = await response.json();
+      window.location.href = checkoutUrl;
+    } catch (err: any) {
+      alert(err.message || "Payment failed. Please try again.");
+    } finally {
+      setPaying(false);
+    }
+  };
+
+  const paymentStatus = paymentInfo?.paymentStatus || "unpaid";
 
   const inputStyle = { background: "#0D0D0D", border: "1px solid #1F1F1F" };
 
@@ -223,6 +284,97 @@ export default function AgencySettings() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Get Verified */}
+      <section
+        className={`rounded-2xl p-6 space-y-4 fade-up delay-350 ${inView ? "in-view" : ""}`}
+        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+      >
+        <div className="flex items-center gap-2 mb-1">
+          <BadgeCheck size={16} style={{ color: "#22C55E" }} />
+          <h2 className="text-sm font-medium text-gray-300">Get Verified</h2>
+        </div>
+
+        {paymentLoading ? (
+          <div className="flex items-center gap-2 text-gray-500 text-sm py-3">
+            <Loader2 size={14} className="animate-spin" />
+            Checking verification status...
+          </div>
+        ) : paymentStatus === "paid" ? (
+          <div className="space-y-3">
+            <div
+              className="rounded-xl px-4 py-3 flex items-center gap-3"
+              style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.25)" }}
+            >
+              <CheckCircle size={18} style={{ color: "#22C55E" }} />
+              <div>
+                <div className="text-sm text-green-400 font-medium">Agency Verified</div>
+                <div className="text-xs text-gray-500">
+                  Your agency has been verified. You can post vacancies and recruit tutors.
+                </div>
+              </div>
+            </div>
+            {paymentInfo?.paidAt && (
+              <p className="text-xs text-gray-600">
+                Verified on {new Date(paymentInfo.paidAt).toLocaleDateString()}
+              </p>
+            )}
+          </div>
+        ) : paymentStatus === "pending" ? (
+          <div className="space-y-3">
+            <div
+              className="rounded-xl px-4 py-3 flex items-center gap-3"
+              style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)" }}
+            >
+              <Clock size={18} style={{ color: "#F59E0B" }} />
+              <div>
+                <div className="text-sm text-yellow-400 font-medium">Payment Processing</div>
+                <div className="text-xs text-gray-500">
+                  Your payment is being processed. This may take a few minutes.
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-xl text-xs font-medium transition-all"
+              style={{ background: "rgba(245,158,11,0.12)", color: "#F59E0B", border: "1px solid rgba(245,158,11,0.25)" }}
+            >
+              Refresh Status
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-xs text-gray-500">
+              Pay a one-time entrance fee to get verified and start posting vacancies.
+            </p>
+            <div className="flex items-center justify-between rounded-xl px-4 py-3" style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}>
+              <div>
+                <div className="text-sm text-white">Entrance Fee</div>
+                <div className="text-xs text-gray-500">One-time payment, non-refundable unless rejected</div>
+              </div>
+              <span className="text-lg font-bold text-green-400">5,000 ETB</span>
+            </div>
+            <button
+              onClick={handlePayEntrance}
+              disabled={paying}
+              className="w-full px-6 py-3 rounded-xl text-sm font-medium transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+              style={{ background: "#22C55E", color: "black" }}
+            >
+              {paying ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <CreditCard size={14} />
+                  Pay Entrance Fee
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Billing */}
