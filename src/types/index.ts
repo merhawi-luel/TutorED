@@ -52,6 +52,7 @@ export interface Document {
   type: DocumentType;
   title: string;
   fileName: string;
+  fileKey?: string;
   status: DocumentStatus;
   submittedAt: string;
   reviewedAt?: string;
