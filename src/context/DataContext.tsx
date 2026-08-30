@@ -182,6 +182,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [agencyOrganization, setAgencyOrganization] = useState<Organization>({
     id: "", name: "My Organization", description: "", location: "", subjects: [], isVerified: false,
   });
+  const [agencyApplicants, setAgencyApplicants] = useState<(Application & { tutorName: string; tutorProfile: TutorProfile | null })[]>([]);
 
   const [loading, setLoading] = useState(true);
 
@@ -217,9 +218,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const fetchAgencyData = useCallback(async () => {
     try {
-      const [org, agencyVacancies] = await Promise.allSettled([
+      const [org, agencyVacancies, applicantsData] = await Promise.allSettled([
         agencyApi.getOrganization(),
         agencyApi.getVacancies(),
+        agencyApi.getApplicants(),
       ]);
 
       if (org.status === "fulfilled") {
@@ -227,6 +229,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
         
         if (agencyVacancies.status === "fulfilled") {
           setVacancies(agencyVacancies.value.map(mapVacancy));
+        }
+        if (applicantsData.status === "fulfilled") {
+          const mapped = applicantsData.value.map((a: any) => ({
+            ...mapApplication(a),
+            tutorName: a.tutorName || a.tutor_name || "Unknown",
+            tutorProfile: a.tutorProfile ? mapProfile(a.tutorProfile) : null,
+          }));
+          setAgencyApplicants(mapped);
         }
       } else {
         // 404 or other error - treat as no organization
@@ -458,12 +468,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [vacancies, agencyOrganization.id]);
 
   const getVacancyApplicants = useCallback(
-    (_vacancyId: string) => {
-      // This data needs to be fetched per vacancy - return from local state if available
-      // For now, we'll fetch on demand in the component
-      return [];
+    (vacancyId: string) => {
+      return agencyApplicants.filter((a) => a.vacancyId === vacancyId);
     },
-    []
+    [agencyApplicants]
   );
 
   const createVacancy = useCallback(
@@ -538,6 +546,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const refetchAgencyData = useCallback(async () => {
     return fetchAgencyData();
   }, [fetchAgencyData]);
+
+  const refreshApplicants = useCallback(async () => {
+    try {
+      const data = await agencyApi.getApplicants();
+      const mapped = data.map((a: any) => ({
+        ...mapApplication(a),
+        tutorName: a.tutorName || a.tutor_name || "Unknown",
+        tutorProfile: a.tutorProfile ? mapProfile(a.tutorProfile) : null,
+      }));
+      setAgencyApplicants(mapped);
+    } catch (err) {
+      console.error("Failed to refresh applicants:", err);
+    }
+  }, []);
 
   // ── Admin Actions ──
   const approveDocument = useCallback(
