@@ -60,6 +60,12 @@ export const tutorApi = {
   requestVerification: () =>
     request<any>("/tutor/verify", { method: "POST" }),
 
+  getEducationEntries: () => request<any[]>("/tutor/education-entries"),
+  createEducationEntry: (data: { name: string; title: string; description?: string }) =>
+    request<any>("/tutor/education-entries", { method: "POST", body: JSON.stringify(data) }),
+  deleteEducationEntry: (id: string) =>
+    request<any>(`/tutor/education-entries/${id}`, { method: "DELETE" }),
+
   getVacancies: () => request<any[]>("/tutor/vacancies"),
 };
 
@@ -125,6 +131,12 @@ export const adminApi = {
   previewDocument: (id: string) =>
     request<{ previewUrl: string; fileName: string; type: string; title: string; tutorName: string; tutorEmail: string }>(`/admin/documents/${id}/preview`),
 
+  getEducationEntries: () => request<any[]>("/admin/education-entries"),
+  approveEducationEntry: (id: string) =>
+    request<any>(`/admin/education-entries/${id}/approve`, { method: "PUT" }),
+  rejectEducationEntry: (id: string, note?: string) =>
+    request<any>(`/admin/education-entries/${id}/reject`, { method: "PUT", body: JSON.stringify({ note }) }),
+
   getTutors: () => request<any[]>("/admin/tutors"),
   getAgencies: () => request<any[]>("/admin/agencies"),
   getAdmins: () => request<any[]>("/admin/admins"),
@@ -146,6 +158,7 @@ export const parentApi = {
   closeVacancy: (id: string) =>
     request<any>(`/parent/vacancies/${id}/close`, { method: "PUT" }),
   getAgencies: () => request<any[]>("/parent/agencies"),
+  getSubjects: () => request<string[]>("/parent/subjects"),
   contactAgency: (data: { organizationId?: string; subject: string; grade: string; location?: string; notes?: string; parentName?: string; parentEmail?: string; parentPhone?: string }) =>
     request<any>("/parent/contact-agency", { method: "POST", body: JSON.stringify(data) }),
   getRequests: () => request<any[]>("/parent/requests"),

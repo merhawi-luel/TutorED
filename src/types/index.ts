@@ -84,6 +84,22 @@ export interface Organization {
   logoUrl?: string;
 }
 
+// ─── Education Entries ──────────────────────────────────────────
+
+export type EducationEntryStatus = "pending" | "approved" | "rejected";
+
+export interface EducationEntry {
+  id: string;
+  tutorId: string;
+  name: string;
+  title: string;
+  description: string;
+  status: EducationEntryStatus;
+  submittedAt: string;
+  reviewedAt?: string;
+  reviewerNote?: string;
+}
+
 // ─── Vacancies ─────────────────────────────────────────────────
 
 export type VacancyStatus = "open" | "closed" | "draft";
