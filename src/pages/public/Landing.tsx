@@ -7,10 +7,12 @@ import Features from "@/components/sections/Features";
 import VacanciesPreview from "@/components/sections/VacanciesPreview";
 import Pricing from "@/components/sections/Pricing";
 import CTA from "@/components/sections/CTA";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function Landing() {
+  const { colors } = useTheme();
   return (
-    <div className="min-h-screen" style={{ fontFamily: "Outfit, sans-serif" }}>
+    <div className="min-h-screen" style={{ fontFamily: "Outfit, sans-serif", background: colors.bgPage }}>
       <Navbar />
       <Hero />
       <Problem />

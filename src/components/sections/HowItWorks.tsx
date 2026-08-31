@@ -1,23 +1,24 @@
+import { useTheme } from "@/context/ThemeContext";
 import { HOW_IT_WORKS } from "@/data/landing";
 import SectionHeader from "@/components/shared/SectionHeader";
 import { useInView } from "@/hooks/useInView";
 
 export default function HowItWorks() {
   const { ref: sectionRef, inView } = useInView();
+  const { colors, isDark } = useTheme();
 
   return (
     <section
       id="how-it-works"
       ref={sectionRef as React.RefObject<HTMLElement>}
       className="py-16 sm:py-24 px-4 sm:px-6 md:px-12"
-      style={{ background: "linear-gradient(160deg, #000000 0%, #050F07 50%, #000000 100%)" }}
+      style={{ background: isDark ? "linear-gradient(160deg, #000000 0%, #050F07 50%, #000000 100%)" : `linear-gradient(160deg, ${colors.bgPage} 0%, ${colors.bgCard} 50%, ${colors.bgPage} 100%)` }}
     >
       <div className="max-w-6xl mx-auto">
         <div className={`fade-up ${inView ? "in-view" : ""}`}>
           <SectionHeader
             label="How it Works"
             title="One identity. Every opportunity."
-            dark
           />
         </div>
 
@@ -25,7 +26,7 @@ export default function HowItWorks() {
           {/* Connector line */}
           <div
             className="hidden md:block absolute top-8 left-1/4 right-1/4 h-px opacity-20"
-            style={{ background: "linear-gradient(to right, transparent, #22C55E, transparent)" }}
+            style={{ background: `linear-gradient(to right, transparent, ${colors.accent}, transparent)` }}
           />
 
           {HOW_IT_WORKS.map((step, i) => (
@@ -35,21 +36,19 @@ export default function HowItWorks() {
             >
               <div
                 className="rounded-2xl p-8 h-full"
-                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+                style={{ background: colors.bgCard, border: `1px solid ${colors.borderColor}` }}
               >
                 <div className="flex items-center justify-between mb-6">
                   <span
                     className="text-3xl sm:text-4xl font-light"
-                    style={{ fontFamily: "DM Mono, monospace", color: "rgba(255,255,255,0.15)" }}
+                    style={{ fontFamily: "DM Mono, monospace", color: colors.textFaint }}
                   >
                     {step.step}
                   </span>
-                  <span className="text-xl sm:text-2xl" style={{ color: "#4ADE80" }}>
-                    {step.icon}
-                  </span>
+                  <span className="text-xl sm:text-2xl">{step.icon}</span>
                 </div>
-                <h3 className="text-white font-semibold text-lg mb-2">{step.title}</h3>
-                <p className="text-gray-400 text-base leading-relaxed">{step.desc}</p>
+                <h3 className="font-semibold text-lg mb-2" style={{ color: colors.textPrimary }}>{step.title}</h3>
+                <p className="text-base leading-relaxed" style={{ color: colors.textSecondary }}>{step.desc}</p>
               </div>
             </div>
           ))}
@@ -58,7 +57,7 @@ export default function HowItWorks() {
         {/* Verification flow visual */}
         <div
           className={`mt-12 sm:mt-16 rounded-2xl p-6 md:p-8 flex flex-wrap items-center justify-center gap-3 text-center fade-up delay-400 ${inView ? "in-view" : ""}`}
-          style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)" }}
+          style={{ background: colors.accentBg, border: `1px solid ${colors.accentBorder}` }}
         >
           {["Tutor Registration", "→", "Create Profile", "→", "Upload Docs", "→", "Verification Queue", "→", "✓ Verified Badge"].map(
             (item, i) => (
@@ -66,17 +65,17 @@ export default function HowItWorks() {
                 key={i}
                 className={
                   item === "→"
-                    ? "text-gray-600 text-lg hidden sm:inline"
+                    ? "text-lg hidden sm:inline"
                     : item.startsWith("✓")
                     ? "px-3 py-1.5 rounded-lg font-medium text-xs"
-                    : "px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                    : "px-3 py-1.5 rounded-lg text-xs font-medium"
                 }
                 style={
                   item === "→"
-                    ? {}
+                    ? { color: colors.textFaint }
                     : item.startsWith("✓")
-                    ? { background: "#22C55E", color: "black" }
-                    : { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }
+                    ? { background: colors.accent, color: "#fff" }
+                    : { background: colors.bgCard, border: `1px solid ${colors.borderColor}`, color: colors.textPrimary }
                 }
               >
                 {item}

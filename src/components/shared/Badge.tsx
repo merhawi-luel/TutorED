@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTheme } from "@/context/ThemeContext";
 
 type BadgeVariant = "default" | "success" | "danger" | "info";
 
@@ -8,17 +9,20 @@ interface BadgeProps {
   className?: string;
 }
 
-const VARIANT_STYLES: Record<BadgeVariant, string> = {
-  default: "bg-white/5 border border-white/10 text-gray-300",
-  success: "bg-emerald-500/20 border border-emerald-500/30 text-emerald-300",
-  danger: "bg-red-500/20 border border-red-500/30 text-red-300",
-  info: "bg-primary/20 border border-primary/30 text-emerald-300",
-};
-
 export default function Badge({ children, variant = "default", className = "" }: BadgeProps) {
+  const { colors } = useTheme();
+
+  const styleMap: Record<BadgeVariant, React.CSSProperties> = {
+    default: { background: colors.accentBg, border: `1px solid ${colors.accentBorder}`, color: colors.textSecondary },
+    success: { background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)", color: "#22C55E" },
+    danger: { background: colors.dangerBg, border: `1px solid ${colors.dangerBorder}`, color: colors.dangerColor },
+    info: { background: colors.accentBg, border: `1px solid ${colors.accentBorder}`, color: colors.accent },
+  };
+
   return (
     <span
-      className={`inline-flex items-center gap-2 px-2 py-0.5 rounded-full text-xs font-medium ${VARIANT_STYLES[variant]} ${className}`}
+      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${className}`}
+      style={styleMap[variant]}
     >
       {children}
     </span>

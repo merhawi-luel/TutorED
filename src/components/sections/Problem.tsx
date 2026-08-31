@@ -1,3 +1,4 @@
+import { useTheme } from "@/context/ThemeContext";
 import { PROBLEMS } from "@/data/landing";
 import SectionHeader from "@/components/shared/SectionHeader";
 import { FolderX, SearchX, ShieldQuestion } from "lucide-react";
@@ -7,12 +8,13 @@ const PROBLEM_ICONS = [FolderX, SearchX, ShieldQuestion];
 
 export default function Problem() {
   const { ref: sectionRef, inView } = useInView();
+  const { colors, isDark } = useTheme();
 
   return (
     <section
       ref={sectionRef as React.RefObject<HTMLElement>}
       className="py-16 sm:py-24 px-4 sm:px-6 md:px-12"
-      style={{ background: "linear-gradient(160deg, #000000 0%, #050F07 50%, #000000 100%)" }}
+      style={{ background: isDark ? "linear-gradient(160deg, #000000 0%, #050F07 50%, #000000 100%)" : `linear-gradient(160deg, ${colors.bgPage} 0%, ${colors.bgCard} 50%, ${colors.bgPage} 100%)` }}
     >
       <div className="max-w-6xl mx-auto">
         <div className={`fade-up ${inView ? "in-view" : ""}`}>
@@ -20,7 +22,6 @@ export default function Problem() {
             label="The Problem"
             title="Education recruitment is broken"
             description="Vacancies spread across Telegram groups. Credentials verified manually every time. Trust is impossible to scale."
-            dark
           />
         </div>
 
@@ -33,21 +34,21 @@ export default function Problem() {
               <div
                 key={p.role}
                 className={`rounded-2xl p-8 slide-right ${delay} ${floatClass} ${inView ? "in-view" : ""}`}
-                style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+                style={{ background: colors.bgCard, border: `1px solid ${colors.borderColor}` }}
               >
                 <div
                   className="w-14 h-14 rounded-xl flex items-center justify-center mb-5"
-                  style={{ background: "rgba(13, 193, 100, 0.64)", border: "1px solid rgba(239,68,68,0.18)" }}
+                  style={{ background: colors.dangerBg, border: `1px solid ${colors.dangerBorder}` }}
                 >
-                  <Icon size={24} color="#EF4444" strokeWidth={1.5} />
+                  <Icon size={24} color={colors.dangerColor} strokeWidth={1.5} />
                 </div>
-                <h3 className="font-semibold text-white text-lg mb-4">For {p.role}</h3>
+                <h3 className="font-semibold text-lg mb-4" style={{ color: colors.textPrimary }}>For {p.role}</h3>
                 <ul className="space-y-3">
                   {p.pain.map((item) => (
-                    <li key={item} className="flex items-start gap-3 text-base leading-relaxed text-gray-400">
+                    <li key={item} className="flex items-start gap-3 text-base leading-relaxed" style={{ color: colors.textSecondary }}>
                       <span
                         className="mt-1 w-4 h-4 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
-                        style={{ background: "rgba(235, 234, 234, 0.99)", color: "#ff0000" }}
+                        style={{ background: colors.dangerBg, color: colors.dangerColor }}
                       >
                         ✕
                       </span>
