@@ -69,6 +69,9 @@ export const tutorApi = {
   getVacancies: () => request<any[]>("/tutor/vacancies"),
   applyToVacancy: (vacancyId: string) =>
     request<any>("/tutor/applications", { method: "POST", body: JSON.stringify({ vacancyId }) }),
+
+  getReviews: () => request<any[]>("/tutor/reviews"),
+  getReviewStats: () => request<{ averageRating: number; totalReviews: number }>("/tutor/reviews/stats"),
 };
 
 // ─── Applications ──────────────────────────────────────────────
@@ -173,6 +176,10 @@ export const parentApi = {
     request<{ previewUrl: string; fileName: string; type: string; title: string }>(`/parent/documents/${docId}/preview`),
   downloadTutorDocument: (docId: string) =>
     request<{ downloadUrl: string; fileName: string }>(`/parent/documents/${docId}/download`),
+
+  // Reviews
+  submitReview: (data: { applicationId: string; rating: number; description?: string }) =>
+    request<any>("/parent/reviews", { method: "POST", body: JSON.stringify(data) }),
 };
 
 // ─── Upload ────────────────────────────────────────────────────

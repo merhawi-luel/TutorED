@@ -132,6 +132,7 @@ export type ApplicationStatus =
   | "shortlisted"
   | "interview"
   | "accepted"
+  | "completed"
   | "rejected"
   | "withdrawn";
 
@@ -144,4 +145,17 @@ export interface Application {
   status: ApplicationStatus;
   appliedAt: string;
   updatedAt: string;
+}
+
+// ─── Reviews ────────────────────────────────────────────────
+
+export interface Review {
+  id: string;
+  applicationId: string;
+  parentId: string;
+  tutorId: string;
+  rating: number;
+  description: string;
+  createdAt: string;
+  parentName?: string;
 }

@@ -10,9 +10,10 @@ import {
   organizations,
   users,
   educationEntries,
+  tutorReviews,
 } from "../db/schema";
 import { requireAuth, requireRole } from "../middleware/auth";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -586,6 +587,57 @@ router.delete("/education-entries/:id", requireAuth, requireRole("tutor"), async
     res.json({ success: true });
   } catch (error) {
     console.error("Delete education entry error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── GET /api/tutor/reviews ───────────────────────────────
+router.get("/reviews", requireAuth, requireRole("tutor"), async (req, res) => {
+  try {
+    const userId = req.user!.userId;
+
+    const reviews = await db
+      .select({
+        id: tutorReviews.id,
+        applicationId: tutorReviews.applicationId,
+        parentId: tutorReviews.parentId,
+        tutorId: tutorReviews.tutorId,
+        rating: tutorReviews.rating,
+        description: tutorReviews.description,
+        createdAt: tutorReviews.createdAt,
+        parentName: users.name,
+      })
+      .from(tutorReviews)
+      .innerJoin(users, eq(tutorReviews.parentId, users.id))
+      .where(eq(tutorReviews.tutorId, userId))
+      .orderBy(desc(tutorReviews.createdAt));
+
+    res.json(reviews);
+  } catch (error) {
+    console.error("Get tutor reviews error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── GET /api/tutor/reviews/stats ──────────────────────────
+router.get("/reviews/stats", requireAuth, requireRole("tutor"), async (req, res) => {
+  try {
+    const userId = req.user!.userId;
+
+    const [stats] = await db
+      .select({
+        avg: sql<number>`COALESCE(AVG(${tutorReviews.rating}), 0)`,
+        count: sql<number>`COUNT(${tutorReviews.id})`,
+      })
+      .from(tutorReviews)
+      .where(eq(tutorReviews.tutorId, userId));
+
+    res.json({
+      averageRating: Number(Number(stats.avg).toFixed(1)),
+      totalReviews: Number(stats.count),
+    });
+  } catch (error) {
+    console.error("Get tutor review stats error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

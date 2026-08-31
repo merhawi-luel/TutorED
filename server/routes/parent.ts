@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { createClient } from "@supabase/supabase-js";
 import { db } from "../db";
-import { parentProfiles, vacancies, organizations, recruitmentRequests, users, applications, tutorProfiles, documents, educationEntries } from "../db/schema";
+import { parentProfiles, vacancies, organizations, recruitmentRequests, users, applications, tutorProfiles, documents, educationEntries, tutorReviews } from "../db/schema";
 import { requireAuth } from "../middleware/auth";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -553,6 +553,81 @@ router.get("/documents/:id/download", requireAuth, async (req, res) => {
     res.json({ downloadUrl: data.signedUrl, fileName: doc.fileName });
   } catch (error) {
     console.error("Download document error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── POST /api/parent/reviews ─────────────────────────────
+router.post("/reviews", requireAuth, async (req, res) => {
+  try {
+    const { applicationId, rating, description } = req.body;
+    const userId = req.user!.userId;
+
+    if (!applicationId || !rating) {
+      return res.status(400).json({ error: "applicationId and rating are required" });
+    }
+
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ error: "Rating must be between 1 and 5" });
+    }
+
+    // Verify the application exists, is completed, and belongs to this parent's vacancy
+    const [app] = await db
+      .select()
+      .from(applications)
+      .innerJoin(vacancies, eq(applications.vacancyId, vacancies.id))
+      .where(
+        and(
+          eq(applications.id, applicationId),
+          eq(vacancies.parentId, userId),
+          eq(applications.status, "completed")
+        )
+      )
+      .limit(1);
+
+    if (!app) {
+      return res.status(404).json({ error: "Completed application not found or not authorized" });
+    }
+
+    // Check if review already exists for this application
+    const [existing] = await db
+      .select()
+      .from(tutorReviews)
+      .where(eq(tutorReviews.applicationId, applicationId))
+      .limit(1);
+
+    if (existing) {
+      return res.status(400).json({ error: "You have already reviewed this application" });
+    }
+
+    // Create the review
+    const [review] = await db
+      .insert(tutorReviews)
+      .values({
+        applicationId,
+        parentId: userId,
+        tutorId: app.applications.tutorId,
+        rating,
+        description: description || "",
+      })
+      .returning();
+
+    // Update tutor's average rating
+    const [avgResult] = await db
+      .select({ avg: sql<number>`AVG(${tutorReviews.rating})` })
+      .from(tutorReviews)
+      .where(eq(tutorReviews.tutorId, app.applications.tutorId));
+
+    if (avgResult?.avg != null) {
+      await db
+        .update(tutorProfiles)
+        .set({ rating: String(Number(avgResult.avg).toFixed(1)) })
+        .where(eq(tutorProfiles.userId, app.applications.tutorId));
+    }
+
+    res.json(review);
+  } catch (error) {
+    console.error("Create review error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

@@ -1,4 +1,5 @@
 import { useTheme } from "@/context/ThemeContext";
+import { useData } from "@/context/DataContext";
 import { useState, useEffect, useCallback } from "react";
 import { parentApi } from "@/lib/api";
 import { useInView } from "@/hooks/useInView";
@@ -56,6 +57,7 @@ const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
   shortlisted: { color: "var(--accent)", label: "Shortlisted" },
   interview: { color: "var(--badge-purple-color)", label: "Interview" },
   accepted: { color: "var(--accent)", label: "Accepted" },
+  completed: { color: "var(--accent)", label: "Completed" },
   rejected: { color: "var(--danger-color)", label: "Rejected" },
   withdrawn: { color: "var(--text-muted)", label: "Withdrawn" },
 };
@@ -88,6 +90,7 @@ const VERIFICATION_CONFIG: Record<string, { color: string; label: string }> = {
 
 export default function ParentApplicants() {
   const { ref, inView } = useInView();
+  const { submitReview, reviews } = useData();
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -98,6 +101,14 @@ export default function ParentApplicants() {
     tutorProfile: TutorProfile | null;
     educationEntries: EducationEntry[];
   }>({ isOpen: false, tutorId: "", tutorName: "", tutorProfile: null, educationEntries: [] });
+  const [reviewModal, setReviewModal] = useState<{
+    isOpen: boolean;
+    applicationId: string;
+    tutorName: string;
+  }>({ isOpen: false, applicationId: "", tutorName: "" });
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewDescription, setReviewDescription] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
   const fetchApplicants = useCallback(async () => {
     setLoading(true);
@@ -153,6 +164,30 @@ export default function ParentApplicants() {
   useEffect(() => {
     fetchApplicants();
   }, [fetchApplicants]);
+
+  const handleSubmitReview = async () => {
+    if (reviewRating === 0) return;
+    setReviewSubmitting(true);
+    try {
+      await submitReview({
+        applicationId: reviewModal.applicationId,
+        rating: reviewRating,
+        description: reviewDescription,
+      });
+      setReviewModal({ isOpen: false, applicationId: "", tutorName: "" });
+      setReviewRating(0);
+      setReviewDescription("");
+      fetchApplicants();
+    } catch (err) {
+      console.error("Failed to submit review:", err);
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
+  const hasReviewed = (applicationId: string) => {
+    return reviews.some(r => r.applicationId === applicationId);
+  };
 
   // Sort: applied first, then by date
   const sorted = [...applicants].sort((a, b) => {
@@ -401,6 +436,27 @@ export default function ParentApplicants() {
                         >
                           <Eye size={13} /> View Full Profile & Documents
                         </button>
+                        {applicant.status === "completed" && !hasReviewed(applicant.id) && (
+                          <button
+                            onClick={() => setReviewModal({ isOpen: true, applicationId: applicant.id, tutorName: applicant.tutorName })}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium transition-all"
+                            style={{
+                              background: "var(--accent)",
+                              color: "#FFFFFF",
+                              border: "none",
+                            }}
+                          >
+                            <Star size={13} /> Leave Review
+                          </button>
+                        )}
+                        {applicant.status === "completed" && hasReviewed(applicant.id) && (
+                          <span
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium"
+                            style={{ background: "var(--accent-bg)", color: "var(--accent)" }}
+                          >
+                            <CheckCircle2 size={13} /> Reviewed
+                          </span>
+                        )}
                       </div>
                     </div>
                   )}
@@ -838,6 +894,99 @@ function ParentApplicantProfileModal({
               style={{ height: "calc(90vh - 60px)" }}
               title={previewDoc.title}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Review Modal */}
+      {reviewModal.isOpen && (
+        <div className="fixed inset-0 z-[50] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setReviewModal({ isOpen: false, applicationId: "", tutorName: "" })} />
+          <div
+            className="relative w-full max-w-md rounded-2xl p-6"
+            style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
+                Review {reviewModal.tutorName}
+              </h3>
+              <button
+                onClick={() => setReviewModal({ isOpen: false, applicationId: "", tutorName: "" })}
+                className="p-1.5 rounded-lg hover:bg-black/5"
+              >
+                <X size={18} style={{ color: "var(--text-muted)" }} />
+              </button>
+            </div>
+
+            {/* Star Rating */}
+            <div className="mb-4">
+              <label className="text-sm font-medium mb-2 block" style={{ color: "var(--text-secondary)" }}>
+                Rating *
+              </label>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => setReviewRating(star)}
+                    className="p-1 transition-all hover:scale-110"
+                  >
+                    <Star
+                      size={28}
+                      style={{ color: star <= reviewRating ? "var(--accent)" : "var(--text-faint)" }}
+                      fill={star <= reviewRating ? "var(--accent)" : "none"}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="mb-5">
+              <label className="text-sm font-medium mb-2 block" style={{ color: "var(--text-secondary)" }}>
+                Your Review
+              </label>
+              <textarea
+                value={reviewDescription}
+                onChange={(e) => setReviewDescription(e.target.value)}
+                placeholder="Share your experience with this tutor..."
+                rows={4}
+                className="w-full px-4 py-3 rounded-xl text-sm resize-none outline-none"
+                style={{
+                  background: "var(--bg-input)",
+                  border: "1px solid var(--border-color)",
+                  color: "var(--text-primary)",
+                }}
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setReviewModal({ isOpen: false, applicationId: "", tutorName: "" })}
+                className="px-4 py-2 rounded-xl text-sm font-medium"
+                style={{
+                  background: "var(--bg-input)",
+                  border: "1px solid var(--border-color)",
+                  color: "var(--text-secondary)",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmitReview}
+                disabled={reviewRating === 0 || reviewSubmitting}
+                className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold transition-all"
+                style={{
+                  background: reviewRating === 0 ? "var(--text-faint)" : "var(--accent)",
+                  color: "#FFFFFF",
+                  border: "none",
+                  opacity: reviewSubmitting ? 0.7 : 1,
+                  cursor: reviewRating === 0 ? "not-allowed" : "pointer",
+                }}
+              >
+                {reviewSubmitting ? "Submitting..." : "Submit Review"}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config({ override: true });
 import bcrypt from "bcryptjs";
 import { db, schema } from "./index";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 async function seed() {
   console.log("🌱 Seeding database...");
@@ -13,6 +13,7 @@ async function seed() {
   await db.delete(schema.vacancies);
   await db.delete(schema.verificationRequests);
   await db.delete(schema.documents);
+  await db.delete(schema.tutorReviews);
   await db.delete(schema.educationEntries);
   await db.delete(schema.tutorProfiles);
   await db.delete(schema.organizationMembers);
@@ -60,7 +61,12 @@ async function seed() {
     .values({ name: "Admin User", email: "admin@eduverify.com", passwordHash, role: "admin" })
     .returning({ id: schema.users.id });
 
-  console.log("  ✓ Created users (5 tutors, 1 agency, 1 admin)");
+  const [parent1] = await db
+    .insert(schema.users)
+    .values({ name: "Alem Girma", email: "alem@example.com", passwordHash, role: "parent" })
+    .returning({ id: schema.users.id });
+
+  console.log("  ✓ Created users (5 tutors, 1 agency, 1 admin, 1 parent)");
 
   // ─── Tutor Profiles ──────────────────────────────────────
 
@@ -143,6 +149,17 @@ async function seed() {
   ]);
 
   console.log("  ✓ Created tutor profiles");
+
+  // ─── Parent Profiles ──────────────────────────────────────
+  await db.insert(schema.parentProfiles).values({
+    userId: parent1.id,
+    phone: "+251911223344",
+    childrenGrades: ["Grade 10", "Grade 11"],
+    preferredSubjects: ["Mathematics", "English"],
+    location: "Addis Ababa",
+    notes: "Looking for experienced tutors for my children.",
+  });
+  console.log("  ✓ Created parent profile");
 
   // ─── Organizations ───────────────────────────────────────
 
@@ -415,13 +432,82 @@ async function seed() {
     { tutorId: tutor2.id, vacancyId: v5.id, status: "shortlisted", appliedAt: new Date("2026-08-03"), updatedAt: new Date("2026-08-07") },
     { tutorId: tutor3.id, vacancyId: v1.id, status: "under_review", appliedAt: new Date("2026-08-04"), updatedAt: new Date("2026-08-06") },
     { tutorId: tutor3.id, vacancyId: v2.id, status: "applied", appliedAt: new Date("2026-08-16"), updatedAt: new Date("2026-08-16") },
-    { tutorId: tutor3.id, vacancyId: v7.id, status: "accepted", appliedAt: new Date("2026-07-16"), updatedAt: new Date("2026-07-28") },
+    { tutorId: tutor3.id, vacancyId: v7.id, status: "completed", appliedAt: new Date("2026-07-16"), updatedAt: new Date("2026-08-15") },
     { tutorId: tutor4.id, vacancyId: v6.id, status: "shortlisted", appliedAt: new Date("2026-07-30"), updatedAt: new Date("2026-08-02") },
-    { tutorId: tutor4.id, vacancyId: v3.id, status: "accepted", appliedAt: new Date("2026-07-30"), updatedAt: new Date("2026-08-10") },
+    { tutorId: tutor4.id, vacancyId: v3.id, status: "completed", appliedAt: new Date("2026-07-30"), updatedAt: new Date("2026-08-18") },
     { tutorId: tutor5.id, vacancyId: v4.id, status: "applied", appliedAt: new Date("2026-08-14"), updatedAt: new Date("2026-08-14") },
   ]);
 
   console.log("  ✓ Created 12 applications");
+
+  // ─── Reviews ──────────────────────────────────────────────
+  await db.delete(schema.tutorReviews);
+
+  // Find completed applications to review
+  const completedApps = await db.select().from(schema.applications).where(eq(schema.applications.status, "completed"));
+  const acceptedApps = await db.select().from(schema.applications).where(eq(schema.applications.status, "accepted"));
+
+  // Create reviews for some completed/accepted applications
+  const reviewsData: any[] = [];
+
+  // If we have completed apps, use those; otherwise use accepted apps
+  const appsToReview = completedApps.length > 0 ? completedApps : acceptedApps.slice(0, 3);
+
+  if (appsToReview.length > 0 && parent1) {
+    reviewsData.push(
+      {
+        applicationId: appsToReview[0].id,
+        parentId: parent1.id,
+        tutorId: appsToReview[0].tutorId,
+        rating: 5,
+        description: "Excellent tutor! My child's grades improved significantly. Very patient and professional.",
+        createdAt: new Date("2026-08-20"),
+      }
+    );
+  }
+  if (appsToReview.length > 1 && parent1) {
+    reviewsData.push(
+      {
+        applicationId: appsToReview[1].id,
+        parentId: parent1.id,
+        tutorId: appsToReview[1].tutorId,
+        rating: 4,
+        description: "Good teaching style and well-prepared sessions. Would recommend.",
+        createdAt: new Date("2026-08-22"),
+      }
+    );
+  }
+  if (appsToReview.length > 2 && parent1) {
+    reviewsData.push(
+      {
+        applicationId: appsToReview[2].id,
+        parentId: parent1.id,
+        tutorId: appsToReview[2].tutorId,
+        rating: 3,
+        description: "Decent tutor, but could improve on time management.",
+        createdAt: new Date("2026-08-25"),
+      }
+    );
+  }
+
+  if (reviewsData.length > 0) {
+    await db.insert(schema.tutorReviews).values(reviewsData);
+    console.log(`  ✓ Created ${reviewsData.length} reviews`);
+  }
+
+  // Update tutor ratings based on reviews
+  for (const review of reviewsData) {
+    const avgResult = await db
+      .select({ avg: sql`AVG(${schema.tutorReviews.rating})` })
+      .from(schema.tutorReviews)
+      .where(eq(schema.tutorReviews.tutorId, review.tutorId));
+    if (avgResult[0]?.avg != null) {
+      await db
+        .update(schema.tutorProfiles)
+        .set({ rating: String(Number(avgResult[0].avg).toFixed(1)) })
+        .where(eq(schema.tutorProfiles.userId, review.tutorId));
+    }
+  }
 
   // ─── Done ────────────────────────────────────────────────
 

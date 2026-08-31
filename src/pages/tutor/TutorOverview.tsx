@@ -11,6 +11,7 @@ import {
   Clock,
   AlertCircle,
   GraduationCap,
+  Star,
 } from "lucide-react";
 import type { TutorTab } from "@/components/layout/TutorSidebar";
 
@@ -34,7 +35,7 @@ const VERIFICATION_INFO: Record<string, { label: string; color: string; icon: ty
 
 export default function TutorOverview({ onTabChange }: OverviewProps) {
   const onTab = onTabChange ?? (() => {});
-  const { tutorProfile, documents, applications, educationEntries } = useData();
+  const { tutorProfile, documents, applications, educationEntries, reviews } = useData();
   const { colors } = useTheme();
   const { ref, inView } = useInView();
 
@@ -42,6 +43,7 @@ export default function TutorOverview({ onTabChange }: OverviewProps) {
   const pendingDocs = documents.filter((d) => d.status === "pending" || d.status === "under_review").length;
   const shortlisted = applications.filter((a) => a.status === "shortlisted").length;
   const approvedEducation = educationEntries.filter((e) => e.status === "approved").length;
+  const avgRating = reviews.length > 0 ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1) : "0.0";
 
   const vLevel = tutorProfile?.verificationLevel ?? "unverified";
   const vInfo = VERIFICATION_INFO[vLevel];
@@ -168,6 +170,53 @@ export default function TutorOverview({ onTabChange }: OverviewProps) {
           )}
         </div>
       </div>
+
+      {/* Reviews Section */}
+      {reviews.length > 0 && (
+        <div className={`fade-up delay-700 ${inView ? "in-view" : ""}`}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-medium" style={{ color: colors.textSecondary }}>Reviews from Parents</h2>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: colors.accentBg }}>
+              <Star size={14} style={{ color: colors.accent }} fill={colors.accent} />
+              <span className="text-sm font-semibold" style={{ color: colors.accent }}>{avgRating}</span>
+              <span className="text-xs" style={{ color: colors.textMuted }}>({reviews.length})</span>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {reviews.slice(0, 5).map((review) => (
+              <div
+                key={review.id}
+                className="rounded-xl px-5 py-4"
+                style={{ background: colors.bgCard, border: `1px solid ${colors.borderColor}` }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium" style={{ color: colors.textPrimary }}>
+                    {review.parentName || "Parent"}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        size={12}
+                        style={{ color: i < review.rating ? colors.accent : colors.textFaint }}
+                        fill={i < review.rating ? colors.accent : "none"}
+                      />
+                    ))}
+                  </div>
+                </div>
+                {review.description && (
+                  <p className="text-xs leading-relaxed" style={{ color: colors.textSecondary }}>
+                    {review.description}
+                  </p>
+                )}
+                <p className="text-xs mt-2" style={{ color: colors.textFaint }}>
+                  {new Date(review.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -179,6 +228,7 @@ function StatusBadge({ status }: { status: string }) {
     shortlisted: { bg: "var(--accent-bg)", color: "var(--accent)", label: "Shortlisted" },
     interview: { bg: "var(--badge-purple-bg)", color: "var(--badge-purple-color)", label: "Interview" },
     accepted: { bg: "rgba(34,197,94,0.2)", color: "var(--accent)", label: "Accepted" },
+    completed: { bg: "rgba(34,197,94,0.25)", color: "var(--accent)", label: "Completed" },
     rejected: { bg: "rgba(239,68,68,0.15)", color: "var(--danger-color)", label: "Rejected" },
     withdrawn: { bg: "rgba(107,114,128,0.1)", color: "var(--text-muted)", label: "Withdrawn" },
   };

@@ -16,6 +16,7 @@ import type {
   VerificationRequest,
   Organization,
   EducationEntry,
+  Review,
   DocumentStatus,
   VerificationRequestStatus,
   EducationEntryStatus,
@@ -32,6 +33,7 @@ interface DataState {
   documents: Document[];
   verificationRequest: VerificationRequest | null;
   vacancies: Vacancy[];
+  reviews: Review[];
   applications: Application[];
   educationEntries: EducationEntry[];
 
@@ -60,6 +62,7 @@ interface DataState {
   requestVerification: () => void;
   addEducationEntry: (entry: { name: string; title: string; description?: string }) => void;
   removeEducationEntry: (entryId: string) => void;
+  submitReview: (data: { applicationId: string; rating: number; description?: string }) => Promise<Review>;
 
   // Agency actions
   createVacancy: (vacancy: Omit<Vacancy, "id" | "organizationId" | "organizationName" | "status" | "applicantCount" | "createdAt">) => void;
@@ -180,6 +183,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [educationEntries, setEducationEntries] = useState<EducationEntry[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
 
   // Admin state
   const [allTutorProfiles, setAllTutorProfiles] = useState<TutorProfile[]>([]);
@@ -199,13 +203,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // ── Fetch data based on role ──
   const fetchTutorData = useCallback(async () => {
     try {
-      const [profile, docs, verification, allVacancies, myApps, eduEntries] = await Promise.allSettled([
+      const [profile, docs, verification, allVacancies, myApps, eduEntries, tutorReviews] = await Promise.allSettled([
         tutorApi.getProfile(),
         tutorApi.getDocuments(),
         tutorApi.getVerification(),
         tutorApi.getVacancies(),
         applicationsApi.list(),
         tutorApi.getEducationEntries(),
+        tutorApi.getReviews(),
       ]);
 
       if (profile.status === "fulfilled") setTutorProfile(mapProfile(profile.value));
@@ -220,6 +225,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
         submittedAt: e.submittedAt || e.submitted_at,
         reviewedAt: e.reviewedAt || e.reviewed_at || undefined,
         reviewerNote: e.reviewerNote || e.reviewer_note || undefined,
+      })));
+      if (tutorReviews.status === "fulfilled") setReviews(tutorReviews.value.map((r: any) => ({
+        id: r.id,
+        applicationId: r.applicationId || r.application_id,
+        parentId: r.parentId || r.parent_id,
+        tutorId: r.tutorId || r.tutor_id,
+        rating: r.rating,
+        description: r.description || "",
+        createdAt: r.createdAt || r.created_at,
+        parentName: r.parentName || r.parent_name || undefined,
       })));
       if (verification.status === "fulfilled" && verification.value) {
         setVerificationRequest({
@@ -532,6 +547,30 @@ export function DataProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const submitReview = useCallback(
+    async (data: { applicationId: string; rating: number; description?: string }) => {
+      try {
+        const created = await parentApi.submitReview(data);
+        const newReview: Review = {
+          id: created.id,
+          applicationId: created.applicationId || created.application_id,
+          parentId: created.parentId || created.parent_id,
+          tutorId: created.tutorId || created.tutor_id,
+          rating: created.rating,
+          description: created.description || "",
+          createdAt: created.createdAt || created.created_at,
+          parentName: created.parentName || undefined,
+        };
+        setReviews((prev) => [newReview, ...prev]);
+        return newReview;
+      } catch (err) {
+        console.error("Failed to submit review:", err);
+        throw err;
+      }
+    },
+    []
+  );
+
   // ── Agency Actions ──
   const getAgencyVacancies = useCallback(() => {
     return vacancies.filter((v) => v.organizationId === agencyOrganization.id);
@@ -737,6 +776,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       vacancies,
       applications,
       educationEntries,
+      reviews,
       allUsers: [],
       allTutorProfiles,
       allDocuments,
@@ -757,6 +797,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       requestVerification,
       addEducationEntry,
       removeEducationEntry,
+      submitReview,
       createVacancy,
       updateVacancy,
       closeVacancy,
@@ -779,6 +820,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       vacancies,
       applications,
       educationEntries,
+      reviews,
       allTutorProfiles,
       allDocuments,
       allVerificationRequests,
@@ -797,6 +839,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       requestVerification,
       addEducationEntry,
       removeEducationEntry,
+      submitReview,
       createVacancy,
       updateVacancy,
       closeVacancy,

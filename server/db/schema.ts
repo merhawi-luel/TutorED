@@ -75,6 +75,7 @@ export const applicationStatusEnum = pgEnum("application_status", [
   "shortlisted",
   "interview",
   "accepted",
+  "completed",
   "rejected",
   "withdrawn",
 ]);
@@ -269,4 +270,22 @@ export const educationEntries = pgTable("education_entries", {
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
   reviewedAt: timestamp("reviewed_at"),
   reviewerNote: text("reviewer_note"),
+});
+
+// ─── Tutor Reviews ──────────────────────────────────────────
+
+export const tutorReviews = pgTable("tutor_reviews", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  applicationId: uuid("application_id")
+    .notNull()
+    .references(() => applications.id, { onDelete: "cascade" }),
+  parentId: uuid("parent_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  tutorId: uuid("tutor_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  rating: integer("rating").notNull(),
+  description: text("description").default(""),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
