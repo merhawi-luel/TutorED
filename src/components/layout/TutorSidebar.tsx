@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Briefcase,
   Send,
+  GraduationCap,
   Settings,
   LogOut,
   ChevronLeft,
@@ -19,6 +20,7 @@ export type TutorTab =
   | "profile"
   | "documents"
   | "verification"
+  | "education"
   | "vacancies"
   | "applications"
   | "settings";
@@ -33,6 +35,7 @@ const NAV_ITEMS: { tab: TutorTab; label: string; icon: typeof LayoutDashboard }[
   { tab: "profile", label: "My Profile", icon: User },
   { tab: "documents", label: "Documents", icon: FileText },
   { tab: "verification", label: "Verification", icon: ShieldCheck },
+  { tab: "education", label: "Education", icon: GraduationCap },
   { tab: "vacancies", label: "Vacancies", icon: Briefcase },
   { tab: "applications", label: "Applications", icon: Send },
 ];

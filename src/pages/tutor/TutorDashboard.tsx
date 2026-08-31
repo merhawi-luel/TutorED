@@ -4,6 +4,7 @@ import TutorOverview from "./TutorOverview";
 import TutorProfile from "./TutorProfile";
 import TutorDocuments from "./TutorDocuments";
 import TutorVerification from "./TutorVerification";
+import TutorEducation from "./TutorEducation";
 import TutorVacancies from "./TutorVacancies";
 import TutorApplications from "./TutorApplications";
 import TutorSettings from "./TutorSettings";
@@ -13,6 +14,7 @@ const TAB_COMPONENTS: Record<TutorTab, React.ComponentType<{ onTabChange?: (tab:
   profile: TutorProfile,
   documents: TutorDocuments,
   verification: TutorVerification,
+  education: TutorEducation,
   vacancies: TutorVacancies,
   applications: TutorApplications,
   settings: TutorSettings,
