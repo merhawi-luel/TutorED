@@ -8,6 +8,7 @@ import {
   Users,
   Building2,
   Shield,
+  GraduationCap,
   Settings,
   LogOut,
   ChevronLeft,
@@ -18,6 +19,7 @@ export type AdminTab =
   | "overview"
   | "verifications"
   | "documents"
+  | "education"
   | "tutors"
   | "agencies"
   | "admins"
@@ -32,6 +34,7 @@ const NAV_ITEMS: { tab: AdminTab; label: string; icon: typeof LayoutDashboard }[
   { tab: "overview", label: "Overview", icon: LayoutDashboard },
   { tab: "verifications", label: "Verification Queue", icon: ShieldCheck },
   { tab: "documents", label: "Documents", icon: FileSearch },
+  { tab: "education", label: "Education Review", icon: GraduationCap },
   { tab: "tutors", label: "Tutors", icon: Users },
   { tab: "agencies", label: "Agencies", icon: Building2 },
   { tab: "admins", label: "Admins", icon: Shield },

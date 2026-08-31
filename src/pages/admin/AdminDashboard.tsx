@@ -3,6 +3,7 @@ import AdminSidebar, { type AdminTab } from "@/components/layout/AdminSidebar";
 import AdminOverview from "./AdminOverview";
 import AdminVerifications from "./AdminVerifications";
 import AdminDocuments from "./AdminDocuments";
+import AdminEducation from "./AdminEducation";
 import AdminTutors from "./AdminTutors";
 import AdminAgencies from "./AdminAgencies";
 import AdminAdmins from "./AdminAdmins";
@@ -12,6 +13,7 @@ const TAB_COMPONENTS: Record<AdminTab, React.ComponentType<{ onTabChange?: (tab:
   overview: AdminOverview,
   verifications: AdminVerifications,
   documents: AdminDocuments,
+  education: AdminEducation,
   tutors: AdminTutors,
   agencies: AdminAgencies,
   admins: AdminAdmins,

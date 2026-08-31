@@ -15,11 +15,6 @@ import {
   BookOpen,
 } from "lucide-react";
 
-const SUBJECTS = [
-  "Mathematics", "Physics", "Chemistry", "Biology", "English",
-  "History", "Geography", "Computer Science",
-];
-
 const GRADES = [
   "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5",
   "Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 10",
@@ -40,6 +35,7 @@ export default function ParentRecruitment() {
   const { ref, inView } = useInView();
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [loadingAgencies, setLoadingAgencies] = useState(true);
+  const [subjects, setSubjects] = useState<string[]>([]);
 
   const [mode, setMode] = useState<"agency" | "self">("agency");
   const [selectedAgency, setSelectedAgency] = useState<string | null>(null);
@@ -61,11 +57,13 @@ export default function ParentRecruitment() {
 
   useEffect(() => {
     setLoadingAgencies(true);
-    parentApi
-      .getAgencies()
-      .then((data) => {
+    Promise.allSettled([
+      parentApi.getAgencies(),
+      parentApi.getSubjects(),
+    ]).then(([agenciesRes, subjectsRes]) => {
+      if (agenciesRes.status === "fulfilled") {
         setAgencies(
-          data.map((a: any) => ({
+          agenciesRes.value.map((a: any) => ({
             id: a.id,
             name: a.name,
             description: a.description || "",
@@ -74,9 +72,11 @@ export default function ParentRecruitment() {
             isVerified: a.isVerified || a.is_verified || false,
           }))
         );
-      })
-      .catch(() => {})
-      .finally(() => setLoadingAgencies(false));
+      }
+      if (subjectsRes.status === "fulfilled") {
+        setSubjects(subjectsRes.value);
+      }
+    }).catch(() => {}).finally(() => setLoadingAgencies(false));
   }, []);
 
   const selectedAgencyData = agencies.find((a) => a.id === selectedAgency);
@@ -303,7 +303,7 @@ export default function ParentRecruitment() {
               style={inputStyle}
             >
               <option value="">Select subject...</option>
-              {SUBJECTS.map((s) => (
+              {subjects.map((s) => (
                 <option key={s} value={s}>{s}</option>
               ))}
             </select>
