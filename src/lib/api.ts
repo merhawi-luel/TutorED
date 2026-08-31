@@ -149,6 +149,15 @@ export const parentApi = {
   contactAgency: (data: { organizationId?: string; subject: string; grade: string; location?: string; notes?: string; parentName?: string; parentEmail?: string; parentPhone?: string }) =>
     request<any>("/parent/contact-agency", { method: "POST", body: JSON.stringify(data) }),
   getRequests: () => request<any[]>("/parent/requests"),
+
+  // Applicants
+  getApplicants: () => request<any[]>("/parent/applicants"),
+  getTutorDocuments: (tutorId: string) =>
+    request<any[]>(`/parent/tutors/${tutorId}/documents`),
+  previewTutorDocument: (docId: string) =>
+    request<{ previewUrl: string; fileName: string; type: string; title: string }>(`/parent/documents/${docId}/preview`),
+  downloadTutorDocument: (docId: string) =>
+    request<{ downloadUrl: string; fileName: string }>(`/parent/documents/${docId}/download`),
 };
 
 // ─── Upload ────────────────────────────────────────────────────

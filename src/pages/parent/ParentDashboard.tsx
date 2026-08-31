@@ -4,13 +4,26 @@ import ParentOverview from "./ParentOverview";
 import ParentProfile from "./ParentProfile";
 import ParentRecruitment from "./ParentRecruitment";
 import ParentVacancies from "./ParentVacancies";
+import ParentApplicants from "./ParentApplicants";
+import ParentVacancyApplicants from "./ParentVacancyApplicants";
 import ParentRequests from "./ParentRequests";
 import ParentSettings from "./ParentSettings";
 
 export default function ParentDashboard() {
   const [activeTab, setActiveTab] = useState<ParentTab>("overview");
+  const [selectedVacancyId, setSelectedVacancyId] = useState<string | null>(null);
 
   const renderPage = () => {
+    // If viewing a specific vacancy's applicants
+    if (selectedVacancyId) {
+      return (
+        <ParentVacancyApplicants
+          vacancyId={selectedVacancyId}
+          onBack={() => setSelectedVacancyId(null)}
+        />
+      );
+    }
+
     switch (activeTab) {
       case "overview":
         return <ParentOverview />;
@@ -19,7 +32,13 @@ export default function ParentDashboard() {
       case "recruitment":
         return <ParentRecruitment />;
       case "vacancies":
-        return <ParentVacancies />;
+        return (
+          <ParentVacancies
+            onBrowseApplicants={(vacancyId) => setSelectedVacancyId(vacancyId)}
+          />
+        );
+      case "applicants":
+        return <ParentApplicants />;
       case "requests":
         return <ParentRequests />;
       case "settings":

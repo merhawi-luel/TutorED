@@ -1,8 +1,15 @@
 import { Router } from "express";
+import { createClient } from "@supabase/supabase-js";
 import { db } from "../db";
-import { parentProfiles, vacancies, organizations, recruitmentRequests, users, applications } from "../db/schema";
+import { parentProfiles, vacancies, organizations, recruitmentRequests, users, applications, tutorProfiles, documents } from "../db/schema";
 import { requireAuth } from "../middleware/auth";
 import { eq, and, desc } from "drizzle-orm";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+const BUCKET_NAME = "documents";
 
 const router = Router();
 
@@ -301,6 +308,224 @@ router.get("/tutors", requireAuth, async (req, res) => {
     res.json(enriched);
   } catch (error) {
     console.error("Get tutors error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── GET /api/parent/applicants ──────────────────────────────
+// Get all applicants who applied to this parent's vacancies
+
+router.get("/applicants", requireAuth, async (req, res) => {
+  try {
+    // Get all vacancies owned by this parent
+    const myVacancies = await db
+      .select({ id: vacancies.id, title: vacancies.title })
+      .from(vacancies)
+      .where(eq(vacancies.parentId, req.user!.userId));
+
+    const vacancyIds = myVacancies.map((v) => v.id);
+    const vacancyMap = new Map(myVacancies.map((v) => [v.id, v.title]));
+
+    if (vacancyIds.length === 0) {
+      return res.json([]);
+    }
+
+    // Get all applications for these vacancies
+    const allApps = [];
+    for (const vId of vacancyIds) {
+      const apps = await db
+        .select()
+        .from(applications)
+        .where(eq(applications.vacancyId, vId));
+      allApps.push(...apps);
+    }
+
+    // Enrich with tutor info and profile
+    const enriched = await Promise.all(
+      allApps.map(async (a) => {
+        const [tutorUser] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, a.tutorId));
+        const [profile] = await db
+          .select()
+          .from(tutorProfiles)
+          .where(eq(tutorProfiles.userId, a.tutorId));
+        return {
+          ...a,
+          tutorName: tutorUser?.name ?? "Unknown",
+          tutorEmail: tutorUser?.email ?? "",
+          vacancyTitle: vacancyMap.get(a.vacancyId) ?? "Unknown",
+          tutorProfile: profile ?? null,
+        };
+      })
+    );
+
+    res.json(enriched);
+  } catch (error) {
+    console.error("Get parent applicants error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── GET /api/parent/tutors/:tutorId/documents ───────────────
+// Get documents for a tutor who applied to this parent's vacancy
+
+router.get("/tutors/:tutorId/documents", requireAuth, async (req, res) => {
+  try {
+    // Verify this tutor has applied to at least one of our vacancies
+    const myVacancies = await db
+      .select({ id: vacancies.id })
+      .from(vacancies)
+      .where(eq(vacancies.parentId, req.user!.userId));
+
+    const vacancyIds = myVacancies.map((v) => v.id);
+
+    if (vacancyIds.length === 0) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    // Check if tutor applied to any of our vacancies
+    const hasApplied = await db
+      .select()
+      .from(applications)
+      .where(eq(applications.tutorId, req.params.tutorId));
+
+    const appliedToUs = hasApplied.some((a) => vacancyIds.includes(a.vacancyId));
+
+    if (!appliedToUs) {
+      return res.status(403).json({ error: "Not authorized to view this tutor's documents" });
+    }
+
+    // Get tutor's documents
+    const tutorDocs = await db
+      .select()
+      .from(documents)
+      .where(eq(documents.tutorId, req.params.tutorId))
+      .orderBy(desc(documents.submittedAt));
+
+    res.json(tutorDocs);
+  } catch (error) {
+    console.error("Get parent tutor documents error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── GET /api/parent/documents/:id/preview ────────────────────
+// Preview a document (only verified documents)
+
+router.get("/documents/:id/preview", requireAuth, async (req, res) => {
+  try {
+    const [doc] = await db
+      .select()
+      .from(documents)
+      .where(eq(documents.id, req.params.id));
+
+    if (!doc) {
+      return res.status(404).json({ error: "Document not found" });
+    }
+
+    if (doc.status !== "verified") {
+      return res.status(403).json({ error: "Can only preview verified documents" });
+    }
+
+    // Verify parent has access (tutor applied to their vacancy)
+    const myVacancies = await db
+      .select({ id: vacancies.id })
+      .from(vacancies)
+      .where(eq(vacancies.parentId, req.user!.userId));
+
+    const vacancyIds = myVacancies.map((v) => v.id);
+
+    const hasApplied = await db
+      .select()
+      .from(applications)
+      .where(eq(applications.tutorId, doc.tutorId));
+
+    const appliedToUs = hasApplied.some((a) => vacancyIds.includes(a.vacancyId));
+
+    if (!appliedToUs) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    if (!doc.fileKey) {
+      return res.status(404).json({ error: "File not available" });
+    }
+
+    const { data, error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .createSignedUrl(doc.fileKey, 7200);
+
+    if (error) {
+      console.error("Supabase signed URL error:", error);
+      return res.status(500).json({ error: "Failed to generate preview URL" });
+    }
+
+    res.json({
+      previewUrl: data.signedUrl,
+      fileName: doc.fileName,
+      type: doc.type,
+      title: doc.title,
+    });
+  } catch (error) {
+    console.error("Preview document error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── GET /api/parent/documents/:id/download ───────────────────
+// Download a document (only verified documents)
+
+router.get("/documents/:id/download", requireAuth, async (req, res) => {
+  try {
+    const [doc] = await db
+      .select()
+      .from(documents)
+      .where(eq(documents.id, req.params.id));
+
+    if (!doc) {
+      return res.status(404).json({ error: "Document not found" });
+    }
+
+    if (doc.status !== "verified") {
+      return res.status(403).json({ error: "Can only download verified documents" });
+    }
+
+    // Verify parent has access
+    const myVacancies = await db
+      .select({ id: vacancies.id })
+      .from(vacancies)
+      .where(eq(vacancies.parentId, req.user!.userId));
+
+    const vacancyIds = myVacancies.map((v) => v.id);
+
+    const hasApplied = await db
+      .select()
+      .from(applications)
+      .where(eq(applications.tutorId, doc.tutorId));
+
+    const appliedToUs = hasApplied.some((a) => vacancyIds.includes(a.vacancyId));
+
+    if (!appliedToUs) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    if (!doc.fileKey) {
+      return res.status(404).json({ error: "File not available" });
+    }
+
+    const { data, error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .createSignedUrl(doc.fileKey, 3600);
+
+    if (error) {
+      console.error("Supabase signed URL error:", error);
+      return res.status(500).json({ error: "Failed to generate download URL" });
+    }
+
+    res.json({ downloadUrl: data.signedUrl, fileName: doc.fileName });
+  } catch (error) {
+    console.error("Download document error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

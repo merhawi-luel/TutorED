@@ -11,6 +11,7 @@ import {
   XCircle,
   CheckCircle2,
   Briefcase,
+  Users,
 } from "lucide-react";
 
 interface VacancyItem {
@@ -34,7 +35,7 @@ const MODE_COLORS: Record<string, { bg: string; color: string }> = {
   hybrid: { bg: "rgba(168,85,247,0.12)", color: "#C084FC" },
 };
 
-export default function ParentVacancies() {
+export default function ParentVacancies({ onBrowseApplicants }: { onBrowseApplicants?: (vacancyId: string) => void }) {
   const { ref, inView } = useInView();
   const [vacancies, setVacancies] = useState<VacancyItem[]>([]);
   const [myVacancyIds, setMyVacancyIds] = useState<Set<string>>(new Set());
@@ -418,6 +419,19 @@ export default function ParentVacancies() {
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
+                    {isMine && (
+                      <button
+                        onClick={() => onBrowseApplicants?.(vacancy.id)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                        style={{
+                          background: "rgba(34,197,94,0.1)",
+                          color: "#22C55E",
+                          border: "1px solid rgba(34,197,94,0.2)",
+                        }}
+                      >
+                        <Users size={13} /> Browse Applicants
+                      </button>
+                    )}
                     {isMine && isOpen && (
                       <button
                         onClick={() => handleClose(vacancy.id)}
