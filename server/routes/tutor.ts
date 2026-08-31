@@ -9,6 +9,7 @@ import {
   applications,
   organizations,
   users,
+  educationEntries,
 } from "../db/schema";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { eq, and, desc } from "drizzle-orm";
@@ -513,6 +514,78 @@ router.put("/applications/:id/withdraw", requireAuth, requireRole("tutor"), asyn
     res.json(updated);
   } catch (error) {
     console.error("Withdraw error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── GET /api/tutor/education-entries ──────────────────────
+
+router.get("/education-entries", requireAuth, requireRole("tutor"), async (req, res) => {
+  try {
+    const entries = await db
+      .select()
+      .from(educationEntries)
+      .where(eq(educationEntries.tutorId, req.user!.userId))
+      .orderBy(desc(educationEntries.submittedAt));
+
+    res.json(entries);
+  } catch (error) {
+    console.error("Get education entries error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── POST /api/tutor/education-entries ─────────────────────
+
+router.post("/education-entries", requireAuth, requireRole("tutor"), async (req, res) => {
+  try {
+    const { name, title, description } = req.body;
+
+    if (!name || !title) {
+      return res.status(400).json({ error: "Name and title are required" });
+    }
+
+    const [entry] = await db
+      .insert(educationEntries)
+      .values({
+        tutorId: req.user!.userId,
+        name,
+        title,
+        description: description || "",
+        status: "pending",
+      })
+      .returning();
+
+    res.status(201).json(entry);
+  } catch (error) {
+    console.error("Create education entry error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── DELETE /api/tutor/education-entries/:id ───────────────
+
+router.delete("/education-entries/:id", requireAuth, requireRole("tutor"), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [entry] = await db
+      .select()
+      .from(educationEntries)
+      .where(and(eq(educationEntries.id, id), eq(educationEntries.tutorId, req.user!.userId)));
+
+    if (!entry) {
+      return res.status(404).json({ error: "Education entry not found" });
+    }
+
+    if (entry.status !== "pending") {
+      return res.status(400).json({ error: "Can only delete pending entries" });
+    }
+
+    await db.delete(educationEntries).where(eq(educationEntries.id, id));
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Delete education entry error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

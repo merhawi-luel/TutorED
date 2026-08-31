@@ -9,6 +9,7 @@ import {
   users,
   recruitmentRequests,
   documents,
+  educationEntries,
 } from "../db/schema";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { eq, and, desc } from "drizzle-orm";
@@ -297,7 +298,7 @@ router.get("/applicants/:vacancyId", requireAuth, requireRole("agency"), async (
       .where(eq(applications.vacancyId, req.params.vacancyId))
       .orderBy(desc(applications.appliedAt));
 
-    // Enrich with tutor info
+    // Enrich with tutor info and education entries
     const enriched = await Promise.all(
       apps.map(async (a) => {
         const [tutorUser] = await db
@@ -308,10 +309,15 @@ router.get("/applicants/:vacancyId", requireAuth, requireRole("agency"), async (
           .select()
           .from(tutorProfiles)
           .where(eq(tutorProfiles.userId, a.tutorId));
+        const tutorEducationEntries = await db
+          .select()
+          .from(educationEntries)
+          .where(eq(educationEntries.tutorId, a.tutorId));
         return {
           ...a,
           tutorName: tutorUser?.name ?? "Unknown",
           tutorProfile: profile ?? null,
+          educationEntries: tutorEducationEntries,
         };
       })
     );
@@ -353,7 +359,7 @@ router.get("/applicants", requireAuth, requireRole("agency"), async (req, res) =
       allApps.push(...apps);
     }
 
-    // Enrich with tutor info and vacancy title
+    // Enrich with tutor info, vacancy title, and education entries
     const enriched = await Promise.all(
       allApps.map(async (a) => {
         const [tutorUser] = await db
@@ -368,11 +374,16 @@ router.get("/applicants", requireAuth, requireRole("agency"), async (req, res) =
           .select()
           .from(vacancies)
           .where(eq(vacancies.id, a.vacancyId));
+        const tutorEducationEntries = await db
+          .select()
+          .from(educationEntries)
+          .where(eq(educationEntries.tutorId, a.tutorId));
         return {
           ...a,
           tutorName: tutorUser?.name ?? "Unknown",
           tutorProfile: profile ?? null,
           vacancyTitle: vacancy?.title ?? "Unknown",
+          educationEntries: tutorEducationEntries,
         };
       })
     );

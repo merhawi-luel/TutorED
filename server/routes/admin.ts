@@ -7,10 +7,11 @@ import {
   documents,
   verificationRequests,
   organizations,
+  educationEntries,
 } from "../db/schema";
 import { supabaseAdmin } from "../lib/supabase";
 import { requireAuth, requireRole } from "../middleware/auth";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 const router = Router();
 
@@ -413,6 +414,125 @@ router.post("/create-admin", requireAuth, requireRole("admin"), async (req, res)
     });
   } catch (error) {
     console.error("Create admin error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── GET /api/admin/education-entries ──────────────────────
+
+router.get("/education-entries", requireAuth, requireRole("admin"), async (_req, res) => {
+  try {
+    const entries = await db
+      .select()
+      .from(educationEntries)
+      .orderBy(desc(educationEntries.submittedAt));
+
+    // Enrich with tutor name
+    const enriched = await Promise.all(
+      entries.map(async (e) => {
+        const [tutor] = await db
+          .select({ name: users.name })
+          .from(users)
+          .where(eq(users.id, e.tutorId));
+        return {
+          ...e,
+          tutorName: tutor?.name ?? "Unknown",
+        };
+      })
+    );
+
+    res.json(enriched);
+  } catch (error) {
+    console.error("Get education entries error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── PUT /api/admin/education-entries/:id/approve ───────────
+
+router.put("/education-entries/:id/approve", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const [entry] = await db
+      .select()
+      .from(educationEntries)
+      .where(eq(educationEntries.id, req.params.id));
+
+    if (!entry) {
+      return res.status(404).json({ error: "Education entry not found" });
+    }
+
+    const [updated] = await db
+      .update(educationEntries)
+      .set({ status: "approved", reviewedAt: new Date() })
+      .where(eq(educationEntries.id, req.params.id))
+      .returning();
+
+    // Check if tutor should be verified (all entries approved)
+    const allEntries = await db
+      .select()
+      .from(educationEntries)
+      .where(eq(educationEntries.tutorId, entry.tutorId));
+
+    const allApproved = allEntries.every((e) => e.status === "approved");
+    if (allApproved) {
+      await db
+        .update(tutorProfiles)
+        .set({ verificationLevel: "verified" })
+        .where(eq(tutorProfiles.userId, entry.tutorId));
+    }
+
+    res.json(updated);
+  } catch (error) {
+    console.error("Approve education entry error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── PUT /api/admin/education-entries/:id/reject ────────────
+
+router.put("/education-entries/:id/reject", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const { note } = req.body;
+
+    const [entry] = await db
+      .select()
+      .from(educationEntries)
+      .where(eq(educationEntries.id, req.params.id));
+
+    if (!entry) {
+      return res.status(404).json({ error: "Education entry not found" });
+    }
+
+    const [updated] = await db
+      .update(educationEntries)
+      .set({ status: "rejected", reviewedAt: new Date(), reviewerNote: note || "" })
+      .where(eq(educationEntries.id, req.params.id))
+      .returning();
+
+    // Tutor cannot be verified if any entry is rejected
+    const allEntries = await db
+      .select()
+      .from(educationEntries)
+      .where(eq(educationEntries.tutorId, entry.tutorId));
+
+    const allApproved = allEntries.every((e) => e.status === "approved");
+    if (!allApproved) {
+      const currentProfile = await db
+        .select({ verificationLevel: tutorProfiles.verificationLevel })
+        .from(tutorProfiles)
+        .where(eq(tutorProfiles.userId, entry.tutorId));
+
+      if (currentProfile[0]?.verificationLevel === "verified") {
+        await db
+          .update(tutorProfiles)
+          .set({ verificationLevel: "partial" })
+          .where(eq(tutorProfiles.userId, entry.tutorId));
+      }
+    }
+
+    res.json(updated);
+  } catch (error) {
+    console.error("Reject education entry error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { createClient } from "@supabase/supabase-js";
 import { db } from "../db";
-import { parentProfiles, vacancies, organizations, recruitmentRequests, users, applications, tutorProfiles, documents } from "../db/schema";
+import { parentProfiles, vacancies, organizations, recruitmentRequests, users, applications, tutorProfiles, documents, educationEntries } from "../db/schema";
 import { requireAuth } from "../middleware/auth";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -261,6 +261,28 @@ router.get("/requests", requireAuth, async (req, res) => {
   }
 });
 
+// ─── GET /api/parent/subjects ──────────────────────────────────
+// Get all unique subjects from agencies and vacancies
+
+router.get("/subjects", requireAuth, async (_req, res) => {
+  try {
+    // Collect subjects from organizations
+    const orgs = await db.select({ subjects: organizations.subjects }).from(organizations);
+    const orgSubjects = orgs.flatMap((o) => o.subjects || []);
+
+    // Collect subjects from vacancies
+    const vacs = await db.select({ subject: vacancies.subject }).from(vacancies);
+    const vacSubjects = vacs.map((v) => v.subject).filter(Boolean);
+
+    // Deduplicate and sort
+    const all = Array.from(new Set([...orgSubjects, ...vacSubjects])).sort();
+    res.json(all);
+  } catch (error) {
+    console.error("Get subjects error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // ─── GET /api/parent/agencies ────────────────────────────────
 // List verified agencies for contacting
 
@@ -340,7 +362,7 @@ router.get("/applicants", requireAuth, async (req, res) => {
       allApps.push(...apps);
     }
 
-    // Enrich with tutor info and profile
+    // Enrich with tutor info, profile, and education entries
     const enriched = await Promise.all(
       allApps.map(async (a) => {
         const [tutorUser] = await db
@@ -351,12 +373,17 @@ router.get("/applicants", requireAuth, async (req, res) => {
           .select()
           .from(tutorProfiles)
           .where(eq(tutorProfiles.userId, a.tutorId));
+        const tutorEducationEntries = await db
+          .select()
+          .from(educationEntries)
+          .where(eq(educationEntries.tutorId, a.tutorId));
         return {
           ...a,
           tutorName: tutorUser?.name ?? "Unknown",
           tutorEmail: tutorUser?.email ?? "",
           vacancyTitle: vacancyMap.get(a.vacancyId) ?? "Unknown",
           tutorProfile: profile ?? null,
+          educationEntries: tutorEducationEntries,
         };
       })
     );
