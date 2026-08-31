@@ -1,254 +1,261 @@
-import { useState } from "react";
-import { useData } from "@/context/DataContext";
-import { useTheme } from "@/context/ThemeContext";
-import { useInView } from "@/hooks/useInView";
-import ApplyConsentModal from "@/components/shared/ApplyConsentModal";
-import {
-  Search,
-  MapPin,
-  Clock,
-  DollarSign,
-  Users,
-  Briefcase,
-  CheckCircle2,
-  Send,
-} from "lucide-react";
-
-const FILTER_SUBJECTS = ["All", "Mathematics", "Physics", "Science", "English", "Computer Science"];
-const FILTER_MODES: { value: string; label: string }[] = [
-  { value: "all", label: "All Modes" },
-  { value: "in-person", label: "In-person" },
-  { value: "online", label: "Online" },
-  { value: "hybrid", label: "Hybrid" },
-];
+import { useState, useMemo } from 'react';
+import { useTheme } from '../../context/ThemeContext';
+import { useData } from '../../context/DataContext';
+import { useAuth } from '../../context/AuthContext';
+import { tutorApi } from '../../lib/api';
+import { MapPin, Clock, DollarSign, Search, Filter, ChevronDown, Send, CheckCircle, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function TutorVacancies() {
-  const { vacancies, applications, applyToVacancy } = useData();
-  const { isDark } = useTheme();
-  const { ref, inView } = useInView();
+  const { colors } = useTheme();
+  const { vacancies, applications, refreshData } = useData();
+  const { user } = useAuth();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState('All');
+  const [selectedType, setSelectedType] = useState('All');
+  const [showFilters, setShowFilters] = useState(false);
+  const [applying, setApplying] = useState<string | null>(null);
 
-  const [search, setSearch] = useState("");
-  const [subjectFilter, setSubjectFilter] = useState("All");
-  const [modeFilter, setModeFilter] = useState("all");
-  const [consentModal, setConsentModal] = useState<{
-    isOpen: boolean;
-    vacancyId: string;
-    agencyName: string;
-    vacancyTitle: string;
-  }>({ isOpen: false, vacancyId: "", agencyName: "", vacancyTitle: "" });
+  const appliedVacancyIds = useMemo(() => {
+    return new Set(applications.filter(a => a.tutorId === user?.id).map(a => a.vacancyId));
+  }, [applications, user?.id]);
 
-  const filtered = vacancies.filter((v) => {
-    if (v.status !== "open") return false;
-    if (subjectFilter !== "All" && v.subject !== subjectFilter) return false;
-    if (modeFilter !== "all" && v.teachingMode !== modeFilter) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      return (
-        v.title.toLowerCase().includes(q) ||
-        v.organizationName.toLowerCase().includes(q) ||
-        v.subject.toLowerCase().includes(q) ||
-        v.location.toLowerCase().includes(q)
-      );
+  const filteredVacancies = useMemo(() => {
+    return vacancies.filter(v => {
+      const matchesSearch = v.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        v.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        v.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSubject = selectedSubject === 'All' || v.subject === selectedSubject;
+      const matchesType = selectedType === 'All' || v.type === selectedType;
+      return matchesSearch && matchesSubject && matchesType;
+    });
+  }, [vacancies, searchTerm, selectedSubject, selectedType]);
+
+  const uniqueSubjects = useMemo(() => {
+    return ['All', ...new Set(vacancies.map(v => v.subject))];
+  }, [vacancies]);
+
+  const uniqueTypes = useMemo(() => {
+    return ['All', ...new Set(vacancies.map(v => v.type))];
+  }, [vacancies]);
+
+  const handleApply = async (vacancyId: string) => {
+    setApplying(vacancyId);
+    try {
+      await tutorApi.applyToVacancy(vacancyId);
+      await refreshData();
+      toast.success('Application submitted successfully!');
+    } catch (error) {
+      console.error('Error applying:', error);
+      toast.error('Failed to submit application');
+    } finally {
+      setApplying(null);
     }
-    return true;
-  });
-
-  const appliedIds = new Set(applications.map((a) => a.vacancyId));
-
-  const cardBg = isDark ? "#111111" : "#FFFFFF";
-  const cardBorder = isDark ? "#1F1F1F" : "#E2E8F0";
-  const inputBg = isDark ? "#0D0D0D" : "#F1F5F9";
-  const inputBorder = isDark ? "#1F1F1F" : "#E2E8F0";
-  const textPrimary = isDark ? "#FFFFFF" : "#0F172A";
-  const textSecondary = isDark ? "#9CA3AF" : "#475569";
-  const textMuted = isDark ? "#6B7280" : "#94A3B8";
-  const textFaint = isDark ? "#4B5563" : "#CBD5E1";
-  const pillBg = isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)";
-  const pillBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
+  };
 
   return (
-    <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
+    <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
       {/* Header */}
-      <div className={`fade-up ${inView ? "in-view" : ""}`}>
-        <h1 className="text-2xl font-semibold" style={{ color: textPrimary }}>Vacancies</h1>
-        <p className="text-sm mt-1" style={{ color: textSecondary }}>
-          Browse open positions from verified agencies.
+      <div style={{ marginBottom: '32px' }}>
+        <h1 style={{ 
+          fontSize: '28px', fontWeight: '700', color: colors.primaryText,
+          marginBottom: '8px', fontFamily: "'Inter', sans-serif"
+        }}>
+          Available Vacancies
+        </h1>
+        <p style={{ fontSize: '16px', color: colors.secondaryText }}>
+          Browse and apply to tutoring opportunities
         </p>
       </div>
 
       {/* Search & Filters */}
-      <div
-        className={`rounded-2xl p-5 space-y-4 fade-up delay-100 ${inView ? "in-view" : ""}`}
-        style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
-      >
-        <div className="relative">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: textMuted }} />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by title, subject, organization, or location..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm focus:outline-none"
-            style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
-          />
+      <div style={{
+        backgroundColor: colors.card, borderRadius: '16px', padding: '20px',
+        marginBottom: '24px', border: `1px solid ${colors.border}`,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+      }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <Search size={18} color={colors.secondaryText} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+            <input
+              type="text"
+              placeholder="Search vacancies..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: '100%', padding: '12px 16px 12px 42px', borderRadius: '12px',
+                border: `1px solid ${colors.border}`, backgroundColor: colors.background,
+                color: colors.primaryText, fontSize: '15px', outline: 'none',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              padding: '12px 20px', borderRadius: '12px',
+              border: `1px solid ${colors.border}`,
+              backgroundColor: showFilters ? colors.primaryLight : colors.background,
+              color: showFilters ? colors.primary : colors.secondaryText,
+              fontSize: '14px', fontWeight: '500', cursor: 'pointer'
+            }}
+          >
+            <Filter size={16} /> Filters <ChevronDown size={14} style={{ transform: showFilters ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+          </button>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <div className="flex gap-1.5 flex-wrap">
-            {FILTER_SUBJECTS.map((s) => (
-              <button
-                key={s}
-                onClick={() => setSubjectFilter(s)}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+        {showFilters && (
+          <div style={{ display: 'flex', gap: '12px', marginTop: '16px', paddingTop: '16px', borderTop: `1px solid ${colors.border}` }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: colors.secondaryText, marginBottom: '6px' }}>
+                Subject
+              </label>
+              <select
+                value={selectedSubject}
+                onChange={(e) => setSelectedSubject(e.target.value)}
                 style={{
-                  background: subjectFilter === s ? "rgba(34,197,94,0.15)" : pillBg,
-                  border: `1px solid ${subjectFilter === s ? "rgba(34,197,94,0.3)" : pillBorder}`,
-                  color: subjectFilter === s ? "#22C55E" : textSecondary,
+                  width: '100%', padding: '10px 14px', borderRadius: '10px',
+                  border: `1px solid ${colors.border}`, backgroundColor: colors.background,
+                  color: colors.primaryText, fontSize: '14px', outline: 'none',
+                  boxSizing: 'border-box'
                 }}
               >
-                {s}
-              </button>
-            ))}
+                {uniqueSubjects.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: colors.secondaryText, marginBottom: '6px' }}>
+                Type
+              </label>
+              <select
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+                style={{
+                  width: '100%', padding: '10px 14px', borderRadius: '10px',
+                  border: `1px solid ${colors.border}`, backgroundColor: colors.background,
+                  color: colors.primaryText, fontSize: '14px', outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              >
+                {uniqueTypes.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
           </div>
-
-          <select
-            value={modeFilter}
-            onChange={(e) => setModeFilter(e.target.value)}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium focus:outline-none"
-            style={{ background: pillBg, border: `1px solid ${pillBorder}`, color: textSecondary }}
-          >
-            {FILTER_MODES.map((m) => (
-              <option key={m.value} value={m.value}>{m.label}</option>
-            ))}
-          </select>
-        </div>
+        )}
       </div>
 
       {/* Results Count */}
-      <div className="text-xs" style={{ color: textMuted }}>
-        {filtered.length} {filtered.length === 1 ? "vacancy" : "vacancies"} found
-      </div>
+      <p style={{ fontSize: '14px', color: colors.secondaryText, marginBottom: '16px' }}>
+        {filteredVacancies.length} {filteredVacancies.length === 1 ? 'vacancy' : 'vacancies'} found
+      </p>
 
-      {/* Vacancy List */}
-      <div className="space-y-3">
-        {filtered.length === 0 ? (
-          <div
-            className="rounded-xl p-12 text-center"
-            style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
-          >
-            <Briefcase size={32} className="mx-auto mb-3" style={{ color: textFaint }} />
-            <p className="text-sm" style={{ color: textSecondary }}>No vacancies match your filters.</p>
+      {/* Vacancy Cards */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {filteredVacancies.length === 0 ? (
+          <div style={{
+            backgroundColor: colors.card, borderRadius: '16px', padding: '48px',
+            textAlign: 'center', border: `1px solid ${colors.border}`
+          }}>
+            <Search size={48} color={colors.border} style={{ marginBottom: '16px' }} />
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: colors.primaryText, marginBottom: '8px' }}>
+              No Vacancies Found
+            </h3>
+            <p style={{ fontSize: '14px', color: colors.secondaryText }}>
+              Try adjusting your search or filters
+            </p>
           </div>
         ) : (
-          filtered.map((vacancy, i) => {
-            const isApplied = appliedIds.has(vacancy.id);
+          filteredVacancies.map((vacancy) => {
+            const hasApplied = appliedVacancyIds.has(vacancy.id);
             return (
               <div
                 key={vacancy.id}
-                className={`rounded-2xl p-5 md:p-6 transition-all hover:-translate-y-1 fade-up delay-${Math.min((i + 1) * 100, 500)} ${inView ? "in-view" : ""}`}
-                style={{ background: cardBg, border: `1px solid ${cardBorder}`, boxShadow: "var(--shadow-card)" }}
+                style={{
+                  backgroundColor: colors.card, borderRadius: '16px', padding: '24px',
+                  border: `1px solid ${colors.border}`,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                  transition: 'box-shadow 0.2s',
+                }}
               >
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div
-                        className="w-9 h-9 rounded-lg flex items-center justify-center text-black font-bold text-xs shrink-0"
-                        style={{ background: "linear-gradient(135deg, #22C55E, #16A34A)" }}
-                      >
-                        {vacancy.organizationName[0]}
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-semibold" style={{ color: textPrimary }}>{vacancy.title}</h3>
-                        <div className="text-xs" style={{ color: textMuted }}>{vacancy.organizationName}</div>
-                      </div>
-                    </div>
-
-                    <p className="text-xs leading-relaxed mb-3 line-clamp-2" style={{ color: textSecondary }}>
-                      {vacancy.description}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '18px', fontWeight: '600', color: colors.primaryText, marginBottom: '4px' }}>
+                      {vacancy.title}
+                    </h3>
+                    <p style={{ fontSize: '14px', color: colors.secondaryText }}>
+                      Posted by {vacancy.parentName || 'Parent'}
                     </p>
-
-                    <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs" style={{ color: textMuted }}>
-                      <span className="flex items-center gap-1.5">
-                        <Briefcase size={12} /> {vacancy.subject} · {vacancy.grade}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <MapPin size={12} /> {vacancy.location}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <Clock size={12} /> {vacancy.teachingMode}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <DollarSign size={12} /> {vacancy.salary}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <Users size={12} /> {vacancy.applicantCount} applicants
-                      </span>
-                    </div>
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <span
-                        className="px-2 py-0.5 rounded text-xs"
-                        style={{ background: pillBg, color: textSecondary }}
-                      >
-                        {vacancy.requiredEducation}
-                      </span>
-                      <span
-                        className="px-2 py-0.5 rounded text-xs"
-                        style={{ background: pillBg, color: textSecondary }}
-                      >
-                        {vacancy.requiredExperience}+ years exp
-                      </span>
-                      <span
-                        className="px-2 py-0.5 rounded text-xs"
-                        style={{ background: pillBg, color: textSecondary }}
-                      >
-                        {vacancy.availability}
-                      </span>
-                    </div>
                   </div>
+                  <span style={{
+                    padding: '6px 12px', borderRadius: '8px',
+                    backgroundColor: colors.primaryLight, color: colors.primary,
+                    fontSize: '13px', fontWeight: '500'
+                  }}>
+                    {vacancy.type}
+                  </span>
+                </div>
 
-                  <div className="shrink-0 lg:text-right">
-                    <div className="text-xs mb-2" style={{ color: textFaint }}>
-                      Deadline: {vacancy.deadline}
-                    </div>
-                    {isApplied ? (
-                      <span
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium"
-                        style={{ background: "rgba(34,197,94,0.12)", color: "#22C55E" }}
-                      >
-                        <CheckCircle2 size={13} /> Applied
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => setConsentModal({
-                          isOpen: true,
-                          vacancyId: vacancy.id,
-                          agencyName: vacancy.organizationName,
-                          vacancyTitle: vacancy.title,
-                        })}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
-                        style={{ background: "#22C55E", color: "black" }}
-                      >
-                        <Send size={13} /> Apply Now
-                      </button>
-                    )}
+                <p style={{ fontSize: '14px', color: colors.secondaryText, lineHeight: '1.6', marginBottom: '16px' }}>
+                  {vacancy.description}
+                </p>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: colors.secondaryText }}>
+                    <span style={{ 
+                      padding: '4px 10px', borderRadius: '6px',
+                      backgroundColor: colors.background, color: colors.primaryText, fontWeight: '500'
+                    }}>
+                      {vacancy.subject}
+                    </span>
                   </div>
+                  {vacancy.location && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: colors.secondaryText }}>
+                      <MapPin size={14} /> {vacancy.location}
+                    </div>
+                  )}
+                  {vacancy.rate && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: colors.secondaryText }}>
+                      <DollarSign size={14} /> {vacancy.rate}/hr
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: colors.secondaryText }}>
+                    <Clock size={14} /> Posted {new Date(vacancy.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  {hasApplied ? (
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                      padding: '10px 20px', borderRadius: '12px',
+                      backgroundColor: '#DCFCE7', color: '#16A34A',
+                      fontSize: '14px', fontWeight: '600'
+                    }}>
+                      <CheckCircle size={16} /> Applied
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleApply(vacancy.id)}
+                      disabled={applying === vacancy.id}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '8px',
+                        padding: '10px 20px', borderRadius: '12px', border: 'none',
+                        backgroundColor: colors.primary, color: '#fff',
+                        fontSize: '14px', fontWeight: '600', cursor: 'pointer',
+                        minWidth: '180px', justifyContent: 'center',
+                        opacity: applying === vacancy.id ? 0.7 : 1
+                      }}
+                    >
+                      <Send size={16} /> {applying === vacancy.id ? 'Applying...' : 'Apply Now'}
+                    </button>
+                  )}
                 </div>
               </div>
             );
           })
         )}
       </div>
-
-      <ApplyConsentModal
-        isOpen={consentModal.isOpen}
-        onClose={() => setConsentModal({ ...consentModal, isOpen: false })}
-        onConfirm={() => {
-          applyToVacancy(consentModal.vacancyId);
-          setConsentModal({ ...consentModal, isOpen: false });
-        }}
-        agencyName={consentModal.agencyName}
-        vacancyTitle={consentModal.vacancyTitle}
-      />
     </div>
   );
 }

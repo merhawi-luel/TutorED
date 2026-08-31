@@ -1,5 +1,6 @@
 import { useState } from "react";
 import AdminSidebar, { type AdminTab } from "@/components/layout/AdminSidebar";
+import { useTheme } from "@/context/ThemeContext";
 import AdminOverview from "./AdminOverview";
 import AdminVerifications from "./AdminVerifications";
 import AdminDocuments from "./AdminDocuments";
@@ -22,11 +23,12 @@ const TAB_COMPONENTS: Record<AdminTab, React.ComponentType<{ onTabChange?: (tab:
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+  const { colors } = useTheme();
 
   const Page = TAB_COMPONENTS[activeTab];
 
   return (
-    <div className="flex min-h-screen" style={{ background: "#000000" }}>
+    <div className="flex min-h-screen" style={{ background: colors.bgPage }}>
       <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
       <main className="flex-1 min-w-0 p-6 md:p-8 lg:p-10 overflow-y-auto">
         <Page onTabChange={setActiveTab} />

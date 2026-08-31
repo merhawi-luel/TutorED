@@ -1,5 +1,6 @@
 import { useState } from "react";
 import ParentSidebar, { type ParentTab } from "@/components/layout/ParentSidebar";
+import { useTheme } from "@/context/ThemeContext";
 import ParentOverview from "./ParentOverview";
 import ParentProfile from "./ParentProfile";
 import ParentRecruitment from "./ParentRecruitment";
@@ -12,9 +13,9 @@ import ParentSettings from "./ParentSettings";
 export default function ParentDashboard() {
   const [activeTab, setActiveTab] = useState<ParentTab>("overview");
   const [selectedVacancyId, setSelectedVacancyId] = useState<string | null>(null);
+  const { colors } = useTheme();
 
   const renderPage = () => {
-    // If viewing a specific vacancy's applicants
     if (selectedVacancyId) {
       return (
         <ParentVacancyApplicants
@@ -49,7 +50,7 @@ export default function ParentDashboard() {
   };
 
   return (
-    <div className="flex min-h-screen" style={{ background: "#000000" }}>
+    <div className="flex min-h-screen" style={{ background: colors.bgPage }}>
       <ParentSidebar activeTab={activeTab} onTabChange={setActiveTab} />
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-6xl mx-auto px-6 py-8">

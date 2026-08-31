@@ -1,249 +1,432 @@
-import { useState } from "react";
-import { useData } from "@/context/DataContext";
-import { useTheme } from "@/context/ThemeContext";
-import { useInView } from "@/hooks/useInView";
-import { Save, Plus, X } from "lucide-react";
-import type { TeachingMode } from "@/types";
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
+import { useData } from '../../context/DataContext';
+import { tutorApi } from '../../lib/api';
+import { User, Mail, Phone, MapPin, Save, X, Check, Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
-const SUBJECT_OPTIONS = [
-  "Mathematics",
-  "Physics",
-  "Chemistry",
-  "Biology",
-  "English",
-  "Amharic",
-  "History",
-  "Geography",
-  "Computer Science",
-  "Economics",
+const subjects = [
+  'Mathematics', 'English', 'Science', 'Physics', 'Chemistry', 'Biology',
+  'History', 'Geography', 'Computer Science', 'Music', 'Art', 'French',
+  'Spanish', 'Economics', 'Psychology', 'Business Studies'
 ];
 
-const GRADE_OPTIONS = [
-  "Grade 1",
-  "Grade 2",
-  "Grade 3",
-  "Grade 4",
-  "Grade 5",
-  "Grade 6",
-  "Grade 7",
-  "Grade 8",
-  "Grade 9",
-  "Grade 10",
-  "Grade 11",
-  "Grade 12",
+const levels = [
+  'Primary', 'GCSE', 'A-Level', 'University', 'Professional'
 ];
+
+interface SubjectTag {
+  subject: string;
+  level: string;
+}
 
 export default function TutorProfile() {
-  const { tutorProfile, updateProfile } = useData();
-  const { isDark } = useTheme();
-  const { ref, inView } = useInView();
+  const { user } = useAuth();
+  const { colors } = useTheme();
+  const { profile, refreshData } = useData();
+  const [editMode, setEditMode] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: profile?.firstName || '',
+    lastName: profile?.lastName || '',
+    email: user?.email || '',
+    phone: profile?.phone || '',
+    location: profile?.location || '',
+    bio: profile?.bio || '',
+  });
+  const [selectedSubjects, setSelectedSubjects] = useState<SubjectTag[]>(
+    profile?.subjects?.map((s: string) => ({ subject: s.split(' - ')[0], level: s.split(' - ')[1] || '' })) || []
+  );
+  const [showSubjectPicker, setShowSubjectPicker] = useState(false);
+  const [newSubject, setNewSubject] = useState('');
+  const [newLevel, setNewLevel] = useState('GCSE');
 
-  const [headline, setHeadline] = useState(tutorProfile?.headline ?? "");
-  const [bio, setBio] = useState(tutorProfile?.bio ?? "");
-  const [subjects, setSubjects] = useState<string[]>(tutorProfile?.subjects ?? []);
-  const [grades, setGrades] = useState<string[]>(tutorProfile?.grades ?? []);
-  const [experience, setExperience] = useState(tutorProfile?.experience ?? 0);
-  const [education, setEducation] = useState(tutorProfile?.education ?? "");
-  const [location, setLocation] = useState(tutorProfile?.location ?? "");
-  const [teachingMode, setTeachingMode] = useState<TeachingMode>(tutorProfile?.teachingMode ?? "in-person");
-  const [availability, setAvailability] = useState(tutorProfile?.availability ?? "");
-  const [saved, setSaved] = useState(false);
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        firstName: profile.firstName || '',
+        lastName: profile.lastName || '',
+        email: user?.email || '',
+        phone: profile.phone || '',
+        location: profile.location || '',
+        bio: profile.bio || '',
+      });
+      setSelectedSubjects(
+        profile.subjects?.map((s: string) => ({ subject: s.split(' - ')[0], level: s.split(' - ')[1] || '' })) || []
+      );
+    }
+  }, [profile, user]);
 
-  const toggleSubject = (s: string) => {
-    setSubjects((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      const subjectsStr = selectedSubjects.map(s => `${s.subject} - ${s.level}`);
+      await tutorApi.updateProfile({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        location: formData.location,
+        bio: formData.bio,
+        subjects: subjectsStr,
+      });
+      await refreshData();
+      setEditMode(false);
+      toast.success('Profile updated successfully');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const toggleGrade = (g: string) => {
-    setGrades((prev) => (prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]));
+  const addSubject = () => {
+    if (newSubject && !selectedSubjects.some(s => s.subject === newSubject)) {
+      setSelectedSubjects([...selectedSubjects, { subject: newSubject, level: newLevel }]);
+      setNewSubject('');
+    }
   };
 
-  const handleSave = () => {
-    updateProfile({ headline, bio, subjects, grades, experience, education, location, teachingMode, availability });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const removeSubject = (index: number) => {
+    setSelectedSubjects(selectedSubjects.filter((_, i) => i !== index));
   };
-
-  const cardBg = isDark ? "#111111" : "#FFFFFF";
-  const cardBorder = isDark ? "#1F1F1F" : "#E2E8F0";
-  const inputBg = isDark ? "#0D0D0D" : "#F1F5F9";
-  const inputBorder = isDark ? "#1F1F1F" : "#E2E8F0";
-  const textPrimary = isDark ? "#FFFFFF" : "#0F172A";
-  const textSecondary = isDark ? "#9CA3AF" : "#475569";
-  const textMuted = isDark ? "#6B7280" : "#94A3B8";
-  const pillBg = isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)";
-  const pillBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
 
   return (
-    <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
-      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 fade-up ${inView ? "in-view" : ""}`}>
-        <div>
-          <h1 className="text-2xl font-semibold" style={{ color: textPrimary }}>My Profile</h1>
-          <p className="text-sm mt-1" style={{ color: textSecondary }}>Build your professional teaching identity.</p>
-        </div>
-        <button
-          onClick={handleSave}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
-          style={{ background: "#22C55E", color: "black", minWidth: 180, justifyContent: "center" }}
-        >
-          <Save size={16} />
-          {saved ? "Saved!" : "Save Profile"}
-        </button>
+    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+      <div style={{ marginBottom: '32px' }}>
+        <h1 style={{ 
+          fontSize: '28px', 
+          fontWeight: '700', 
+          color: colors.primaryText, 
+          marginBottom: '8px',
+          fontFamily: "'Inter', sans-serif"
+        }}>
+          Profile
+        </h1>
+        <p style={{ 
+          fontSize: '16px', 
+          color: colors.secondaryText 
+        }}>
+          Manage your personal information and subjects
+        </p>
       </div>
 
-      {/* Basic Info */}
-      <section
-        className={`rounded-2xl p-6 space-y-5 fade-up delay-100 ${inView ? "in-view" : ""}`}
-        style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
-      >
-        <h2 className="text-sm font-medium" style={{ color: textSecondary }}>Basic Information</h2>
-
-        <div>
-          <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Headline</label>
-          <input
-            value={headline}
-            onChange={(e) => setHeadline(e.target.value)}
-            placeholder="e.g. Mathematics Tutor"
-            className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors"
-            style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
-          />
+      {/* Profile Card */}
+      <div style={{
+        backgroundColor: colors.card,
+        borderRadius: '16px',
+        padding: '32px',
+        marginBottom: '24px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+        border: `1px solid ${colors.border}`
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '600', color: colors.primaryText }}>
+            Personal Information
+          </h2>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {editMode ? (
+              <>
+                <button
+                  onClick={() => setEditMode(false)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '10px 20px', borderRadius: '12px', border: `1px solid ${colors.border}`,
+                    backgroundColor: colors.background, color: colors.secondaryText,
+                    fontSize: '14px', fontWeight: '500', cursor: 'pointer'
+                  }}
+                >
+                  <X size={16} /> Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={loading}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '10px 20px', borderRadius: '12px', border: 'none',
+                    backgroundColor: colors.primary, color: '#fff',
+                    fontSize: '14px', fontWeight: '600', cursor: 'pointer',
+                    opacity: loading ? 0.7 : 1
+                  }}
+                >
+                  <Save size={16} /> {loading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setEditMode(true)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  padding: '10px 20px', borderRadius: '12px', border: 'none',
+                  backgroundColor: colors.primary, color: '#fff',
+                  fontSize: '14px', fontWeight: '600', cursor: 'pointer'
+                }}
+              >
+                <User size={16} /> Edit Profile
+              </button>
+            )}
+          </div>
         </div>
 
-        <div>
-          <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Bio</label>
-          <textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            placeholder="Tell agencies about your teaching experience and approach..."
-            rows={4}
-            className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors resize-none"
-            style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
-          />
-        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.secondaryText, marginBottom: '8px' }}>
+              First Name
+            </label>
+            {editMode ? (
+              <input
+                type="text"
+                value={formData.firstName}
+                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                style={{
+                  width: '100%', padding: '12px 16px', borderRadius: '12px',
+                  border: `1px solid ${colors.border}`, backgroundColor: colors.background,
+                  color: colors.primaryText, fontSize: '15px', outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
+            ) : (
+              <div style={{ padding: '12px 0', color: colors.primaryText, fontSize: '15px' }}>
+                {formData.firstName || 'Not set'}
+              </div>
+            )}
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Years of Experience</label>
-            <input
-              type="number"
-              min={0}
-              value={experience}
-              onChange={(e) => setExperience(Number(e.target.value))}
-              className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors"
-              style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
-            />
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.secondaryText, marginBottom: '8px' }}>
+              Last Name
+            </label>
+            {editMode ? (
+              <input
+                type="text"
+                value={formData.lastName}
+                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                style={{
+                  width: '100%', padding: '12px 16px', borderRadius: '12px',
+                  border: `1px solid ${colors.border}`, backgroundColor: colors.background,
+                  color: colors.primaryText, fontSize: '15px', outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
+            ) : (
+              <div style={{ padding: '12px 0', color: colors.primaryText, fontSize: '15px' }}>
+                {formData.lastName || 'Not set'}
+              </div>
+            )}
           </div>
+
           <div>
-            <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Education</label>
-            <input
-              value={education}
-              onChange={(e) => setEducation(e.target.value)}
-              placeholder="e.g. BSc Mathematics"
-              className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors"
-              style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
-            />
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.secondaryText, marginBottom: '8px' }}>
+              <Mail size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+              Email
+            </label>
+            <div style={{ padding: '12px 0', color: colors.primaryText, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {formData.email}
+              <span style={{ 
+                fontSize: '11px', padding: '3px 8px', borderRadius: '6px',
+                backgroundColor: '#D4EDDA', color: '#155724', fontWeight: '500'
+              }}>
+                Verified
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.secondaryText, marginBottom: '8px' }}>
+              <Phone size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+              Phone
+            </label>
+            {editMode ? (
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                style={{
+                  width: '100%', padding: '12px 16px', borderRadius: '12px',
+                  border: `1px solid ${colors.border}`, backgroundColor: colors.background,
+                  color: colors.primaryText, fontSize: '15px', outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
+            ) : (
+              <div style={{ padding: '12px 0', color: colors.primaryText, fontSize: '15px' }}>
+                {formData.phone || 'Not set'}
+              </div>
+            )}
+          </div>
+
+          <div style={{ gridColumn: 'span 2' }}>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.secondaryText, marginBottom: '8px' }}>
+              <MapPin size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+              Location
+            </label>
+            {editMode ? (
+              <input
+                type="text"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                style={{
+                  width: '100%', padding: '12px 16px', borderRadius: '12px',
+                  border: `1px solid ${colors.border}`, backgroundColor: colors.background,
+                  color: colors.primaryText, fontSize: '15px', outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
+            ) : (
+              <div style={{ padding: '12px 0', color: colors.primaryText, fontSize: '15px' }}>
+                {formData.location || 'Not set'}
+              </div>
+            )}
+          </div>
+
+          <div style={{ gridColumn: 'span 2' }}>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.secondaryText, marginBottom: '8px' }}>
+              Bio
+            </label>
+            {editMode ? (
+              <textarea
+                value={formData.bio}
+                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                rows={4}
+                style={{
+                  width: '100%', padding: '12px 16px', borderRadius: '12px',
+                  border: `1px solid ${colors.border}`, backgroundColor: colors.background,
+                  color: colors.primaryText, fontSize: '15px', outline: 'none',
+                  resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box'
+                }}
+              />
+            ) : (
+              <div style={{ padding: '12px 0', color: colors.primaryText, fontSize: '15px', lineHeight: '1.6' }}>
+                {formData.bio || 'No bio added yet'}
+              </div>
+            )}
           </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Location</label>
-            <input
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="e.g. Addis Ababa"
-              className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors"
-              style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
-            />
-          </div>
-          <div>
-            <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Teaching Mode</label>
-            <select
-              value={teachingMode}
-              onChange={(e) => setTeachingMode(e.target.value as TeachingMode)}
-              className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors"
-              style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
+      {/* Subjects Card */}
+      <div style={{
+        backgroundColor: colors.card,
+        borderRadius: '16px',
+        padding: '32px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+        border: `1px solid ${colors.border}`
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '600', color: colors.primaryText }}>
+            Subjects & Levels
+          </h2>
+          {editMode && (
+            <button
+              onClick={() => setShowSubjectPicker(!showSubjectPicker)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '10px 20px', borderRadius: '12px', border: 'none',
+                backgroundColor: colors.primary, color: '#fff',
+                fontSize: '14px', fontWeight: '600', cursor: 'pointer',
+                minWidth: '180px', justifyContent: 'center'
+              }}
             >
-              <option value="in-person">In-person</option>
-              <option value="online">Online</option>
-              <option value="hybrid">Hybrid</option>
-            </select>
+              <Plus size={16} /> Add Subject
+            </button>
+          )}
+        </div>
+
+        {showSubjectPicker && editMode && (
+          <div style={{
+            backgroundColor: colors.background, borderRadius: '12px', padding: '20px',
+            marginBottom: '20px', border: `1px solid ${colors.border}`
+          }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'end' }}>
+              <div style={{ flex: 2 }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: colors.secondaryText, marginBottom: '6px' }}>
+                  Subject
+                </label>
+                <select
+                  value={newSubject}
+                  onChange={(e) => setNewSubject(e.target.value)}
+                  style={{
+                    width: '100%', padding: '10px 14px', borderRadius: '10px',
+                    border: `1px solid ${colors.border}`, backgroundColor: colors.card,
+                    color: colors.primaryText, fontSize: '14px', outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  <option value="">Select subject...</option>
+                  {subjects.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: colors.secondaryText, marginBottom: '6px' }}>
+                  Level
+                </label>
+                <select
+                  value={newLevel}
+                  onChange={(e) => setNewLevel(e.target.value)}
+                  style={{
+                    width: '100%', padding: '10px 14px', borderRadius: '10px',
+                    border: `1px solid ${colors.border}`, backgroundColor: colors.card,
+                    color: colors.primaryText, fontSize: '14px', outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  {levels.map(l => <option key={l} value={l}>{l}</option>)}
+                </select>
+              </div>
+              <button
+                onClick={addSubject}
+                disabled={!newSubject}
+                style={{
+                  padding: '10px 20px', borderRadius: '10px', border: 'none',
+                  backgroundColor: newSubject ? colors.primary : colors.border,
+                  color: '#fff', fontSize: '14px', fontWeight: '600',
+                  cursor: newSubject ? 'pointer' : 'not-allowed'
+                }}
+              >
+                Add
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
-        <div>
-          <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Availability</label>
-          <input
-            value={availability}
-            onChange={(e) => setAvailability(e.target.value)}
-            placeholder="e.g. Monday - Saturday"
-            className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors"
-            style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
-          />
-        </div>
-      </section>
-
-      {/* Subjects */}
-      <section
-        className={`rounded-2xl p-6 space-y-4 fade-up delay-200 ${inView ? "in-view" : ""}`}
-        style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
-      >
-        <h2 className="text-sm font-medium" style={{ color: textSecondary }}>Subjects</h2>
-        <div className="flex flex-wrap gap-2">
-          {SUBJECT_OPTIONS.map((s) => {
-            const selected = subjects.includes(s);
-            return (
-              <button
-                key={s}
-                onClick={() => toggleSubject(s)}
-                className="px-3.5 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5"
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+          {selectedSubjects.length === 0 ? (
+            <p style={{ color: colors.secondaryText, fontSize: '14px' }}>No subjects added yet</p>
+          ) : (
+            selectedSubjects.map((s, i) => (
+              <div
+                key={i}
                 style={{
-                  background: selected ? "rgba(34,197,94,0.15)" : pillBg,
-                  border: `1px solid ${selected ? "rgba(34,197,94,0.3)" : pillBorder}`,
-                  color: selected ? "#22C55E" : textSecondary,
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  padding: '10px 16px', borderRadius: '10px',
+                  backgroundColor: colors.background,
+                  border: `1px solid ${colors.border}`
                 }}
               >
-                {selected && <X size={12} />}
-                {s}
-              </button>
-            );
-          })}
-          <button
-            className="px-3.5 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5"
-            style={{ background: "transparent", border: `1px dashed ${pillBorder}`, color: textMuted }}
-          >
-            <Plus size={12} />
-            Custom
-          </button>
+                <span style={{ fontSize: '14px', fontWeight: '500', color: colors.primaryText }}>{s.subject}</span>
+                <span style={{
+                  fontSize: '12px', padding: '2px 8px', borderRadius: '6px',
+                  backgroundColor: colors.primaryLight, color: colors.primary
+                }}>
+                  {s.level}
+                </span>
+                {editMode && (
+                  <button
+                    onClick={() => removeSubject(i)}
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: colors.secondaryText, padding: '2px'
+                    }}
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+            ))
+          )}
         </div>
-      </section>
-
-      {/* Grades */}
-      <section
-        className={`rounded-2xl p-6 space-y-4 fade-up delay-300 ${inView ? "in-view" : ""}`}
-        style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
-      >
-        <h2 className="text-sm font-medium" style={{ color: textSecondary }}>Grades</h2>
-        <div className="flex flex-wrap gap-2">
-          {GRADE_OPTIONS.map((g) => {
-            const selected = grades.includes(g);
-            return (
-              <button
-                key={g}
-                onClick={() => toggleGrade(g)}
-                className="px-3.5 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5"
-                style={{
-                  background: selected ? "rgba(34,197,94,0.15)" : pillBg,
-                  border: `1px solid ${selected ? "rgba(34,197,94,0.3)" : pillBorder}`,
-                  color: selected ? "#22C55E" : textSecondary,
-                }}
-              >
-                {selected && <X size={12} />}
-                {g}
-              </button>
-            );
-          })}
-        </div>
-      </section>
+      </div>
     </div>
   );
 }

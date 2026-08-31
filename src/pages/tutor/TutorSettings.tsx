@@ -1,289 +1,237 @@
-import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { useTheme } from "@/context/ThemeContext";
-import { supabase } from "@/lib/supabase";
-import { useInView } from "@/hooks/useInView";
-import {
-  User,
-  Lock,
-  Bell,
-  Shield,
-  Save,
-  CheckCircle,
-  AlertCircle,
-  Loader2,
-  Sun,
-  Moon,
-} from "lucide-react";
+import { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
+import { useData } from '../../context/DataContext';
+import { tutorApi } from '../../lib/api';
+import { User, Bell, Shield, Save, Sun, Moon, Monitor } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function TutorSettings() {
   const { user, logout } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
-  const { ref, inView } = useInView();
+  const { colors, theme, setTheme } = useTheme();
+  const { profile, refreshData } = useData();
+  const [loading, setLoading] = useState(false);
+  const [settings, setSettings] = useState({
+    emailNotifications: true,
+    pushNotifications: true,
+    weeklyDigest: false,
+    showProfile: true,
+    allowMessages: true,
+  });
 
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordLoading, setPasswordLoading] = useState(false);
-  const [passwordMsg, setPasswordMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
-
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [vacancyAlerts, setVacancyAlerts] = useState(true);
-  const [applicationUpdates, setApplicationUpdates] = useState(true);
-  const [saved, setSaved] = useState(false);
-
-  const cardBg = isDark ? "#111111" : "#FFFFFF";
-  const cardBorder = isDark ? "#1F1F1F" : "#E2E8F0";
-  const inputBg = isDark ? "#0D0D0D" : "#F1F5F9";
-  const inputBorder = isDark ? "#1F1F1F" : "#E2E8F0";
-  const textPrimary = isDark ? "#FFFFFF" : "#0F172A";
-  const textSecondary = isDark ? "#9CA3AF" : "#475569";
-  const textMuted = isDark ? "#6B7280" : "#94A3B8";
-  const textFaint = isDark ? "#4B5563" : "#CBD5E1";
-
-  const handlePasswordChange = async () => {
-    setPasswordMsg(null);
-    if (!currentPassword || !newPassword) {
-      setPasswordMsg({ type: "error", text: "Please fill in all password fields." });
-      return;
-    }
-    if (newPassword.length < 6) {
-      setPasswordMsg({ type: "error", text: "New password must be at least 6 characters." });
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordMsg({ type: "error", text: "New passwords do not match." });
-      return;
-    }
-    setPasswordLoading(true);
+  const handleSave = async () => {
+    setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) {
-        setPasswordMsg({ type: "error", text: error.message });
-      } else {
-        setPasswordMsg({ type: "success", text: "Password updated successfully!" });
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-      }
-    } catch {
-      setPasswordMsg({ type: "error", text: "Failed to update password." });
+      // Save settings (placeholder for now)
+      await new Promise(resolve => setTimeout(resolve, 500));
+      toast.success('Settings saved successfully');
+    } catch (error) {
+      toast.error('Failed to save settings');
     } finally {
-      setPasswordLoading(false);
+      setLoading(false);
     }
-  };
-
-  const handleSaveNotifications = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
   };
 
   return (
-    <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
+    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
       {/* Header */}
-      <div className={`fade-up ${inView ? "in-view" : ""}`}>
-        <h1 className="text-2xl font-semibold" style={{ color: textPrimary }}>Settings</h1>
-        <p className="text-sm mt-1" style={{ color: textSecondary }}>Manage your account and preferences.</p>
+      <div style={{ marginBottom: '32px' }}>
+        <h1 style={{ 
+          fontSize: '28px', fontWeight: '700', color: colors.primaryText,
+          marginBottom: '8px', fontFamily: "'Inter', sans-serif"
+        }}>
+          Settings
+        </h1>
+        <p style={{ fontSize: '16px', color: colors.secondaryText }}>
+          Manage your account preferences
+        </p>
       </div>
 
       {/* Appearance */}
-      <section
-        className={`rounded-2xl p-6 space-y-5 fade-up delay-50 ${inView ? "in-view" : ""}`}
-        style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
-      >
-        <div className="flex items-center gap-2 mb-1">
-          {isDark ? <Sun size={16} style={{ color: "#F59E0B" }} /> : <Moon size={16} style={{ color: "#6366F1" }} />}
-          <h2 className="text-sm font-medium" style={{ color: textSecondary }}>Appearance</h2>
+      <div style={{
+        backgroundColor: colors.card, borderRadius: '16px', padding: '24px',
+        marginBottom: '24px', border: `1px solid ${colors.border}`,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+          <Monitor size={20} color={colors.primary} />
+          <h2 style={{ fontSize: '18px', fontWeight: '600', color: colors.primaryText }}>Appearance</h2>
         </div>
-
-        <div
-          className="flex items-center justify-between rounded-xl px-4 py-3"
-          style={{ background: inputBg, border: `1px solid ${inputBorder}` }}
-        >
-          <div>
-            <div className="text-sm" style={{ color: textPrimary }}>Theme</div>
-            <div className="text-xs" style={{ color: textMuted }}>{isDark ? "Dark mode" : "Light mode"} is currently active</div>
-          </div>
-          <button
-            onClick={toggleTheme}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
-            style={{ background: "#22C55E", color: "black" }}
-          >
-            {isDark ? <Sun size={14} /> : <Moon size={14} />}
-            Switch to {isDark ? "Light" : "Dark"}
-          </button>
-        </div>
-      </section>
-
-      {/* Account Info */}
-      <section
-        className={`rounded-2xl p-6 space-y-5 fade-up delay-100 ${inView ? "in-view" : ""}`}
-        style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
-      >
-        <div className="flex items-center gap-2 mb-1">
-          <User size={16} style={{ color: "#22C55E" }} />
-          <h2 className="text-sm font-medium" style={{ color: textSecondary }}>Account Information</h2>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Full Name</label>
-            <input
-              value={user?.name || ""}
-              disabled
-              className="w-full px-4 py-2.5 rounded-xl text-sm"
-              style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textFaint }}
-            />
-          </div>
-          <div>
-            <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Email</label>
-            <input
-              value={user?.email || ""}
-              disabled
-              className="w-full px-4 py-2.5 rounded-xl text-sm"
-              style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textFaint }}
-            />
-          </div>
-        </div>
-        <p className="text-xs" style={{ color: textFaint }}>
-          Contact support to update your name or email address.
+        
+        <p style={{ fontSize: '14px', color: colors.secondaryText, marginBottom: '16px' }}>
+          Choose your preferred theme
         </p>
-      </section>
 
-      {/* Change Password */}
-      <section
-        className={`rounded-2xl p-6 space-y-5 fade-up delay-200 ${inView ? "in-view" : ""}`}
-        style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
-      >
-        <div className="flex items-center gap-2 mb-1">
-          <Lock size={16} style={{ color: "#F59E0B" }} />
-          <h2 className="text-sm font-medium" style={{ color: textSecondary }}>Change Password</h2>
-        </div>
-
-        {passwordMsg && (
-          <div
-            className="rounded-xl px-4 py-2.5 flex items-center gap-2 text-sm"
-            style={{
-              background: passwordMsg.type === "success" ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
-              border: `1px solid ${passwordMsg.type === "success" ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.2)"}`,
-              color: passwordMsg.type === "success" ? "#4ADE80" : "#F87171",
-            }}
-          >
-            {passwordMsg.type === "success" ? <CheckCircle size={15} /> : <AlertCircle size={15} />}
-            {passwordMsg.text}
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs mb-1.5" style={{ color: textMuted }}>New Password</label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none"
-              style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
-            />
-          </div>
-          <div>
-            <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Confirm New Password</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none"
-              style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
-            />
-          </div>
-        </div>
-
-        <button
-          onClick={handlePasswordChange}
-          disabled={passwordLoading || !newPassword || !confirmPassword}
-          className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-40 flex items-center gap-2"
-          style={{ background: "rgba(245,158,11,0.15)", color: "#F59E0B", border: "1px solid rgba(245,158,11,0.3)", minWidth: 180 }}
-        >
-          {passwordLoading ? <Loader2 size={14} className="animate-spin" /> : <Lock size={14} />}
-          Update Password
-        </button>
-      </section>
-
-      {/* Notification Preferences */}
-      <section
-        className={`rounded-2xl p-6 space-y-5 fade-up delay-300 ${inView ? "in-view" : ""}`}
-        style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
-      >
-        <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center gap-2">
-            <Bell size={16} style={{ color: "#3B82F6" }} />
-            <h2 className="text-sm font-medium" style={{ color: textSecondary }}>Notification Preferences</h2>
-          </div>
-          <button
-            onClick={handleSaveNotifications}
-            className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-medium transition-all"
-            style={{ background: "#22C55E", color: "black" }}
-          >
-            {saved ? <CheckCircle size={13} /> : <Save size={13} />}
-            {saved ? "Saved!" : "Save"}
-          </button>
-        </div>
-
-        <div className="space-y-3">
+        <div style={{ display: 'flex', gap: '12px' }}>
           {[
-            { label: "Email Notifications", desc: "Receive general updates via email", value: emailNotifications, onChange: setEmailNotifications },
-            { label: "New Vacancy Alerts", desc: "Get notified when new matching vacancies are posted", value: vacancyAlerts, onChange: setVacancyAlerts },
-            { label: "Application Updates", desc: "Get notified when your application status changes", value: applicationUpdates, onChange: setApplicationUpdates },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="flex items-center justify-between rounded-xl px-4 py-3"
-              style={{ background: inputBg, border: `1px solid ${inputBorder}` }}
+            { value: 'light', label: 'Light', icon: <Sun size={20} /> },
+            { value: 'dark', label: 'Dark', icon: <Moon size={20} /> },
+            { value: 'system', label: 'System', icon: <Monitor size={20} /> },
+          ].map((option) => (
+            <button
+              key={option.value}
+              onClick={() => setTheme(option.value as 'light' | 'dark' | 'system')}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                padding: '16px 24px', borderRadius: '12px',
+                border: `2px solid ${theme === option.value ? colors.primary : colors.border}`,
+                backgroundColor: theme === option.value ? colors.primaryLight : colors.background,
+                color: theme === option.value ? colors.primary : colors.secondaryText,
+                cursor: 'pointer', transition: 'all 0.2s',
+                minWidth: '100px'
+              }}
             >
+              {option.icon}
+              <span style={{ fontSize: '14px', fontWeight: '500' }}>{option.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Notifications */}
+      <div style={{
+        backgroundColor: colors.card, borderRadius: '16px', padding: '24px',
+        marginBottom: '24px', border: `1px solid ${colors.border}`,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+          <Bell size={20} color={colors.primary} />
+          <h2 style={{ fontSize: '18px', fontWeight: '600', color: colors.primaryText }}>Notifications</h2>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {[
+            { key: 'emailNotifications', label: 'Email Notifications', desc: 'Receive updates about applications and vacancies' },
+            { key: 'pushNotifications', label: 'Push Notifications', desc: 'Get notified about new messages and updates' },
+            { key: 'weeklyDigest', label: 'Weekly Digest', desc: 'Receive a weekly summary of your activity' },
+          ].map((item) => (
+            <div key={item.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: `1px solid ${colors.border}` }}>
               <div>
-                <div className="text-sm" style={{ color: textPrimary }}>{item.label}</div>
-                <div className="text-xs" style={{ color: textMuted }}>{item.desc}</div>
+                <p style={{ fontSize: '15px', fontWeight: '500', color: colors.primaryText, marginBottom: '2px' }}>{item.label}</p>
+                <p style={{ fontSize: '13px', color: colors.secondaryText }}>{item.desc}</p>
               </div>
-              <button
-                onClick={() => item.onChange(!item.value)}
-                className="relative w-10 h-5 rounded-full transition-colors"
-                style={{ background: item.value ? "#22C55E" : isDark ? "#2A2A2A" : "#CBD5E1" }}
-              >
-                <span
-                  className="absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform"
-                  style={{ left: item.value ? "22px" : "2px" }}
+              <label style={{ position: 'relative', display: 'inline-block', width: '48px', height: '26px' }}>
+                <input
+                  type="checkbox"
+                  checked={(settings as any)[item.key]}
+                  onChange={(e) => setSettings({ ...settings, [item.key]: e.target.checked })}
+                  style={{ opacity: 0, width: 0, height: 0 }}
                 />
-              </button>
+                <span style={{
+                  position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                  backgroundColor: (settings as any)[item.key] ? colors.primary : colors.border,
+                  borderRadius: '13px', transition: '0.3s',
+                }}>
+                  <span style={{
+                    position: 'absolute', content: '""', height: '20px', width: '20px',
+                    left: (settings as any)[item.key] ? '24px' : '3px',
+                    bottom: '3px', backgroundColor: '#fff', borderRadius: '50%',
+                    transition: '0.3s',
+                  }} />
+                </span>
+              </label>
             </div>
           ))}
         </div>
-      </section>
+      </div>
 
-      {/* Danger Zone */}
-      <section
-        className={`rounded-2xl p-6 space-y-4 fade-up delay-400 ${inView ? "in-view" : ""}`}
-        style={{ background: cardBg, border: "1px solid rgba(239,68,68,0.2)" }}
-      >
-        <div className="flex items-center gap-2 mb-1">
-          <Shield size={16} style={{ color: "#EF4444" }} />
-          <h2 className="text-sm font-medium" style={{ color: textSecondary }}>Danger Zone</h2>
+      {/* Privacy */}
+      <div style={{
+        backgroundColor: colors.card, borderRadius: '16px', padding: '24px',
+        marginBottom: '24px', border: `1px solid ${colors.border}`,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+          <Shield size={20} color={colors.primary} />
+          <h2 style={{ fontSize: '18px', fontWeight: '600', color: colors.primaryText }}>Privacy</h2>
         </div>
 
-        <div className="flex items-center justify-between rounded-xl px-4 py-3" style={{ background: inputBg, border: `1px solid ${inputBorder}` }}>
-          <div>
-            <div className="text-sm" style={{ color: textPrimary }}>Sign Out</div>
-            <div className="text-xs" style={{ color: textMuted }}>Sign out of your account on this device.</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {[
+            { key: 'showProfile', label: 'Show Profile', desc: 'Make your profile visible to parents and agencies' },
+            { key: 'allowMessages', label: 'Allow Messages', desc: 'Allow parents and agencies to message you directly' },
+          ].map((item) => (
+            <div key={item.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: `1px solid ${colors.border}` }}>
+              <div>
+                <p style={{ fontSize: '15px', fontWeight: '500', color: colors.primaryText, marginBottom: '2px' }}>{item.label}</p>
+                <p style={{ fontSize: '13px', color: colors.secondaryText }}>{item.desc}</p>
+              </div>
+              <label style={{ position: 'relative', display: 'inline-block', width: '48px', height: '26px' }}>
+                <input
+                  type="checkbox"
+                  checked={(settings as any)[item.key]}
+                  onChange={(e) => setSettings({ ...settings, [item.key]: e.target.checked })}
+                  style={{ opacity: 0, width: 0, height: 0 }}
+                />
+                <span style={{
+                  position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                  backgroundColor: (settings as any)[item.key] ? colors.primary : colors.border,
+                  borderRadius: '13px', transition: '0.3s',
+                }}>
+                  <span style={{
+                    position: 'absolute', content: '""', height: '20px', width: '20px',
+                    left: (settings as any)[item.key] ? '24px' : '3px',
+                    bottom: '3px', backgroundColor: '#fff', borderRadius: '50%',
+                    transition: '0.3s',
+                  }} />
+                </span>
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Account */}
+      <div style={{
+        backgroundColor: colors.card, borderRadius: '16px', padding: '24px',
+        border: `1px solid ${colors.border}`,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+          <User size={20} color={colors.primary} />
+          <h2 style={{ fontSize: '18px', fontWeight: '600', color: colors.primaryText }}>Account</h2>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ padding: '12px 0', borderBottom: `1px solid ${colors.border}` }}>
+            <p style={{ fontSize: '13px', color: colors.secondaryText, marginBottom: '4px' }}>Email</p>
+            <p style={{ fontSize: '15px', color: colors.primaryText }}>{user?.email}</p>
+          </div>
+          <div style={{ padding: '12px 0', borderBottom: `1px solid ${colors.border}` }}>
+            <p style={{ fontSize: '13px', color: colors.secondaryText, marginBottom: '4px' }}>Role</p>
+            <p style={{ fontSize: '15px', color: colors.primaryText, textTransform: 'capitalize' }}>{user?.role}</p>
           </div>
           <button
-            onClick={() => { logout(); window.location.href = "/"; }}
-            className="px-4 py-1.5 rounded-lg text-xs font-medium transition-all"
-            style={{ background: "rgba(239,68,68,0.12)", color: "#F87171", border: "1px solid rgba(239,68,68,0.2)" }}
+            onClick={logout}
+            style={{
+              marginTop: '12px', padding: '12px 20px', borderRadius: '12px',
+              border: '1px solid #DC2626', backgroundColor: '#FEE2E2',
+              color: '#DC2626', fontSize: '14px', fontWeight: '600',
+              cursor: 'pointer', alignSelf: 'flex-start'
+            }}
           >
             Sign Out
           </button>
         </div>
-      </section>
+      </div>
+
+      {/* Save Button */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
+        <button
+          onClick={handleSave}
+          disabled={loading}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            padding: '12px 24px', borderRadius: '12px', border: 'none',
+            backgroundColor: colors.primary, color: '#fff',
+            fontSize: '14px', fontWeight: '600', cursor: 'pointer',
+            minWidth: '180px', justifyContent: 'center',
+            opacity: loading ? 0.7 : 1
+          }}
+        >
+          <Save size={16} /> {loading ? 'Saving...' : 'Save Settings'}
+        </button>
+      </div>
     </div>
   );
 }

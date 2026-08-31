@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 import {
   LayoutDashboard,
   User,
@@ -12,6 +13,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Users,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 export type ParentTab =
@@ -40,6 +43,7 @@ const NAV_ITEMS: { tab: ParentTab; label: string; icon: typeof LayoutDashboard }
 export default function ParentSidebar({ activeTab, onTabChange }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const { logout } = useAuth();
+  const { isDark, toggleTheme, colors } = useTheme();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -52,24 +56,26 @@ export default function ParentSidebar({ activeTab, onTabChange }: SidebarProps) 
       className="h-screen sticky top-0 flex flex-col transition-all duration-300 shrink-0"
       style={{
         width: collapsed ? "72px" : "260px",
-        background: "#0A0A0A",
-        borderRight: "1px solid #1F1F1F",
+        background: colors.bgSidebar,
+        borderRight: `1px solid ${colors.borderSubtle}`,
       }}
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-5 h-16 shrink-0" style={{ borderBottom: "1px solid #1F1F1F" }}>
+      <div className="flex items-center gap-3 px-5 h-16 shrink-0" style={{ borderBottom: `1px solid ${colors.borderSubtle}` }}>
         <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-black font-bold text-xs shrink-0"
-          style={{ background: "linear-gradient(135deg, #22C55E, #16A34A)" }}
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs shrink-0"
+          style={{ background: colors.logoGradient }}
         >
           E
         </div>
         {!collapsed && (
-          <span className="font-semibold text-white text-sm tracking-tight">EduVerify</span>
+          <span className="font-semibold text-sm tracking-tight" style={{ color: colors.textPrimary }}>
+            EduVerify
+          </span>
         )}
       </div>
 
-      {/* Nav Items */}
+      {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
@@ -82,8 +88,8 @@ export default function ParentSidebar({ activeTab, onTabChange }: SidebarProps) 
               style={{
                 padding: collapsed ? "10px 0" : "10px 14px",
                 justifyContent: collapsed ? "center" : "flex-start",
-                background: isActive ? "rgba(34,197,94,0.12)" : "transparent",
-                color: isActive ? "#22C55E" : "#6B7280",
+                background: isActive ? colors.accentBg : "transparent",
+                color: isActive ? colors.accent : colors.textMuted,
               }}
               title={collapsed ? item.label : undefined}
             >
@@ -95,15 +101,28 @@ export default function ParentSidebar({ activeTab, onTabChange }: SidebarProps) 
       </nav>
 
       {/* Bottom */}
-      <div className="px-3 py-4 space-y-1" style={{ borderTop: "1px solid #1F1F1F" }}>
+      <div className="px-3 py-4 space-y-1" style={{ borderTop: `1px solid ${colors.borderSubtle}` }}>
+        <button
+          onClick={toggleTheme}
+          className="w-full flex items-center gap-3 rounded-xl text-sm transition-colors"
+          style={{
+            padding: collapsed ? "10px 0" : "10px 14px",
+            justifyContent: collapsed ? "center" : "flex-start",
+            color: colors.textMuted,
+          }}
+          title={collapsed ? (isDark ? "Switch to Light" : "Switch to Dark") : undefined}
+        >
+          {isDark ? <Sun size={20} strokeWidth={1.5} /> : <Moon size={20} strokeWidth={1.5} />}
+          {!collapsed && <span>{isDark ? "Light Mode" : "Dark Mode"}</span>}
+        </button>
         <button
           onClick={() => onTabChange("settings")}
           className="w-full flex items-center gap-3 rounded-xl text-sm transition-colors"
           style={{
             padding: collapsed ? "10px 0" : "10px 14px",
             justifyContent: collapsed ? "center" : "flex-start",
-            color: activeTab === "settings" ? "#22C55E" : "#6B7280",
-            background: activeTab === "settings" ? "rgba(34,197,94,0.12)" : "transparent",
+            color: activeTab === "settings" ? colors.accent : colors.textMuted,
+            background: activeTab === "settings" ? colors.accentBg : "transparent",
           }}
           title={collapsed ? "Settings" : undefined}
         >
@@ -112,11 +131,11 @@ export default function ParentSidebar({ activeTab, onTabChange }: SidebarProps) 
         </button>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 rounded-xl text-sm transition-colors hover:text-white"
+          className="w-full flex items-center gap-3 rounded-xl text-sm transition-colors"
           style={{
             padding: collapsed ? "10px 0" : "10px 14px",
             justifyContent: collapsed ? "center" : "flex-start",
-            color: "#6B7280",
+            color: colors.textMuted,
           }}
           title={collapsed ? "Sign Out" : undefined}
         >
@@ -125,11 +144,11 @@ export default function ParentSidebar({ activeTab, onTabChange }: SidebarProps) 
         </button>
       </div>
 
-      {/* Collapse Toggle */}
+      {/* Collapse */}
       <button
         onClick={() => setCollapsed(!collapsed)}
         className="hidden md:flex items-center justify-center h-10 mx-3 mb-3 rounded-lg transition-colors"
-        style={{ background: "#111111", border: "1px solid #1F1F1F", color: "#6B7280" }}
+        style={{ background: colors.bgInput, border: `1px solid ${colors.borderSubtle}`, color: colors.textMuted }}
       >
         {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
       </button>

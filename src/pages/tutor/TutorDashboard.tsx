@@ -21,12 +21,12 @@ const TAB_COMPONENTS: Record<TutorTab, React.ComponentType<{ onTabChange?: (tab:
 
 export default function TutorDashboard() {
   const [activeTab, setActiveTab] = useState<TutorTab>("overview");
-  const { isDark } = useTheme();
+  const { colors } = useTheme();
 
   const Page = TAB_COMPONENTS[activeTab];
 
   return (
-    <div className="flex min-h-screen" style={{ background: isDark ? "#000000" : "#F8FAFC" }}>
+    <div className="flex min-h-screen" style={{ background: colors.bgPage }}>
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
       <main className="flex-1 min-w-0 p-6 md:p-8 lg:p-10 overflow-y-auto">
         <Page onTabChange={setActiveTab} />

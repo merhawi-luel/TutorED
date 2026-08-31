@@ -1,261 +1,289 @@
-import { useState } from "react";
-import { useData } from "@/context/DataContext";
-import { useTheme } from "@/context/ThemeContext";
-import { useInView } from "@/hooks/useInView";
-import {
-  GraduationCap,
-  Plus,
-  Trash2,
-  CheckCircle2,
-  Clock,
-  XCircle,
-  AlertCircle,
-  Loader2,
-} from "lucide-react";
-import type { EducationEntryStatus } from "@/types";
-
-const STATUS_CONFIG: Record<EducationEntryStatus, { color: string; label: string; icon: typeof CheckCircle2 }> = {
-  approved: { color: "#22C55E", label: "Approved", icon: CheckCircle2 },
-  pending: { color: "#F59E0B", label: "Pending", icon: Clock },
-  rejected: { color: "#EF4444", label: "Rejected", icon: XCircle },
-};
+import { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
+import { useData } from '../../context/DataContext';
+import { tutorApi } from '../../lib/api';
+import { GraduationCap, Plus, Trash2, Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function TutorEducation() {
-  const { educationEntries, addEducationEntry, removeEducationEntry } = useData();
-  const { isDark } = useTheme();
-  const { ref, inView } = useInView();
+  const { user } = useAuth();
+  const { colors } = useTheme();
+  const { educationEntries, refreshData } = useData();
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    title: '',
+    description: '',
+  });
 
-  const [showForm, setShowForm] = useState(false);
-  const [name, setName] = useState("");
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const userEntries = educationEntries.filter(e => e.tutorId === user?.id);
+  const approvedCount = userEntries.filter(e => e.status === 'approved').length;
+  const isVerified = userEntries.length > 0 && userEntries.every(e => e.status === 'approved');
 
-  const handleSubmit = async () => {
-    if (!name.trim() || !title.trim()) {
-      setError("Name and title are required");
+  const handleAdd = async () => {
+    if (!formData.title.trim() || !formData.description.trim()) {
+      toast.error('Please fill in all fields');
       return;
     }
-    setSubmitting(true);
-    setError(null);
+    setLoading(true);
     try {
-      await addEducationEntry({ name: name.trim(), title: title.trim(), description: description.trim() });
-      setName("");
-      setTitle("");
-      setDescription("");
-      setShowForm(false);
-    } catch (err: any) {
-      setError(err.message || "Failed to add education entry");
+      await tutorApi.createEducationEntry({
+        name: `${user?.firstName} ${user?.lastName}`,
+        title: formData.title,
+        description: formData.description,
+      });
+      await refreshData();
+      setShowAddForm(false);
+      setFormData({ name: '', title: '', description: '' });
+      toast.success('Education entry submitted for review');
+    } catch (error) {
+      console.error('Error adding education entry:', error);
+      toast.error('Failed to add education entry');
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
-  const handleDelete = async (entryId: string) => {
-    await removeEducationEntry(entryId);
-    setDeleteConfirm(null);
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this entry?')) return;
+    try {
+      await tutorApi.deleteEducationEntry(id);
+      await refreshData();
+      toast.success('Education entry deleted');
+    } catch (error) {
+      console.error('Error deleting entry:', error);
+      toast.error('Failed to delete entry');
+    }
   };
 
-  const cardBg = isDark ? "#111111" : "#FFFFFF";
-  const cardBorder = isDark ? "#1F1F1F" : "#E2E8F0";
-  const inputBg = isDark ? "#0D0D0D" : "#F1F5F9";
-  const inputBorder = isDark ? "#1F1F1F" : "#E2E8F0";
-  const textPrimary = isDark ? "#FFFFFF" : "#0F172A";
-  const textSecondary = isDark ? "#9CA3AF" : "#475569";
-  const textMuted = isDark ? "#6B7280" : "#94A3B8";
-  const textFaint = isDark ? "#4B5563" : "#CBD5E1";
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return { icon: <CheckCircle size={14} />, color: '#16A34A', bg: '#DCFCE7', text: 'Approved' };
+      case 'pending':
+        return { icon: <Clock size={14} />, color: '#D97706', bg: '#FEF3C7', text: 'Pending' };
+      case 'rejected':
+        return { icon: <XCircle size={14} />, color: '#DC2626', bg: '#FEE2E2', text: 'Rejected' };
+      default:
+        return { icon: <Clock size={14} />, color: colors.secondaryText, bg: colors.background, text: 'Unknown' };
+    }
+  };
 
   return (
-    <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
+    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
       {/* Header */}
-      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 fade-up ${inView ? "in-view" : ""}`}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
         <div>
-          <h1 className="text-2xl font-semibold" style={{ color: textPrimary }}>Education Verification</h1>
-          <p className="text-sm mt-1" style={{ color: textSecondary }}>
-            Add your education credentials for admin verification. You must be approved to be verified.
+          <h1 style={{ 
+            fontSize: '28px', fontWeight: '700', color: colors.primaryText, 
+            marginBottom: '8px', fontFamily: "'Inter', sans-serif"
+          }}>
+            Education
+          </h1>
+          <p style={{ fontSize: '16px', color: colors.secondaryText }}>
+            Manage your education credentials and verification status
           </p>
         </div>
         <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
-          style={{ background: "#22C55E", color: "black", minWidth: 180, justifyContent: "center" }}
+          onClick={() => setShowAddForm(!showAddForm)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            padding: '10px 20px', borderRadius: '12px', border: 'none',
+            backgroundColor: colors.primary, color: '#fff',
+            fontSize: '14px', fontWeight: '600', cursor: 'pointer',
+            minWidth: '180px', justifyContent: 'center'
+          }}
         >
-          <Plus size={16} />
-          Add Entry
+          <Plus size={16} /> Add Education
         </button>
       </div>
 
-      {/* Verification Rule */}
-      <div
-        className={`rounded-xl px-5 py-4 flex items-start gap-3 fade-up delay-100 ${inView ? "in-view" : ""}`}
-        style={{ background: isDark ? "rgba(245,158,11,0.06)" : "rgba(234,179,8,0.06)", border: `1px solid ${isDark ? "rgba(245,158,11,0.15)" : "rgba(234,179,8,0.15)"}` }}
-      >
-        <AlertCircle size={18} className="mt-0.5 shrink-0" style={{ color: "#F59E0B" }} />
-        <div className="text-xs leading-relaxed" style={{ color: textSecondary }}>
-          <span className="font-medium" style={{ color: textPrimary }}>Verification Rule:</span> You are only marked as verified when ALL of your submitted education entries are approved by an admin. If even one entry is pending or rejected, you remain unverified.
+      {/* Verification Banner */}
+      <div style={{
+        backgroundColor: isVerified ? '#DCFCE7' : '#FEF3C7',
+        border: `1px solid ${isVerified ? '#86EFAC' : '#FCD34D'}`,
+        borderRadius: '12px', padding: '16px 20px', marginBottom: '24px',
+        display: 'flex', alignItems: 'center', gap: '12px'
+      }}>
+        {isVerified ? (
+          <CheckCircle size={20} color="#16A34A" />
+        ) : (
+          <AlertTriangle size={20} color="#D97706" />
+        )}
+        <div>
+          <p style={{ 
+            fontSize: '14px', fontWeight: '600', 
+            color: isVerified ? '#166534' : '#92400E', marginBottom: '2px'
+          }}>
+            {isVerified ? '✓ Verified — All entries approved' : `Verification: ${approvedCount}/${userEntries.length} entries approved`}
+          </p>
+          <p style={{ fontSize: '13px', color: isVerified ? '#166534' : '#92400E' }}>
+            You are verified only when ALL submitted entries are approved by an admin.
+          </p>
         </div>
       </div>
 
       {/* Add Form */}
-      {showForm && (
-        <section
-          className={`rounded-2xl p-6 space-y-4 fade-up delay-150 ${inView ? "in-view" : ""}`}
-          style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
-        >
-          <h2 className="text-sm font-medium" style={{ color: textSecondary }}>New Education Entry</h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {showAddForm && (
+        <div style={{
+          backgroundColor: colors.card, borderRadius: '16px', padding: '24px',
+          marginBottom: '24px', border: `1px solid ${colors.border}`,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+        }}>
+          <h3 style={{ fontSize: '18px', fontWeight: '600', color: colors.primaryText, marginBottom: '20px' }}>
+            Add Education Entry
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
-              <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Name</label>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.secondaryText, marginBottom: '6px' }}>
+                Title (e.g., "BSc Computer Science")
+              </label>
               <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Merhawi Luel"
-                className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors"
-                style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Enter your education title"
+                style={{
+                  width: '100%', padding: '12px 16px', borderRadius: '12px',
+                  border: `1px solid ${colors.border}`, backgroundColor: colors.background,
+                  color: colors.primaryText, fontSize: '15px', outline: 'none',
+                  boxSizing: 'border-box'
+                }}
               />
             </div>
             <div>
-              <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Title</label>
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. BSc Computer Science"
-                className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors"
-                style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.secondaryText, marginBottom: '6px' }}>
+                Description
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Describe your education, achievements, or credentials"
+                rows={4}
+                style={{
+                  width: '100%', padding: '12px 16px', borderRadius: '12px',
+                  border: `1px solid ${colors.border}`, backgroundColor: colors.background,
+                  color: colors.primaryText, fontSize: '15px', outline: 'none',
+                  resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box'
+                }}
               />
             </div>
-          </div>
-
-          <div>
-            <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe your education or credential..."
-              rows={3}
-              className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors resize-none"
-              style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
-            />
-          </div>
-
-          {error && (
-            <div
-              className="rounded-xl px-4 py-2.5 flex items-center gap-2 text-sm"
-              style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#F87171" }}
-            >
-              <AlertCircle size={15} />
-              {error}
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowAddForm(false)}
+                style={{
+                  padding: '10px 20px', borderRadius: '12px', border: `1px solid ${colors.border}`,
+                  backgroundColor: colors.background, color: colors.secondaryText,
+                  fontSize: '14px', fontWeight: '500', cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAdd}
+                disabled={loading}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  padding: '10px 20px', borderRadius: '12px', border: 'none',
+                  backgroundColor: colors.primary, color: '#fff',
+                  fontSize: '14px', fontWeight: '600', cursor: 'pointer',
+                  minWidth: '180px', justifyContent: 'center',
+                  opacity: loading ? 0.7 : 1
+                }}
+              >
+                <GraduationCap size={16} /> {loading ? 'Submitting...' : 'Submit for Review'}
+              </button>
             </div>
-          )}
-
-          <div className="flex gap-3">
-            <button
-              onClick={handleSubmit}
-              disabled={submitting || !name.trim() || !title.trim()}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
-              style={{ background: "#22C55E", color: "black", minWidth: 180, justifyContent: "center" }}
-            >
-              {submitting ? (
-                <><Loader2 size={14} className="animate-spin" /> Submitting...</>
-              ) : (
-                <><Plus size={14} /> Add Entry</>
-              )}
-            </button>
-            <button
-              onClick={() => { setShowForm(false); setError(null); }}
-              className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all"
-              style={{ background: inputBg, color: textSecondary, border: `1px solid ${inputBorder}` }}
-            >
-              Cancel
-            </button>
           </div>
-        </section>
+        </div>
       )}
 
       {/* Entries List */}
-      <div className="space-y-3">
-        {educationEntries.length === 0 ? (
-          <div
-            className={`rounded-2xl p-12 text-center fade-up delay-200 ${inView ? "in-view" : ""}`}
-            style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
-          >
-            <GraduationCap size={32} className="mx-auto mb-3" style={{ color: textFaint }} />
-            <p className="text-sm" style={{ color: textSecondary }}>No education entries yet.</p>
-            <p className="text-xs mt-1" style={{ color: textFaint }}>Click "Add Entry" to submit your credentials for verification.</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {userEntries.length === 0 ? (
+          <div style={{
+            backgroundColor: colors.card, borderRadius: '16px', padding: '48px',
+            textAlign: 'center', border: `1px solid ${colors.border}`
+          }}>
+            <GraduationCap size={48} color={colors.border} style={{ marginBottom: '16px' }} />
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: colors.primaryText, marginBottom: '8px' }}>
+              No Education Entries
+            </h3>
+            <p style={{ fontSize: '14px', color: colors.secondaryText, marginBottom: '20px' }}>
+              Add your education credentials to get verified
+            </p>
+            <button
+              onClick={() => setShowAddForm(true)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px', margin: '0 auto',
+                padding: '10px 20px', borderRadius: '12px', border: 'none',
+                backgroundColor: colors.primary, color: '#fff',
+                fontSize: '14px', fontWeight: '600', cursor: 'pointer',
+                minWidth: '180px', justifyContent: 'center'
+              }}
+            >
+              <Plus size={16} /> Add Education
+            </button>
           </div>
         ) : (
-          educationEntries.map((entry, i) => {
-            const cfg = STATUS_CONFIG[entry.status];
-            const StatusIcon = cfg.icon;
-            const isDeleteConfirming = deleteConfirm === entry.id;
-
+          userEntries.map((entry) => {
+            const badge = getStatusBadge(entry.status);
             return (
               <div
                 key={entry.id}
-                className={`rounded-2xl overflow-hidden transition-all hover:-translate-y-0.5 fade-up delay-${Math.min((i + 1) * 100, 400)} ${inView ? "in-view" : ""}`}
-                style={{ background: cardBg, border: `1px solid ${cardBorder}`, boxShadow: "var(--shadow-card)" }}
+                style={{
+                  backgroundColor: colors.card, borderRadius: '16px', padding: '24px',
+                  border: `1px solid ${colors.border}`,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                }}
               >
-                <div className="flex items-center justify-between px-5 py-4">
-                  <div className="flex items-center gap-4">
-                    <div
-                      className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                      style={{ background: `${cfg.color}15` }}
-                    >
-                      <StatusIcon size={18} style={{ color: cfg.color }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                      <h3 style={{ fontSize: '16px', fontWeight: '600', color: colors.primaryText }}>
+                        {entry.title}
+                      </h3>
+                      <span style={{
+                        display: 'flex', alignItems: 'center', gap: '4px',
+                        fontSize: '12px', padding: '4px 10px', borderRadius: '8px',
+                        backgroundColor: badge.bg, color: badge.color, fontWeight: '500'
+                      }}>
+                        {badge.icon} {badge.text}
+                      </span>
                     </div>
-                    <div>
-                      <div className="text-sm font-medium" style={{ color: textPrimary }}>{entry.title}</div>
-                      <div className="text-xs" style={{ color: textMuted }}>
-                        {entry.name} · Submitted {entry.submittedAt}
-                      </div>
-                      {entry.description && (
-                        <div className="text-xs mt-0.5 max-w-md truncate" style={{ color: textFaint }}>{entry.description}</div>
-                      )}
-                      {entry.reviewerNote && (
-                        <div className="text-xs mt-0.5" style={{ color: "#EF4444" }}>
-                          Note: {entry.reviewerNote}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="px-2.5 py-1 rounded-lg text-xs font-medium capitalize"
-                      style={{ background: `${cfg.color}18`, color: cfg.color }}
-                    >
-                      {cfg.label}
-                    </span>
-                    {entry.status === "pending" && !isDeleteConfirming && (
-                      <button
-                        onClick={() => setDeleteConfirm(entry.id)}
-                        className="p-1.5 rounded-lg transition-colors hover:bg-white/5"
-                        title="Delete entry"
-                      >
-                        <Trash2 size={14} className="hover:text-red-400" style={{ color: textFaint }} />
-                      </button>
-                    )}
-                    {isDeleteConfirming && (
-                      <div className="flex gap-1.5">
-                        <button
-                          onClick={() => handleDelete(entry.id)}
-                          className="px-2.5 py-1 rounded-lg text-xs font-medium transition-all"
-                          style={{ background: "rgba(239,68,68,0.15)", color: "#F87171" }}
-                        >
-                          Confirm
-                        </button>
-                        <button
-                          onClick={() => setDeleteConfirm(null)}
-                          className="px-2.5 py-1 rounded-lg text-xs font-medium transition-all"
-                          style={{ background: inputBg, color: textSecondary }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
+                    <p style={{ fontSize: '14px', color: colors.secondaryText, lineHeight: '1.5', marginBottom: '8px' }}>
+                      {entry.description}
+                    </p>
+                    <p style={{ fontSize: '12px', color: colors.secondaryText }}>
+                      Submitted: {new Date(entry.submittedAt).toLocaleDateString()}
+                      {entry.reviewedAt && ` • Reviewed: ${new Date(entry.reviewedAt).toLocaleDateString()}`}
+                    </p>
+                    {entry.reviewerNote && (
+                      <p style={{ 
+                        fontSize: '13px', color: entry.status === 'rejected' ? '#DC2626' : colors.secondaryText,
+                        marginTop: '8px', fontStyle: 'italic'
+                      }}>
+                        Note: {entry.reviewerNote}
+                      </p>
                     )}
                   </div>
+                  {entry.status === 'pending' && (
+                    <button
+                      onClick={() => handleDelete(entry.id)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '6px',
+                        padding: '8px 14px', borderRadius: '10px',
+                        border: `1px solid ${colors.border}`,
+                        backgroundColor: colors.background,
+                        color: colors.secondaryText,
+                        fontSize: '13px', fontWeight: '500', cursor: 'pointer'
+                      }}
+                    >
+                      <Trash2 size={14} /> Delete
+                    </button>
+                  )}
                 </div>
               </div>
             );
