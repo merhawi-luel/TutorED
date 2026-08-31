@@ -79,6 +79,12 @@ export const applicationStatusEnum = pgEnum("application_status", [
   "withdrawn",
 ]);
 
+export const educationEntryStatusEnum = pgEnum("education_entry_status", [
+  "pending",
+  "approved",
+  "rejected",
+]);
+
 // ─── Users ───────────────────────────────────────────────────
 
 export const users = pgTable("users", {
@@ -245,4 +251,22 @@ export const organizationMembers = pgTable("organization_members", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   role: varchar("role", { length: 50 }).default("recruiter").notNull(),
+});
+
+// ─── Education Entries ───────────────────────────────────────
+
+export const educationEntries = pgTable("education_entries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tutorId: uuid("tutor_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").default("").notNull(),
+  status: educationEntryStatusEnum("status")
+    .default("pending")
+    .notNull(),
+  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewerNote: text("reviewer_note"),
 });
