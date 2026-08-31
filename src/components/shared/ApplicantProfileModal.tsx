@@ -1,3 +1,4 @@
+import { useTheme } from "@/context/ThemeContext";
 import { useState, useEffect } from "react";
 import {
   X,
@@ -126,7 +127,7 @@ export default function ApplicantProfileModal({
       {/* Modal */}
       <div
         className="relative w-full max-w-2xl max-h-[90vh] rounded-2xl overflow-hidden flex flex-col"
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: "var(--bg-card)", border: "1px solid #1F1F1F" }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #1F1F1F" }}>
@@ -231,7 +232,7 @@ export default function ApplicantProfileModal({
             {loading ? (
               <div
                 className="rounded-xl p-6 flex items-center justify-center"
-                style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                style={{ background: "var(--bg-input)", border: "1px solid #1F1F1F" }}
               >
                 <Loader2 size={20} className="animate-spin text-gray-500" />
                 <span className="ml-2 text-sm text-gray-500">Loading documents...</span>
@@ -247,7 +248,7 @@ export default function ApplicantProfileModal({
             ) : documents.length === 0 ? (
               <div
                 className="rounded-xl p-6 text-center"
-                style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                style={{ background: "var(--bg-input)", border: "1px solid #1F1F1F" }}
               >
                 <FileText size={24} className="mx-auto mb-2 text-gray-600" />
                 <p className="text-sm text-gray-500">No documents uploaded yet.</p>
@@ -273,7 +274,7 @@ export default function ApplicantProfileModal({
                 {/* Document List */}
                 <div
                   className="rounded-xl overflow-hidden"
-                  style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                  style={{ background: "var(--bg-input)", border: "1px solid #1F1F1F" }}
                 >
                   {documents.map((doc) => {
                     const statusConfig = DOC_STATUS_CONFIG[doc.status] || DOC_STATUS_CONFIG.pending;
@@ -341,14 +342,14 @@ export default function ApplicantProfileModal({
             <div className="grid grid-cols-2 gap-4">
               <div
                 className="rounded-xl p-3"
-                style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                style={{ background: "var(--bg-input)", border: "1px solid #1F1F1F" }}
               >
                 <div className="text-[10px] text-gray-600 uppercase mb-1">Teaching Mode</div>
                 <div className="text-xs text-white capitalize">{tutorProfile.teachingMode}</div>
               </div>
               <div
                 className="rounded-xl p-3"
-                style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                style={{ background: "var(--bg-input)", border: "1px solid #1F1F1F" }}
               >
                 <div className="text-[10px] text-gray-600 uppercase mb-1">Availability</div>
                 <div className="text-xs text-white">{tutorProfile.availability || "Not specified"}</div>
@@ -379,7 +380,7 @@ export default function ApplicantProfileModal({
           <div className="absolute inset-0 bg-black/80" onClick={() => setPreviewDoc(null)} />
           <div
             className="relative w-full max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden"
-            style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+            style={{ background: "var(--bg-card)", border: "1px solid #1F1F1F" }}
           >
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid #1F1F1F" }}>
               <span className="text-sm text-white">{previewDoc.title}</span>

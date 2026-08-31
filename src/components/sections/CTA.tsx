@@ -10,7 +10,7 @@ export default function CTA() {
     <section
       ref={sectionRef as React.RefObject<HTMLElement>}
       className="py-16 sm:py-24 px-4 sm:px-6 md:px-12 text-center"
-      style={{ background: isDark ? "linear-gradient(160deg, #000000 0%, #050F07 100%)" : `linear-gradient(160deg, ${colors.bgPage} 0%, ${colors.bgCard} 100%)` }}
+      style={{ background: isDark ? "linear-gradient(160deg, var(--bg-page) 0%, var(--bg-card) 100%)" : `linear-gradient(160deg, ${colors.bgPage} 0%, ${colors.bgCard} 100%)` }}
     >
       <div className="max-w-3xl mx-auto">
         <h2

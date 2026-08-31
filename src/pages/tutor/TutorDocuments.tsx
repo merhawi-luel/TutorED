@@ -1,3 +1,4 @@
+import { useTheme } from "@/context/ThemeContext";
 import { useState, useRef } from "react";
 import { useData } from "@/context/DataContext";
 import { tutorApi, uploadApi } from "@/lib/api";
@@ -28,11 +29,11 @@ const DOC_TYPE_LABELS: Record<DocumentType, string> = {
 };
 
 const STATUS_CONFIG: Record<DocumentStatus, { icon: typeof CheckCircle2; color: string; label: string }> = {
-  verified: { icon: CheckCircle2, color: "#22C55E", label: "Verified" },
-  pending: { icon: Clock, color: "#F59E0B", label: "Pending" },
-  under_review: { icon: Eye, color: "#3B82F6", label: "Under Review" },
-  rejected: { icon: XCircle, color: "#EF4444", label: "Rejected" },
-  expired: { icon: AlertCircle, color: "#6B7280", label: "Expired" },
+  verified: { icon: CheckCircle2, color: "var(--accent)", label: "Verified" },
+  pending: { icon: Clock, color: "var(--badge-pending-color)", label: "Pending" },
+  under_review: { icon: Eye, color: "var(--badge-info-color)", label: "Under Review" },
+  rejected: { icon: XCircle, color: "var(--danger-color)", label: "Rejected" },
+  expired: { icon: AlertCircle, color: "var(--text-muted)", label: "Expired" },
 };
 
 const DOC_OPTIONS: { value: DocumentType; label: string }[] = [
@@ -191,15 +192,15 @@ export default function TutorDocuments() {
       {/* Header */}
       <div className={`flex items-center justify-between fade-up ${inView ? "in-view" : ""}`}>
         <div>
-          <h1 className="text-2xl font-semibold text-white">Documents</h1>
-          <p className="text-sm text-gray-400 mt-1">
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Documents</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
             Upload and manage your credentials. All documents are kept private.
           </p>
         </div>
         <button
           onClick={() => setShowUpload(!showUpload)}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all"
-          style={{ background: "#22C55E", color: "black" }}
+          style={{ background: "var(--accent)", color: "#fff" }}
         >
           <Upload size={16} />
           Upload Document
@@ -210,7 +211,7 @@ export default function TutorDocuments() {
       {success && (
         <div
           className="rounded-xl px-5 py-3 flex items-center gap-3 text-sm"
-          style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", color: "#4ADE80" }}
+          style={{ background: "var(--accent-bg)", border: "1px solid var(--accent-border)", color: "var(--accent)" }}
         >
           <CheckCircle2 size={16} /> {success}
         </div>
@@ -218,7 +219,7 @@ export default function TutorDocuments() {
       {error && !showUpload && (
         <div
           className="rounded-xl px-5 py-3 flex items-center gap-3 text-sm"
-          style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#F87171" }}
+          style={{ background: "var(--danger-bg)", border: "1px solid var(--danger-bg)", color: "var(--danger-color)" }}
         >
           <AlertCircle size={16} /> {error}
         </div>
@@ -228,14 +229,14 @@ export default function TutorDocuments() {
       {showUpload && (
         <div
           className={`rounded-2xl p-6 space-y-4 fade-up ${inView ? "in-view" : ""}`}
-          style={{ background: "#111111", border: "1px solid rgba(34,197,94,0.3)" }}
+          style={{ background: "var(--bg-card)", border: "1px solid var(--accent-border)" }}
         >
           <h2 className="text-sm font-medium text-gray-300">Upload New Document</h2>
 
           {error && (
             <div
               className="rounded-xl px-4 py-2.5 flex items-center gap-2 text-sm"
-              style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#F87171" }}
+              style={{ background: "var(--danger-bg)", border: "1px solid var(--danger-bg)", color: "var(--danger-color)" }}
             >
               <AlertCircle size={15} />
               {error}
@@ -244,12 +245,12 @@ export default function TutorDocuments() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-500 mb-1.5">Document Type</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1.5">Document Type</label>
               <select
                 value={docType}
                 onChange={(e) => setDocType(e.target.value as DocumentType)}
-                className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none"
-                style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                className="w-full px-4 py-2.5 rounded-xl text-sm text-[var(--text-primary)] focus:outline-none"
+                style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
               >
                 {DOC_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -259,13 +260,13 @@ export default function TutorDocuments() {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1.5">Title</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1.5">Title</label>
               <input
                 value={docTitle}
                 onChange={(e) => setDocTitle(e.target.value)}
                 placeholder="e.g. My Degree Certificate"
-                className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none"
-                style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                className="w-full px-4 py-2.5 rounded-xl text-sm text-[var(--text-primary)] focus:outline-none"
+                style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
               />
             </div>
           </div>
@@ -276,8 +277,8 @@ export default function TutorDocuments() {
               selectedFile ? "border-emerald-500/50" : "hover:border-emerald-500/30"
             }`}
             style={{
-              background: "#0D0D0D",
-              border: `2px dashed ${selectedFile ? "rgba(34,197,94,0.5)" : "#1F1F1F"}`,
+              background: "var(--bg-input)",
+              border: `2px dashed ${selectedFile ? "var(--accent-border)" : "var(--border-color)"}`,
               cursor: uploading ? "default" : "pointer",
             }}
             onDragOver={(e) => e.preventDefault()}
@@ -302,7 +303,7 @@ export default function TutorDocuments() {
               <>
                 <FileText size={24} className="mx-auto mb-3 text-emerald-400" />
                 <p className="text-sm text-emerald-400 font-medium">{selectedFile.name}</p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-[var(--text-muted)] mt-1">
                   {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                 </p>
                 <button
@@ -311,16 +312,16 @@ export default function TutorDocuments() {
                     setSelectedFile(null);
                     if (fileInputRef.current) fileInputRef.current.value = "";
                   }}
-                  className="mt-2 text-xs text-gray-500 hover:text-white transition-colors"
+                  className="mt-2 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                 >
                   Remove file
                 </button>
               </>
             ) : (
               <>
-                <Upload size={24} className="mx-auto mb-3 text-gray-600" />
-                <p className="text-sm text-gray-400">Click to select or drag & drop a file</p>
-                <p className="text-xs text-gray-600 mt-1">PDF, JPG, or PNG — Max 10MB</p>
+                <Upload size={24} className="mx-auto mb-3 text-[var(--text-faint)]" />
+                <p className="text-sm text-[var(--text-secondary)]">Click to select or drag & drop a file</p>
+                <p className="text-xs text-[var(--text-faint)] mt-1">PDF, JPG, or PNG — Max 10MB</p>
               </>
             )}
           </div>
@@ -330,7 +331,7 @@ export default function TutorDocuments() {
               onClick={handleUpload}
               disabled={!docTitle || !selectedFile || uploading}
               className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-40 flex items-center gap-2"
-              style={{ background: "#22C55E", color: "black" }}
+              style={{ background: "var(--accent)", color: "#fff" }}
             >
               {uploading ? (
                 <>
@@ -348,7 +349,7 @@ export default function TutorDocuments() {
               onClick={resetForm}
               disabled={uploading}
               className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-40"
-              style={{ background: "#161616", color: "#9CA3AF", border: "1px solid #1F1F1F" }}
+              style={{ background: "var(--bg-input)", color: "var(--text-secondary)", border: "1px solid var(--border-color)" }}
             >
               Cancel
             </button>
@@ -358,13 +359,13 @@ export default function TutorDocuments() {
 
       {/* Document List */}
       <div className={`space-y-3 fade-up delay-100 ${inView ? "in-view" : ""}`}>
-        <h2 className="text-sm font-medium text-gray-400">
+        <h2 className="text-sm font-medium text-[var(--text-secondary)]">
           Uploaded Documents ({documents.length})
         </h2>
         {documents.length === 0 ? (
-          <div className="rounded-xl p-12 text-center" style={{ background: "#111111", border: "1px solid #1F1F1F" }}>
-            <FileText size={32} className="mx-auto mb-3 text-gray-600" />
-            <p className="text-sm text-gray-400">No documents uploaded yet.</p>
+          <div className="rounded-xl p-12 text-center" style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}>
+            <FileText size={32} className="mx-auto mb-3 text-[var(--text-faint)]" />
+            <p className="text-sm text-[var(--text-secondary)]">No documents uploaded yet.</p>
           </div>
         ) : (
           documents.map((doc, i) => {
@@ -374,25 +375,25 @@ export default function TutorDocuments() {
               <div
                 key={doc.id}
                 className={`flex items-center justify-between rounded-xl px-5 py-4 transition-all fade-up delay-${(i + 1) * 100} ${inView ? "in-view" : ""}`}
-                style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+                style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
               >
                 <div className="flex items-center gap-4">
                   <div
                     className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                    style={{ background: "rgba(34,197,94,0.1)" }}
+                    style={{ background: "var(--accent-bg)" }}
                   >
-                    <FileText size={18} style={{ color: "#22C55E" }} />
+                    <FileText size={18} style={{ color: "var(--accent)" }} />
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-white">{doc.title}</div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-sm font-medium text-[var(--text-primary)]">{doc.title}</div>
+                    <div className="text-xs text-[var(--text-muted)]">
                       {DOC_TYPE_LABELS[doc.type]} · {doc.fileName}
                     </div>
-                    <div className="text-xs text-gray-600 mt-0.5">
+                    <div className="text-xs text-[var(--text-faint)] mt-0.5">
                       Submitted {doc.submittedAt}
                       {doc.reviewedAt && ` · Reviewed ${doc.reviewedAt}`}
                       {doc.reviewerNote && (
-                        <span style={{ color: "#EF4444" }}> · &quot;{doc.reviewerNote}&quot;</span>
+                        <span style={{ color: "var(--danger-color)" }}> · &quot;{doc.reviewerNote}&quot;</span>
                       )}
                     </div>
                   </div>
@@ -410,14 +411,14 @@ export default function TutorDocuments() {
                     className="p-1.5 rounded-lg transition-colors hover:bg-white/5"
                     title="Preview"
                   >
-                    <Eye size={14} className="text-gray-600 hover:text-blue-400" />
+                    <Eye size={14} className="text-[var(--text-faint)] hover:text-blue-400" />
                   </button>
                   <button
                     onClick={() => handleDownload(doc.id, doc.fileName)}
                     className="p-1.5 rounded-lg transition-colors hover:bg-white/5"
                     title="Download"
                   >
-                    <Download size={14} className="text-gray-600 hover:text-emerald-400" />
+                    <Download size={14} className="text-[var(--text-faint)] hover:text-emerald-400" />
                   </button>
                   {doc.status === "pending" && (
                     <button
@@ -425,7 +426,7 @@ export default function TutorDocuments() {
                       className="p-1.5 rounded-lg transition-colors hover:bg-white/5"
                       title="Remove"
                     >
-                      <Trash2 size={14} className="text-gray-600 hover:text-red-400" />
+                      <Trash2 size={14} className="text-[var(--text-faint)] hover:text-red-400" />
                     </button>
                   )}
                 </div>

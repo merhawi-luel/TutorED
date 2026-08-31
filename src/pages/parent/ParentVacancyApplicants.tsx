@@ -1,3 +1,4 @@
+import { useTheme } from "@/context/ThemeContext";
 import { useState, useEffect } from "react";
 import { parentApi } from "@/lib/api";
 import { useInView } from "@/hooks/useInView";
@@ -64,13 +65,13 @@ interface TutorDocument {
 // ─── Constants ──────────────────────────────────────────────────
 
 const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
-  applied: { color: "#9CA3AF", label: "Applied" },
-  under_review: { color: "#60A5FA", label: "Under Review" },
-  shortlisted: { color: "#4ADE80", label: "Shortlisted" },
-  interview: { color: "#C084FC", label: "Interview" },
-  accepted: { color: "#22C55E", label: "Accepted" },
-  rejected: { color: "#F87171", label: "Rejected" },
-  withdrawn: { color: "#6B7280", label: "Withdrawn" },
+  applied: { color: "var(--text-secondary)", label: "Applied" },
+  under_review: { color: "var(--badge-info-color)", label: "Under Review" },
+  shortlisted: { color: "var(--accent)", label: "Shortlisted" },
+  interview: { color: "var(--badge-purple-color)", label: "Interview" },
+  accepted: { color: "var(--accent)", label: "Accepted" },
+  rejected: { color: "var(--danger-color)", label: "Rejected" },
+  withdrawn: { color: "var(--text-muted)", label: "Withdrawn" },
 };
 
 const DOC_TYPE_LABELS: Record<string, string> = {
@@ -84,23 +85,23 @@ const DOC_TYPE_LABELS: Record<string, string> = {
 };
 
 const DOC_STATUS_CONFIG: Record<string, { color: string; label: string; bg: string }> = {
-  verified: { color: "#22C55E", label: "Verified", bg: "rgba(34,197,94,0.12)" },
-  pending: { color: "#F59E0B", label: "Pending", bg: "rgba(245,158,11,0.12)" },
-  under_review: { color: "#60A5FA", label: "Under Review", bg: "rgba(59,130,246,0.12)" },
-  rejected: { color: "#F87171", label: "Rejected", bg: "rgba(239,68,68,0.12)" },
+  verified: { color: "var(--accent)", label: "Verified", bg: "var(--accent-bg)" },
+  pending: { color: "var(--badge-pending-color)", label: "Pending", bg: "var(--badge-pending-bg)" },
+  under_review: { color: "var(--badge-info-color)", label: "Under Review", bg: "rgba(59,130,246,0.12)" },
+  rejected: { color: "var(--danger-color)", label: "Rejected", bg: "var(--danger-bg)" },
 };
 
 const VERIFICATION_CONFIG: Record<string, { color: string; label: string }> = {
-  verified: { color: "#22C55E", label: "Fully Verified" },
-  partial: { color: "#F59E0B", label: "Partially Verified" },
-  unverified: { color: "#6B7280", label: "Unverified" },
-  suspended: { color: "#F87171", label: "Suspended" },
+  verified: { color: "var(--accent)", label: "Fully Verified" },
+  partial: { color: "var(--badge-pending-color)", label: "Partially Verified" },
+  unverified: { color: "var(--text-muted)", label: "Unverified" },
+  suspended: { color: "var(--danger-color)", label: "Suspended" },
 };
 
 const MODE_COLORS: Record<string, { bg: string; color: string }> = {
-  "in-person": { bg: "rgba(34,197,94,0.12)", color: "#22C55E" },
-  online: { bg: "rgba(59,130,246,0.12)", color: "#60A5FA" },
-  hybrid: { bg: "rgba(168,85,247,0.12)", color: "#C084FC" },
+  "in-person": { bg: "var(--accent-bg)", color: "var(--accent)" },
+  online: { bg: "rgba(59,130,246,0.12)", color: "var(--badge-info-color)" },
+  hybrid: { bg: "rgba(168,85,247,0.12)", color: "var(--badge-purple-color)" },
 };
 
 // ─── Main Component ─────────────────────────────────────────────
@@ -208,7 +209,7 @@ export default function ParentVacancyApplicants({ vacancyId, onBack }: Props) {
       {/* Back Button */}
       <button
         onClick={onBack}
-        className={`flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors fade-up ${inView ? "in-view" : ""}`}
+        className={`flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors fade-up ${inView ? "in-view" : ""}`}
       >
         <ArrowLeft size={16} />
         Back to Vacancies
@@ -218,12 +219,12 @@ export default function ParentVacancyApplicants({ vacancyId, onBack }: Props) {
       {vacancy && (
         <div
           className={`rounded-2xl p-6 space-y-4 fade-up delay-100 ${inView ? "in-view" : ""}`}
-          style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+          style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
         >
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-xl font-semibold text-white">{vacancy.title}</h1>
+                <h1 className="text-xl font-semibold text-[var(--text-primary)]">{vacancy.title}</h1>
                 <span
                   className="px-2 py-0.5 rounded text-[10px] font-medium"
                   style={{ background: modeStyle.bg, color: modeStyle.color }}
@@ -231,20 +232,20 @@ export default function ParentVacancyApplicants({ vacancyId, onBack }: Props) {
                   {vacancy.teachingMode}
                 </span>
               </div>
-              <p className="text-xs text-gray-400 mt-1">{vacancy.description}</p>
+              <p className="text-xs text-[var(--text-secondary)] mt-1">{vacancy.description}</p>
             </div>
             <span
               className="px-2.5 py-1 rounded-lg text-xs font-medium capitalize shrink-0"
               style={{
-                background: vacancy.status === "open" ? "rgba(34,197,94,0.12)" : "rgba(107,114,128,0.12)",
-                color: vacancy.status === "open" ? "#22C55E" : "#6B7280",
+                background: vacancy.status === "open" ? "var(--accent-bg)" : "rgba(107,114,128,0.12)",
+                color: vacancy.status === "open" ? "var(--accent)" : "var(--text-muted)",
               }}
             >
               {vacancy.status}
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
+          <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--text-muted)]">
             <span className="flex items-center gap-1.5">
               <GraduationCap size={12} /> {vacancy.grade}
             </span>
@@ -265,8 +266,8 @@ export default function ParentVacancyApplicants({ vacancyId, onBack }: Props) {
           </div>
 
           <div className="flex items-center gap-2 text-xs">
-            <Users size={14} className="text-gray-500" />
-            <span className="text-gray-400">
+            <Users size={14} className="text-[var(--text-muted)]" />
+            <span className="text-[var(--text-secondary)]">
               {sorted.length} {sorted.length === 1 ? "applicant" : "applicants"}
             </span>
           </div>
@@ -278,8 +279,8 @@ export default function ParentVacancyApplicants({ vacancyId, onBack }: Props) {
         className={`rounded-xl px-5 py-4 flex items-start gap-3 fade-up delay-200 ${inView ? "in-view" : ""}`}
         style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.15)" }}
       >
-        <Shield size={18} className="mt-0.5 shrink-0" style={{ color: "#60A5FA" }} />
-        <div className="text-xs text-gray-400 leading-relaxed">
+        <Shield size={18} className="mt-0.5 shrink-0" style={{ color: "var(--badge-info-color)" }} />
+        <div className="text-xs text-[var(--text-secondary)] leading-relaxed">
           <span className="font-medium text-gray-300">Privacy Notice:</span> When a tutor applies, they consent to sharing their profile and verified documents with you. This information is confidential and should only be used for recruitment purposes.
         </div>
       </div>
@@ -287,8 +288,8 @@ export default function ParentVacancyApplicants({ vacancyId, onBack }: Props) {
       {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <Loader2 size={24} className="animate-spin text-gray-500" />
-          <span className="ml-3 text-sm text-gray-500">Loading applicants...</span>
+          <Loader2 size={24} className="animate-spin text-[var(--text-muted)]" />
+          <span className="ml-3 text-sm text-[var(--text-muted)]">Loading applicants...</span>
         </div>
       )}
 
@@ -296,9 +297,9 @@ export default function ParentVacancyApplicants({ vacancyId, onBack }: Props) {
       {!loading && (
         <div className="space-y-3">
           {sorted.length === 0 ? (
-            <div className="rounded-xl p-12 text-center" style={{ background: "#111111", border: "1px solid #1F1F1F" }}>
-              <Send size={32} className="mx-auto mb-3 text-gray-600" />
-              <p className="text-sm text-gray-400">No applicants yet for this vacancy.</p>
+            <div className="rounded-xl p-12 text-center" style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}>
+              <Send size={32} className="mx-auto mb-3 text-[var(--text-faint)]" />
+              <p className="text-sm text-[var(--text-secondary)]">No applicants yet for this vacancy.</p>
             </div>
           ) : (
             sorted.map((applicant, i) => {
@@ -310,7 +311,7 @@ export default function ParentVacancyApplicants({ vacancyId, onBack }: Props) {
                 <div
                   key={applicant.id}
                   className={`rounded-2xl overflow-hidden transition-all fade-up delay-${Math.min((i + 1) * 100, 400)} ${inView ? "in-view" : ""}`}
-                  style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+                  style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
                 >
                   {/* Header */}
                   <div
@@ -320,7 +321,7 @@ export default function ParentVacancyApplicants({ vacancyId, onBack }: Props) {
                     <div className="flex items-center gap-4">
                       <div
                         className="w-11 h-11 rounded-xl flex items-center justify-center text-black font-bold text-sm shrink-0"
-                        style={{ background: "linear-gradient(135deg, #22C55E, #16A34A)" }}
+                        style={{ background: "var(--accent)" }}
                       >
                         {applicant.tutorName
                           .split(" ")
@@ -329,11 +330,11 @@ export default function ParentVacancyApplicants({ vacancyId, onBack }: Props) {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-white">{applicant.tutorName}</span>
+                          <span className="text-sm font-semibold text-[var(--text-primary)]">{applicant.tutorName}</span>
                           {applicant.tutorProfile?.verificationLevel === "verified" && (
                             <span
                               className="px-1.5 py-0.5 rounded text-[10px] font-medium"
-                              style={{ background: "rgba(34,197,94,0.15)", color: "#22C55E" }}
+                              style={{ background: "var(--accent-bg)", color: "var(--accent)" }}
                             >
                               ✓ Verified
                             </span>
@@ -341,13 +342,13 @@ export default function ParentVacancyApplicants({ vacancyId, onBack }: Props) {
                           {applicant.tutorProfile?.verificationLevel === "partial" && (
                             <span
                               className="px-1.5 py-0.5 rounded text-[10px] font-medium"
-                              style={{ background: "rgba(245,158,11,0.12)", color: "#F59E0B" }}
+                              style={{ background: "var(--badge-pending-bg)", color: "var(--badge-pending-color)" }}
                             >
                               Partial
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-gray-600 mt-0.5">Applied {applicant.appliedAt}</div>
+                        <div className="text-xs text-[var(--text-faint)] mt-0.5">Applied {applicant.appliedAt}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -359,7 +360,7 @@ export default function ParentVacancyApplicants({ vacancyId, onBack }: Props) {
                       </span>
                       <ChevronDown
                         size={16}
-                        className="text-gray-500 transition-transform"
+                        className="text-[var(--text-muted)] transition-transform"
                         style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0)" }}
                       />
                     </div>
@@ -367,36 +368,36 @@ export default function ParentVacancyApplicants({ vacancyId, onBack }: Props) {
 
                   {/* Expanded Detail */}
                   {isExpanded && (
-                    <div style={{ borderTop: "1px solid #1F1F1F" }} className="px-5 py-5 space-y-4">
+                    <div style={{ borderTop: "1px solid var(--border-color)" }} className="px-5 py-5 space-y-4">
                       {/* Profile Info */}
                       {applicant.tutorProfile && (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                           <div className="flex items-center gap-2">
-                            <GraduationCap size={14} className="text-gray-500" />
+                            <GraduationCap size={14} className="text-[var(--text-muted)]" />
                             <div>
-                              <div className="text-[10px] text-gray-600 uppercase">Education</div>
-                              <div className="text-xs text-white">{applicant.tutorProfile.education || "Not specified"}</div>
+                              <div className="text-[10px] text-[var(--text-faint)] uppercase">Education</div>
+                              <div className="text-xs text-[var(--text-primary)]">{applicant.tutorProfile.education || "Not specified"}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Briefcase size={14} className="text-gray-500" />
+                            <Briefcase size={14} className="text-[var(--text-muted)]" />
                             <div>
-                              <div className="text-[10px] text-gray-600 uppercase">Experience</div>
-                              <div className="text-xs text-white">{applicant.tutorProfile.experience} years</div>
+                              <div className="text-[10px] text-[var(--text-faint)] uppercase">Experience</div>
+                              <div className="text-xs text-[var(--text-primary)]">{applicant.tutorProfile.experience} years</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <MapPin size={14} className="text-gray-500" />
+                            <MapPin size={14} className="text-[var(--text-muted)]" />
                             <div>
-                              <div className="text-[10px] text-gray-600 uppercase">Location</div>
-                              <div className="text-xs text-white">{applicant.tutorProfile.location || "Not specified"}</div>
+                              <div className="text-[10px] text-[var(--text-faint)] uppercase">Location</div>
+                              <div className="text-xs text-[var(--text-primary)]">{applicant.tutorProfile.location || "Not specified"}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Star size={14} className="text-gray-500" />
+                            <Star size={14} className="text-[var(--text-muted)]" />
                             <div>
-                              <div className="text-[10px] text-gray-600 uppercase">Rating</div>
-                              <div className="text-xs text-white">{applicant.tutorProfile.rating} / 5</div>
+                              <div className="text-[10px] text-[var(--text-faint)] uppercase">Rating</div>
+                              <div className="text-xs text-[var(--text-primary)]">{applicant.tutorProfile.rating} / 5</div>
                             </div>
                           </div>
                         </div>
@@ -405,8 +406,8 @@ export default function ParentVacancyApplicants({ vacancyId, onBack }: Props) {
                       {/* Bio */}
                       {applicant.tutorProfile?.bio && (
                         <div>
-                          <div className="text-[10px] text-gray-600 uppercase mb-1">About</div>
-                          <p className="text-xs text-gray-400 leading-relaxed">{applicant.tutorProfile.bio}</p>
+                          <div className="text-[10px] text-[var(--text-faint)] uppercase mb-1">About</div>
+                          <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{applicant.tutorProfile.bio}</p>
                         </div>
                       )}
 
@@ -417,7 +418,7 @@ export default function ParentVacancyApplicants({ vacancyId, onBack }: Props) {
                             <span
                               key={s}
                               className="px-2 py-0.5 rounded text-xs"
-                              style={{ background: "rgba(34,197,94,0.1)", color: "#22C55E" }}
+                              style={{ background: "var(--accent-bg)", color: "var(--accent)" }}
                             >
                               {s}
                             </span>
@@ -426,7 +427,7 @@ export default function ParentVacancyApplicants({ vacancyId, onBack }: Props) {
                             <span
                               key={g}
                               className="px-2 py-0.5 rounded text-xs"
-                              style={{ background: "rgba(255,255,255,0.04)", color: "#9CA3AF" }}
+                              style={{ background: "var(--accent-bg)", color: "var(--text-secondary)" }}
                             >
                               {g}
                             </span>
@@ -441,7 +442,7 @@ export default function ParentVacancyApplicants({ vacancyId, onBack }: Props) {
                           {verification.label}
                         </div>
                         {applicant.tutorEmail && (
-                          <div className="flex items-center gap-1.5 text-gray-500">
+                          <div className="flex items-center gap-1.5 text-[var(--text-muted)]">
                             <User size={12} />
                             {applicant.tutorEmail}
                           </div>
@@ -461,9 +462,9 @@ export default function ParentVacancyApplicants({ vacancyId, onBack }: Props) {
                           }
                           className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium transition-all"
                           style={{
-                            background: "rgba(34,197,94,0.1)",
-                            color: "#22C55E",
-                            border: "1px solid rgba(34,197,94,0.2)",
+                            background: "var(--accent-bg)",
+                            color: "var(--accent)",
+                            border: "1px solid var(--accent-border)",
                           }}
                         >
                           <Eye size={13} /> View Full Profile & Documents
@@ -587,14 +588,14 @@ function ParentApplicantProfileModal({
       {/* Modal */}
       <div
         className="relative w-full max-w-2xl max-h-[90vh] rounded-2xl overflow-hidden flex flex-col"
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #1F1F1F" }}>
+        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--border-color)" }}>
           <div className="flex items-center gap-3">
             <div
               className="w-12 h-12 rounded-xl flex items-center justify-center text-black font-bold text-sm shrink-0"
-              style={{ background: "linear-gradient(135deg, #22C55E, #16A34A)" }}
+              style={{ background: "var(--accent)" }}
             >
               {tutorName
                 .split(" ")
@@ -603,7 +604,7 @@ function ParentApplicantProfileModal({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-white">{tutorName}</h2>
+                <h2 className="text-lg font-semibold text-[var(--text-primary)]">{tutorName}</h2>
                 <span
                   className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium"
                   style={{ background: `${verification.color}20`, color: verification.color }}
@@ -612,11 +613,11 @@ function ParentApplicantProfileModal({
                   {verification.label}
                 </span>
               </div>
-              <p className="text-xs text-gray-500">{tutorProfile?.headline || "Tutor"}</p>
+              <p className="text-xs text-[var(--text-muted)]">{tutorProfile?.headline || "Tutor"}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-lg transition-colors hover:bg-white/5">
-            <X size={18} className="text-gray-500" />
+            <X size={18} className="text-[var(--text-muted)]" />
           </button>
         </div>
 
@@ -629,17 +630,17 @@ function ParentApplicantProfileModal({
               style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)" }}
             >
               <div className="flex items-center gap-2">
-                <Shield size={16} style={{ color: "#F59E0B" }} />
-                <span className="text-sm font-medium text-white">Shared Profile Consent</span>
+                <Shield size={16} style={{ color: "var(--badge-pending-color)" }} />
+                <span className="text-sm font-medium text-[var(--text-primary)]">Shared Profile Consent</span>
               </div>
-              <p className="text-xs text-gray-400 leading-relaxed">
+              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                 This tutor has shared their full profile and verified documents with you as part of their application.
                 By viewing, you acknowledge that this information is confidential and will only be used for recruitment purposes.
               </p>
               <button
                 onClick={() => setConsentAccepted(true)}
                 className="px-4 py-2 rounded-lg text-xs font-medium transition-all"
-                style={{ background: "#F59E0B", color: "black" }}
+                style={{ background: "var(--badge-pending-color)", color: "black" }}
               >
                 I Acknowledge & View Profile
               </button>
@@ -652,31 +653,31 @@ function ParentApplicantProfileModal({
               {tutorProfile && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <div className="flex items-center gap-2">
-                    <GraduationCap size={14} className="text-gray-500" />
+                    <GraduationCap size={14} className="text-[var(--text-muted)]" />
                     <div>
-                      <div className="text-[10px] text-gray-600 uppercase">Education</div>
-                      <div className="text-xs text-white">{tutorProfile.education || "Not specified"}</div>
+                      <div className="text-[10px] text-[var(--text-faint)] uppercase">Education</div>
+                      <div className="text-xs text-[var(--text-primary)]">{tutorProfile.education || "Not specified"}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Briefcase size={14} className="text-gray-500" />
+                    <Briefcase size={14} className="text-[var(--text-muted)]" />
                     <div>
-                      <div className="text-[10px] text-gray-600 uppercase">Experience</div>
-                      <div className="text-xs text-white">{tutorProfile.experience} years</div>
+                      <div className="text-[10px] text-[var(--text-faint)] uppercase">Experience</div>
+                      <div className="text-xs text-[var(--text-primary)]">{tutorProfile.experience} years</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <MapPin size={14} className="text-gray-500" />
+                    <MapPin size={14} className="text-[var(--text-muted)]" />
                     <div>
-                      <div className="text-[10px] text-gray-600 uppercase">Location</div>
-                      <div className="text-xs text-white">{tutorProfile.location || "Not specified"}</div>
+                      <div className="text-[10px] text-[var(--text-faint)] uppercase">Location</div>
+                      <div className="text-xs text-[var(--text-primary)]">{tutorProfile.location || "Not specified"}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Star size={14} className="text-gray-500" />
+                    <Star size={14} className="text-[var(--text-muted)]" />
                     <div>
-                      <div className="text-[10px] text-gray-600 uppercase">Rating</div>
-                      <div className="text-xs text-white">{tutorProfile.rating} / 5</div>
+                      <div className="text-[10px] text-[var(--text-faint)] uppercase">Rating</div>
+                      <div className="text-xs text-[var(--text-primary)]">{tutorProfile.rating} / 5</div>
                     </div>
                   </div>
                 </div>
@@ -685,7 +686,7 @@ function ParentApplicantProfileModal({
               {/* Bio */}
               {tutorProfile?.bio && (
                 <div>
-                  <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">About</h3>
+                  <h3 className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider mb-2">About</h3>
                   <p className="text-sm text-gray-300 leading-relaxed">{tutorProfile.bio}</p>
                 </div>
               )}
@@ -697,7 +698,7 @@ function ParentApplicantProfileModal({
                     <span
                       key={s}
                       className="px-2.5 py-1 rounded-lg text-xs"
-                      style={{ background: "rgba(34,197,94,0.1)", color: "#22C55E" }}
+                      style={{ background: "var(--accent-bg)", color: "var(--accent)" }}
                     >
                       {s}
                     </span>
@@ -706,7 +707,7 @@ function ParentApplicantProfileModal({
                     <span
                       key={g}
                       className="px-2.5 py-1 rounded-lg text-xs"
-                      style={{ background: "rgba(255,255,255,0.04)", color: "#9CA3AF" }}
+                      style={{ background: "var(--accent-bg)", color: "var(--text-secondary)" }}
                     >
                       {g}
                     </span>
@@ -717,8 +718,8 @@ function ParentApplicantProfileModal({
               {/* Documents Section */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <FileText size={14} className="text-gray-500" />
-                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  <FileText size={14} className="text-[var(--text-muted)]" />
+                  <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">
                     Shared Documents
                   </span>
                 </div>
@@ -726,39 +727,39 @@ function ParentApplicantProfileModal({
                 {loading ? (
                   <div
                     className="rounded-xl p-6 flex items-center justify-center"
-                    style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                    style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
                   >
-                    <Loader2 size={20} className="animate-spin text-gray-500" />
-                    <span className="ml-2 text-sm text-gray-500">Loading documents...</span>
+                    <Loader2 size={20} className="animate-spin text-[var(--text-muted)]" />
+                    <span className="ml-2 text-sm text-[var(--text-muted)]">Loading documents...</span>
                   </div>
                 ) : error ? (
                   <div
                     className="rounded-xl p-4 flex items-center gap-3"
-                    style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}
+                    style={{ background: "rgba(239,68,68,0.08)", border: "1px solid var(--danger-bg)" }}
                   >
-                    <AlertCircle size={16} style={{ color: "#F87171" }} />
-                    <span className="text-sm text-gray-400">{error}</span>
+                    <AlertCircle size={16} style={{ color: "var(--danger-color)" }} />
+                    <span className="text-sm text-[var(--text-secondary)]">{error}</span>
                   </div>
                 ) : documents.length === 0 ? (
                   <div
                     className="rounded-xl p-6 text-center"
-                    style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                    style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
                   >
-                    <FileText size={24} className="mx-auto mb-2 text-gray-600" />
-                    <p className="text-sm text-gray-500">No documents uploaded yet.</p>
+                    <FileText size={24} className="mx-auto mb-2 text-[var(--text-faint)]" />
+                    <p className="text-sm text-[var(--text-muted)]">No documents uploaded yet.</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {/* Summary */}
                     <div className="flex items-center gap-4 text-xs">
                       {verifiedDocs.length > 0 && (
-                        <span className="flex items-center gap-1.5" style={{ color: "#22C55E" }}>
+                        <span className="flex items-center gap-1.5" style={{ color: "var(--accent)" }}>
                           <CheckCircle2 size={12} />
                           {verifiedDocs.length} verified
                         </span>
                       )}
                       {pendingDocs.length > 0 && (
-                        <span className="flex items-center gap-1.5" style={{ color: "#F59E0B" }}>
+                        <span className="flex items-center gap-1.5" style={{ color: "var(--badge-pending-color)" }}>
                           <AlertCircle size={12} />
                           {pendingDocs.length} pending
                         </span>
@@ -768,7 +769,7 @@ function ParentApplicantProfileModal({
                     {/* Document List */}
                     <div
                       className="rounded-xl overflow-hidden"
-                      style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                      style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
                     >
                       {documents.map((doc) => {
                         const statusConfig = DOC_STATUS_CONFIG[doc.status] || DOC_STATUS_CONFIG.pending;
@@ -776,22 +777,22 @@ function ParentApplicantProfileModal({
                           <div
                             key={doc.id}
                             className="px-4 py-3 flex items-center justify-between"
-                            style={{ borderBottom: "1px solid #1F1F1F" }}
+                            style={{ borderBottom: "1px solid var(--border-color)" }}
                           >
                             <div className="flex items-center gap-3">
                               <div
                                 className="w-10 h-10 rounded-lg flex items-center justify-center"
-                                style={{ background: "rgba(255,255,255,0.04)" }}
+                                style={{ background: "var(--accent-bg)" }}
                               >
-                                <FileText size={16} className="text-gray-500" />
+                                <FileText size={16} className="text-[var(--text-muted)]" />
                               </div>
                               <div>
-                                <div className="text-sm text-white">{doc.title}</div>
-                                <div className="text-xs text-gray-500">
+                                <div className="text-sm text-[var(--text-primary)]">{doc.title}</div>
+                                <div className="text-xs text-[var(--text-muted)]">
                                   {DOC_TYPE_LABELS[doc.type] || doc.type}
                                 </div>
                                 {doc.reviewerNote && (
-                                  <div className="text-xs text-gray-600 mt-0.5">
+                                  <div className="text-xs text-[var(--text-faint)] mt-0.5">
                                     Note: {doc.reviewerNote}
                                   </div>
                                 )}
@@ -811,14 +812,14 @@ function ParentApplicantProfileModal({
                                     className="p-1.5 rounded-lg transition-colors hover:bg-white/5"
                                     title="Preview"
                                   >
-                                    <Eye size={14} className="text-gray-500" />
+                                    <Eye size={14} className="text-[var(--text-muted)]" />
                                   </button>
                                   <button
                                     onClick={() => handleDownload(doc)}
                                     className="p-1.5 rounded-lg transition-colors hover:bg-white/5"
                                     title="Download"
                                   >
-                                    <Download size={14} className="text-gray-500" />
+                                    <Download size={14} className="text-[var(--text-muted)]" />
                                   </button>
                                 </div>
                               )}
@@ -836,17 +837,17 @@ function ParentApplicantProfileModal({
                 <div className="grid grid-cols-2 gap-4">
                   <div
                     className="rounded-xl p-3"
-                    style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                    style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
                   >
-                    <div className="text-[10px] text-gray-600 uppercase mb-1">Teaching Mode</div>
-                    <div className="text-xs text-white capitalize">{tutorProfile.teachingMode}</div>
+                    <div className="text-[10px] text-[var(--text-faint)] uppercase mb-1">Teaching Mode</div>
+                    <div className="text-xs text-[var(--text-primary)] capitalize">{tutorProfile.teachingMode}</div>
                   </div>
                   <div
                     className="rounded-xl p-3"
-                    style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                    style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
                   >
-                    <div className="text-[10px] text-gray-600 uppercase mb-1">Availability</div>
-                    <div className="text-xs text-white">{tutorProfile.availability || "Not specified"}</div>
+                    <div className="text-[10px] text-[var(--text-faint)] uppercase mb-1">Availability</div>
+                    <div className="text-xs text-[var(--text-primary)]">{tutorProfile.availability || "Not specified"}</div>
                   </div>
                 </div>
               )}
@@ -855,14 +856,14 @@ function ParentApplicantProfileModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 flex justify-end" style={{ borderTop: "1px solid #1F1F1F" }}>
+        <div className="px-6 py-4 flex justify-end" style={{ borderTop: "1px solid var(--border-color)" }}>
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
             style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              color: "#9CA3AF",
+              background: "var(--accent-bg)",
+              border: "1px solid var(--border-color)",
+              color: "var(--text-secondary)",
             }}
           >
             Close
@@ -876,12 +877,12 @@ function ParentApplicantProfileModal({
           <div className="absolute inset-0 bg-black/80" onClick={() => setPreviewDoc(null)} />
           <div
             className="relative w-full max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden"
-            style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+            style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
           >
-            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid #1F1F1F" }}>
-              <span className="text-sm text-white">{previewDoc.title}</span>
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid var(--border-color)" }}>
+              <span className="text-sm text-[var(--text-primary)]">{previewDoc.title}</span>
               <button onClick={() => setPreviewDoc(null)} className="p-1.5 rounded-lg hover:bg-white/5">
-                <X size={16} className="text-gray-500" />
+                <X size={16} className="text-[var(--text-muted)]" />
               </button>
             </div>
             <iframe

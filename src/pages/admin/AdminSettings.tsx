@@ -1,3 +1,4 @@
+import { useTheme } from "@/context/ThemeContext";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -31,7 +32,7 @@ export default function AdminSettings() {
   const [allowPublicSignup, setAllowPublicSignup] = useState(true);
   const [saved, setSaved] = useState(false);
 
-  const inputStyle = { background: "#0D0D0D", border: "1px solid #1F1F1F" };
+  const inputStyle = { background: "var(--bg-input)", border: "1px solid var(--border-color)" };
 
   const handlePasswordChange = async () => {
     setPasswordMsg(null);
@@ -77,43 +78,43 @@ export default function AdminSettings() {
     <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
       {/* Header */}
       <div className={`fade-up ${inView ? "in-view" : ""}`}>
-        <h1 className="text-2xl font-semibold text-white">Settings</h1>
-        <p className="text-sm text-gray-400 mt-1">Manage your admin account and platform configuration.</p>
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Settings</h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">Manage your admin account and platform configuration.</p>
       </div>
 
       {/* Account Info */}
       <section
         className={`rounded-2xl p-6 space-y-5 fade-up delay-100 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
       >
         <div className="flex items-center gap-2 mb-1">
-          <User size={16} style={{ color: "#22C55E" }} />
+          <User size={16} style={{ color: "var(--accent)" }} />
           <h2 className="text-sm font-medium text-gray-300">Admin Account</h2>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs text-gray-500 mb-1.5">Name</label>
+            <label className="block text-xs text-[var(--text-muted)] mb-1.5">Name</label>
             <input
               value={user?.name || ""}
               disabled
-              className="w-full px-4 py-2.5 rounded-xl text-sm text-gray-500"
+              className="w-full px-4 py-2.5 rounded-xl text-sm text-[var(--text-muted)]"
               style={inputStyle}
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1.5">Email</label>
+            <label className="block text-xs text-[var(--text-muted)] mb-1.5">Email</label>
             <input
               value={user?.email || ""}
               disabled
-              className="w-full px-4 py-2.5 rounded-xl text-sm text-gray-500"
+              className="w-full px-4 py-2.5 rounded-xl text-sm text-[var(--text-muted)]"
               style={inputStyle}
             />
           </div>
         </div>
 
-        <div className="rounded-xl px-4 py-2.5" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
-          <div className="flex items-center gap-2 text-xs" style={{ color: "#4ADE80" }}>
+        <div className="rounded-xl px-4 py-2.5" style={{ background: "var(--accent-bg)", border: "1px solid var(--accent-border)" }}>
+          <div className="flex items-center gap-2 text-xs" style={{ color: "var(--accent)" }}>
             <Shield size={13} />
             Platform Administrator — Full access to all admin features.
           </div>
@@ -123,10 +124,10 @@ export default function AdminSettings() {
       {/* Change Password */}
       <section
         className={`rounded-2xl p-6 space-y-5 fade-up delay-200 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
       >
         <div className="flex items-center gap-2 mb-1">
-          <Lock size={16} style={{ color: "#F59E0B" }} />
+          <Lock size={16} style={{ color: "var(--badge-pending-color)" }} />
           <h2 className="text-sm font-medium text-gray-300">Change Password</h2>
         </div>
 
@@ -134,9 +135,9 @@ export default function AdminSettings() {
           <div
             className="rounded-xl px-4 py-2.5 flex items-center gap-2 text-sm"
             style={{
-              background: passwordMsg.type === "success" ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
-              border: `1px solid ${passwordMsg.type === "success" ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.2)"}`,
-              color: passwordMsg.type === "success" ? "#4ADE80" : "#F87171",
+              background: passwordMsg.type === "success" ? "var(--accent-bg)" : "var(--danger-bg)",
+              border: `1px solid ${passwordMsg.type === "success" ? "rgba(34,197,94,0.25)" : "var(--danger-bg)"}`,
+              color: passwordMsg.type === "success" ? "var(--accent)" : "var(--danger-color)",
             }}
           >
             {passwordMsg.type === "success" ? <CheckCircle size={15} /> : <AlertCircle size={15} />}
@@ -146,24 +147,24 @@ export default function AdminSettings() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs text-gray-500 mb-1.5">New Password</label>
+            <label className="block text-xs text-[var(--text-muted)] mb-1.5">New Password</label>
             <input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none"
+              className="w-full px-4 py-2.5 rounded-xl text-sm text-[var(--text-primary)] focus:outline-none"
               style={inputStyle}
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1.5">Confirm New Password</label>
+            <label className="block text-xs text-[var(--text-muted)] mb-1.5">Confirm New Password</label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none"
+              className="w-full px-4 py-2.5 rounded-xl text-sm text-[var(--text-primary)] focus:outline-none"
               style={inputStyle}
             />
           </div>
@@ -173,7 +174,7 @@ export default function AdminSettings() {
           onClick={handlePasswordChange}
           disabled={passwordLoading || !newPassword || !confirmPassword}
           className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-40 flex items-center gap-2"
-          style={{ background: "rgba(245,158,11,0.15)", color: "#F59E0B", border: "1px solid rgba(245,158,11,0.3)" }}
+          style={{ background: "var(--badge-pending-bg)", color: "var(--badge-pending-color)", border: "1px solid rgba(245,158,11,0.3)" }}
         >
           {passwordLoading ? <Loader2 size={14} className="animate-spin" /> : <Lock size={14} />}
           Update Password
@@ -183,17 +184,17 @@ export default function AdminSettings() {
       {/* Platform Settings */}
       <section
         className={`rounded-2xl p-6 space-y-5 fade-up delay-300 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
       >
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <Settings size={16} style={{ color: "#A855F7" }} />
+            <Settings size={16} style={{ color: "var(--badge-purple-color)" }} />
             <h2 className="text-sm font-medium text-gray-300">Platform Configuration</h2>
           </div>
           <button
             onClick={handleSavePlatform}
             className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-medium transition-all"
-            style={{ background: "#22C55E", color: "black" }}
+            style={{ background: "var(--accent)", color: "#fff" }}
           >
             {saved ? <CheckCircle size={13} /> : <Save size={13} />}
             {saved ? "Saved!" : "Save"}
@@ -211,19 +212,19 @@ export default function AdminSettings() {
               <div
                 key={item.label}
                 className="flex items-center justify-between rounded-xl px-4 py-3"
-                style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
               >
                 <div className="flex items-center gap-3">
-                  <Icon size={14} className="text-gray-500 shrink-0" />
+                  <Icon size={14} className="text-[var(--text-muted)] shrink-0" />
                   <div>
-                    <div className="text-sm text-white">{item.label}</div>
-                    <div className="text-xs text-gray-500">{item.desc}</div>
+                    <div className="text-sm text-[var(--text-primary)]">{item.label}</div>
+                    <div className="text-xs text-[var(--text-muted)]">{item.desc}</div>
                   </div>
                 </div>
                 <button
                   onClick={() => item.onChange(!item.value)}
                   className="relative w-10 h-5 rounded-full transition-colors shrink-0"
-                  style={{ background: item.value ? "#22C55E" : "#2A2A2A" }}
+                  style={{ background: item.value ? "var(--accent)" : "var(--border-color)" }}
                 >
                   <span
                     className="absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform"
@@ -239,22 +240,22 @@ export default function AdminSettings() {
       {/* Danger Zone */}
       <section
         className={`rounded-2xl p-6 space-y-4 fade-up delay-400 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid rgba(239,68,68,0.2)" }}
+        style={{ background: "var(--bg-card)", border: "1px solid var(--danger-bg)" }}
       >
         <div className="flex items-center gap-2 mb-1">
-          <Shield size={16} style={{ color: "#EF4444" }} />
+          <Shield size={16} style={{ color: "var(--danger-color)" }} />
           <h2 className="text-sm font-medium text-gray-300">Danger Zone</h2>
         </div>
 
-        <div className="flex items-center justify-between rounded-xl px-4 py-3" style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}>
+        <div className="flex items-center justify-between rounded-xl px-4 py-3" style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}>
           <div>
-            <div className="text-sm text-white">Sign Out</div>
-            <div className="text-xs text-gray-500">Sign out of the admin dashboard.</div>
+            <div className="text-sm text-[var(--text-primary)]">Sign Out</div>
+            <div className="text-xs text-[var(--text-muted)]">Sign out of the admin dashboard.</div>
           </div>
           <button
             onClick={() => { logout(); window.location.href = "/"; }}
             className="px-4 py-1.5 rounded-lg text-xs font-medium transition-all"
-            style={{ background: "rgba(239,68,68,0.12)", color: "#F87171", border: "1px solid rgba(239,68,68,0.2)" }}
+            style={{ background: "var(--danger-bg)", color: "var(--danger-color)", border: "1px solid var(--danger-bg)" }}
           >
             Sign Out
           </button>

@@ -34,7 +34,7 @@ export default function VacanciesPreview() {
     <section
       ref={sectionRef as React.RefObject<HTMLElement>}
       className="py-16 sm:py-24 px-4 sm:px-6 md:px-12"
-      style={{ background: isDark ? "linear-gradient(160deg, #000000 0%, #050F07 50%, #000000 100%)" : `linear-gradient(160deg, ${colors.bgPage} 0%, ${colors.bgCard} 50%, ${colors.bgPage} 100%)` }}
+      style={{ background: isDark ? "linear-gradient(160deg, var(--bg-page) 0%, var(--bg-card) 50%, var(--bg-page) 100%)" : `linear-gradient(160deg, ${colors.bgPage} 0%, ${colors.bgCard} 50%, ${colors.bgPage} 100%)` }}
     >
       <div className="max-w-6xl mx-auto">
         <div className={`flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-10 gap-4 fade-up ${inView ? "in-view" : ""}`}>

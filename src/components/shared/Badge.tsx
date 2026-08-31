@@ -14,7 +14,7 @@ export default function Badge({ children, variant = "default", className = "" }:
 
   const styleMap: Record<BadgeVariant, React.CSSProperties> = {
     default: { background: colors.accentBg, border: `1px solid ${colors.accentBorder}`, color: colors.textSecondary },
-    success: { background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)", color: "#22C55E" },
+    success: { background: "var(--accent-bg)", border: "1px solid var(--accent-border)", color: "var(--accent)" },
     danger: { background: colors.dangerBg, border: `1px solid ${colors.dangerBorder}`, color: colors.dangerColor },
     info: { background: colors.accentBg, border: `1px solid ${colors.accentBorder}`, color: colors.accent },
   };

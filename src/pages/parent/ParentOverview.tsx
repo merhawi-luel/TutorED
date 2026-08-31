@@ -1,3 +1,4 @@
+import { useTheme } from "@/context/ThemeContext";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { parentApi } from "@/lib/api";
@@ -31,20 +32,20 @@ export default function ParentOverview() {
   }, []);
 
   const STATS = [
-    { label: "Agencies", value: String(stats.agencies), sub: "Verified partners", icon: Building2, color: "#3B82F6" },
-    { label: "Open Vacancies", value: String(stats.vacancies), sub: "Available positions", icon: Briefcase, color: "#22C55E" },
-    { label: "My Requests", value: String(stats.requests), sub: "Recruitment requests", icon: FileText, color: "#F59E0B" },
-    { label: "Tutors", value: "—", sub: "Available tutors", icon: Users, color: "#A855F7" },
+    { label: "Agencies", value: String(stats.agencies), sub: "Verified partners", icon: Building2, color: "var(--badge-info-color)" },
+    { label: "Open Vacancies", value: String(stats.vacancies), sub: "Available positions", icon: Briefcase, color: "var(--accent)" },
+    { label: "My Requests", value: String(stats.requests), sub: "Recruitment requests", icon: FileText, color: "var(--badge-pending-color)" },
+    { label: "Tutors", value: "—", sub: "Available tutors", icon: Users, color: "var(--badge-purple-color)" },
   ];
 
   return (
     <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
       {/* Welcome */}
       <div className={`fade-up ${inView ? "in-view" : ""}`}>
-        <h1 className="text-2xl font-semibold text-white">
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
           Welcome, {user?.name?.split(" ")[0] || "Parent"} 
         </h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
           Find the perfect tutor for your child or let an agency handle the recruitment.
         </p>
       </div>
@@ -53,13 +54,13 @@ export default function ParentOverview() {
       <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 fade-up delay-100 ${inView ? "in-view" : ""}`}>
         <div
           className="rounded-xl p-6 cursor-pointer transition-all hover:-translate-y-0.5"
-          style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}
+          style={{ background: "var(--accent-bg)", border: "1px solid var(--accent-border)" }}
         >
           <div className="flex items-center gap-3 mb-3">
-            <Search size={20} style={{ color: "#22C55E" }} />
-            <span className="text-sm font-medium text-white">Self-Recruitment</span>
+            <Search size={20} style={{ color: "var(--accent)" }} />
+            <span className="text-sm font-medium text-[var(--text-primary)]">Self-Recruitment</span>
           </div>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-[var(--text-secondary)]">
             Browse tutor profiles and vacancies yourself. Contact tutors directly and manage the hiring process.
           </p>
         </div>
@@ -68,10 +69,10 @@ export default function ParentOverview() {
           style={{ background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)" }}
         >
           <div className="flex items-center gap-3 mb-3">
-            <Building2 size={20} style={{ color: "#3B82F6" }} />
-            <span className="text-sm font-medium text-white">Agency-Assisted</span>
+            <Building2 size={20} style={{ color: "var(--badge-info-color)" }} />
+            <span className="text-sm font-medium text-[var(--text-primary)]">Agency-Assisted</span>
           </div>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-[var(--text-secondary)]">
             Let a verified agency handle the recruitment. They'll find the best tutor match for your child.
           </p>
         </div>
@@ -85,7 +86,7 @@ export default function ParentOverview() {
             <div
               key={card.label}
               className={`rounded-xl p-5 fade-up delay-${(i + 2) * 100} ${inView ? "in-view" : ""}`}
-              style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+              style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
             >
               <div className="flex items-center justify-between mb-3">
                 <div
@@ -94,10 +95,10 @@ export default function ParentOverview() {
                 >
                   <Icon size={18} style={{ color: card.color }} />
                 </div>
-                <ArrowUpRight size={14} className="text-gray-600" />
+                <ArrowUpRight size={14} className="text-[var(--text-faint)]" />
               </div>
-              <div className="text-2xl font-bold text-white">{card.value}</div>
-              <div className="text-xs text-gray-500 mt-0.5">{card.sub}</div>
+              <div className="text-2xl font-bold text-[var(--text-primary)]">{card.value}</div>
+              <div className="text-xs text-[var(--text-muted)] mt-0.5">{card.sub}</div>
             </div>
           );
         })}

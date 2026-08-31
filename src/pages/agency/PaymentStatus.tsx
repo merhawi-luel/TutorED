@@ -1,3 +1,4 @@
+import { useTheme } from "@/context/ThemeContext";
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { CheckCircle, Clock, XCircle, ArrowLeft } from "lucide-react";
@@ -96,13 +97,13 @@ export default function PaymentStatus() {
         <div className="bg-gray-900 rounded-2xl border border-gray-800 p-8 text-center">
           <div className="flex justify-center mb-6">{config.icon}</div>
 
-          <h1 className="text-2xl font-bold text-white mb-4">{config.title}</h1>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-4">{config.title}</h1>
 
-          <p className="text-gray-400 mb-6">{message}</p>
+          <p className="text-[var(--text-secondary)] mb-6">{message}</p>
 
           {txRef && (
             <div className="bg-gray-800 rounded-lg p-3 mb-6">
-              <p className="text-xs text-gray-500">Transaction Reference</p>
+              <p className="text-xs text-[var(--text-muted)]">Transaction Reference</p>
               <p className="text-sm text-gray-300 font-mono break-all">{txRef}</p>
             </div>
           )}
@@ -115,7 +116,7 @@ export default function PaymentStatus() {
 
           <button
             onClick={() => navigate("/agency")}
-            className="flex items-center gap-2 mx-auto px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+            className="flex items-center gap-2 mx-auto px-6 py-3 bg-green-600 hover:bg-green-700 text-[var(--text-primary)] rounded-lg transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Go to Dashboard

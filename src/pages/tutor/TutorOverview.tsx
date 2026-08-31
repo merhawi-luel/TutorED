@@ -26,10 +26,10 @@ const STAT_CARDS = [
 ];
 
 const VERIFICATION_INFO: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
-  verified: { label: "Fully Verified", color: "#22C55E", icon: CheckCircle2 },
-  partial: { label: "Partially Verified", color: "#F59E0B", icon: Clock },
-  unverified: { label: "Unverified", color: "#6B7280", icon: AlertCircle },
-  suspended: { label: "Suspended", color: "#EF4444", icon: AlertCircle },
+  verified: { label: "Fully Verified", color: "var(--accent)", icon: CheckCircle2 },
+  partial: { label: "Partially Verified", color: "var(--badge-pending-color)", icon: Clock },
+  unverified: { label: "Unverified", color: "var(--text-muted)", icon: AlertCircle },
+  suspended: { label: "Suspended", color: "var(--danger-color)", icon: AlertCircle },
 };
 
 export default function TutorOverview({ onTabChange }: OverviewProps) {
@@ -62,7 +62,7 @@ export default function TutorOverview({ onTabChange }: OverviewProps) {
       <div
         className={`rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 fade-up delay-100 ${inView ? "in-view" : ""}`}
         style={{
-          background: vLevel === "verified" ? "rgba(34,197,94,0.1)" : colors.bgCard,
+          background: vLevel === "verified" ? "var(--accent-bg)" : colors.bgCard,
           border: `1px solid ${vLevel === "verified" ? "rgba(34,197,94,0.25)" : colors.borderColor}`,
         }}
       >
@@ -174,13 +174,13 @@ export default function TutorOverview({ onTabChange }: OverviewProps) {
 
 function StatusBadge({ status }: { status: string }) {
   const MAP: Record<string, { bg: string; color: string; label: string }> = {
-    applied: { bg: "rgba(107,114,128,0.15)", color: "#9CA3AF", label: "Applied" },
-    under_review: { bg: "rgba(59,130,246,0.15)", color: "#60A5FA", label: "Under Review" },
-    shortlisted: { bg: "rgba(34,197,94,0.15)", color: "#4ADE80", label: "Shortlisted" },
-    interview: { bg: "rgba(168,85,247,0.15)", color: "#C084FC", label: "Interview" },
-    accepted: { bg: "rgba(34,197,94,0.2)", color: "#22C55E", label: "Accepted" },
-    rejected: { bg: "rgba(239,68,68,0.15)", color: "#F87171", label: "Rejected" },
-    withdrawn: { bg: "rgba(107,114,128,0.1)", color: "#6B7280", label: "Withdrawn" },
+    applied: { bg: "rgba(107,114,128,0.15)", color: "var(--text-secondary)", label: "Applied" },
+    under_review: { bg: "rgba(59,130,246,0.15)", color: "var(--badge-info-color)", label: "Under Review" },
+    shortlisted: { bg: "var(--accent-bg)", color: "var(--accent)", label: "Shortlisted" },
+    interview: { bg: "var(--badge-purple-bg)", color: "var(--badge-purple-color)", label: "Interview" },
+    accepted: { bg: "rgba(34,197,94,0.2)", color: "var(--accent)", label: "Accepted" },
+    rejected: { bg: "rgba(239,68,68,0.15)", color: "var(--danger-color)", label: "Rejected" },
+    withdrawn: { bg: "rgba(107,114,128,0.1)", color: "var(--text-muted)", label: "Withdrawn" },
   };
   const s = MAP[status] ?? MAP.applied;
   return (

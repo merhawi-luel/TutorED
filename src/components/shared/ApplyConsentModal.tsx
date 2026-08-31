@@ -1,3 +1,4 @@
+import { useTheme } from "@/context/ThemeContext";
 import { useState, useEffect } from "react";
 import {
   X,
@@ -36,10 +37,10 @@ const DOC_TYPE_LABELS: Record<string, string> = {
 };
 
 const DOC_STATUS_CONFIG: Record<string, { color: string; label: string }> = {
-  verified: { color: "#22C55E", label: "Verified" },
-  pending: { color: "#F59E0B", label: "Pending" },
-  under_review: { color: "#60A5FA", label: "Under Review" },
-  rejected: { color: "#F87171", label: "Rejected" },
+  verified: { color: "var(--accent)", label: "Verified" },
+  pending: { color: "var(--badge-pending-color)", label: "Pending" },
+  under_review: { color: "var(--badge-info-color)", label: "Under Review" },
+  rejected: { color: "var(--danger-color)", label: "Rejected" },
 };
 
 export default function ApplyConsentModal({
@@ -90,27 +91,27 @@ export default function ApplyConsentModal({
       {/* Modal */}
       <div
         className="relative w-full max-w-lg rounded-2xl overflow-hidden"
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #1F1F1F" }}>
+        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--border-color)" }}>
           <div className="flex items-center gap-3">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: "rgba(34,197,94,0.1)" }}
+              style={{ background: "var(--accent-bg)" }}
             >
-              <Shield size={20} style={{ color: "#22C55E" }} />
+              <Shield size={20} style={{ color: "var(--accent)" }} />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-white">Share Profile</h2>
-              <p className="text-xs text-gray-500">Review before applying</p>
+              <h2 className="text-base font-semibold text-[var(--text-primary)]">Share Profile</h2>
+              <p className="text-xs text-[var(--text-muted)]">Review before applying</p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="p-2 rounded-lg transition-colors hover:bg-white/5"
           >
-            <X size={18} className="text-gray-500" />
+            <X size={18} className="text-[var(--text-muted)]" />
           </button>
         </div>
 
@@ -119,13 +120,13 @@ export default function ApplyConsentModal({
           {/* Question */}
           <div
             className="rounded-xl p-4"
-            style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}
+            style={{ background: "var(--accent-bg)", border: "1px solid var(--accent-border)" }}
           >
-            <p className="text-sm text-white font-medium">
+            <p className="text-sm text-[var(--text-primary)] font-medium">
               Are you willing to share your profile with{" "}
-              <span style={{ color: "#22C55E" }}>{agencyName}</span>?
+              <span style={{ color: "var(--accent)" }}>{agencyName}</span>?
             </p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-[var(--text-secondary)] mt-1">
               Applying to: <span className="text-gray-300">{vacancyTitle}</span>
             </p>
           </div>
@@ -133,8 +134,8 @@ export default function ApplyConsentModal({
           {/* Documents Card */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <FileText size={14} className="text-gray-500" />
-              <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+              <FileText size={14} className="text-[var(--text-muted)]" />
+              <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">
                 Your Documents
               </span>
             </div>
@@ -142,44 +143,44 @@ export default function ApplyConsentModal({
             {loading ? (
               <div
                 className="rounded-xl p-6 flex items-center justify-center"
-                style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
               >
-                <Loader2 size={20} className="animate-spin text-gray-500" />
-                <span className="ml-2 text-sm text-gray-500">Loading documents...</span>
+                <Loader2 size={20} className="animate-spin text-[var(--text-muted)]" />
+                <span className="ml-2 text-sm text-[var(--text-muted)]">Loading documents...</span>
               </div>
             ) : error ? (
               <div
                 className="rounded-xl p-4 flex items-center gap-3"
-                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}
+                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid var(--danger-bg)" }}
               >
-                <AlertCircle size={16} style={{ color: "#F87171" }} />
-                <span className="text-sm text-gray-400">{error}</span>
+                <AlertCircle size={16} style={{ color: "var(--danger-color)" }} />
+                <span className="text-sm text-[var(--text-secondary)]">{error}</span>
               </div>
             ) : documents.length === 0 ? (
               <div
                 className="rounded-xl p-6 text-center"
-                style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
               >
-                <FileText size={24} className="mx-auto mb-2 text-gray-600" />
-                <p className="text-sm text-gray-500">
+                <FileText size={24} className="mx-auto mb-2 text-[var(--text-faint)]" />
+                <p className="text-sm text-[var(--text-muted)]">
                   No documents uploaded yet. Upload documents to get verified.
                 </p>
               </div>
             ) : (
               <div
                 className="rounded-xl overflow-hidden"
-                style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
               >
                 {/* Summary */}
-                <div className="px-4 py-3 flex items-center gap-4 text-xs" style={{ borderBottom: "1px solid #1F1F1F" }}>
+                <div className="px-4 py-3 flex items-center gap-4 text-xs" style={{ borderBottom: "1px solid var(--border-color)" }}>
                   {verifiedCount > 0 && (
-                    <span className="flex items-center gap-1.5" style={{ color: "#22C55E" }}>
+                    <span className="flex items-center gap-1.5" style={{ color: "var(--accent)" }}>
                       <CheckCircle2 size={12} />
                       {verifiedCount} verified
                     </span>
                   )}
                   {pendingCount > 0 && (
-                    <span className="flex items-center gap-1.5" style={{ color: "#F59E0B" }}>
+                    <span className="flex items-center gap-1.5" style={{ color: "var(--badge-pending-color)" }}>
                       <AlertCircle size={12} />
                       {pendingCount} pending
                     </span>
@@ -187,7 +188,7 @@ export default function ApplyConsentModal({
                 </div>
 
                 {/* Document List */}
-                <div className="divide-y" style={{ borderColor: "#1F1F1F" }}>
+                <div className="divide-y" style={{ borderColor: "var(--border-color)" }}>
                   {documents.map((doc) => {
                     const statusConfig = DOC_STATUS_CONFIG[doc.status] || DOC_STATUS_CONFIG.pending;
                     return (
@@ -195,13 +196,13 @@ export default function ApplyConsentModal({
                         <div className="flex items-center gap-3">
                           <div
                             className="w-8 h-8 rounded-lg flex items-center justify-center"
-                            style={{ background: "rgba(255,255,255,0.04)" }}
+                            style={{ background: "var(--accent-bg)" }}
                           >
-                            <FileText size={14} className="text-gray-500" />
+                            <FileText size={14} className="text-[var(--text-muted)]" />
                           </div>
                           <div>
-                            <div className="text-sm text-white">{doc.title}</div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-sm text-[var(--text-primary)]">{doc.title}</div>
+                            <div className="text-xs text-[var(--text-muted)]">
                               {DOC_TYPE_LABELS[doc.type] || doc.type}
                             </div>
                           </div>
@@ -224,7 +225,7 @@ export default function ApplyConsentModal({
           </div>
 
           {/* Info Note */}
-          <div className="flex items-start gap-2 text-xs text-gray-500">
+          <div className="flex items-start gap-2 text-xs text-[var(--text-muted)]">
             <AlertCircle size={14} className="shrink-0 mt-0.5" />
             <p>
               The agency will see your profile information and document verification status.
@@ -234,14 +235,14 @@ export default function ApplyConsentModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 flex gap-3" style={{ borderTop: "1px solid #1F1F1F" }}>
+        <div className="px-6 py-4 flex gap-3" style={{ borderTop: "1px solid var(--border-color)" }}>
           <button
             onClick={onClose}
             className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
             style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              color: "#9CA3AF",
+              background: "var(--accent-bg)",
+              border: "1px solid var(--border-color)",
+              color: "var(--text-secondary)",
             }}
           >
             Cancel
@@ -249,7 +250,7 @@ export default function ApplyConsentModal({
           <button
             onClick={onConfirm}
             className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:opacity-90"
-            style={{ background: "#22C55E", color: "black" }}
+            style={{ background: "var(--accent)", color: "#fff" }}
           >
             Yes, Share & Apply
           </button>

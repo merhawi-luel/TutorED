@@ -1,3 +1,4 @@
+import { useTheme } from "@/context/ThemeContext";
 import { useState } from "react";
 import { useData } from "@/context/DataContext";
 import { useInView } from "@/hooks/useInView";
@@ -28,20 +29,20 @@ export default function AgencyOrganization() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const inputStyle = { background: "#0D0D0D", border: "1px solid #1F1F1F" };
+  const inputStyle = { background: "var(--bg-input)", border: "1px solid var(--border-color)" };
 
   return (
     <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
       {/* Header */}
       <div className={`flex items-center justify-between fade-up ${inView ? "in-view" : ""}`}>
         <div>
-          <h1 className="text-2xl font-semibold text-white">Organization Profile</h1>
-          <p className="text-sm text-gray-400 mt-1">Manage your agency's public profile.</p>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Organization Profile</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">Manage your agency's public profile.</p>
         </div>
         <button
           onClick={handleSave}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all"
-          style={{ background: "#22C55E", color: "black" }}
+          style={{ background: "var(--accent)", color: "#fff" }}
         >
           <Save size={16} />
           {saved ? "Saved!" : "Save Changes"}
@@ -52,48 +53,48 @@ export default function AgencyOrganization() {
       {agencyOrganization.isVerified && (
         <div
           className={`rounded-xl px-5 py-3 flex items-center gap-3 text-sm fade-up delay-50 ${inView ? "in-view" : ""}`}
-          style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}
+          style={{ background: "var(--accent-bg)", border: "1px solid var(--accent-border)" }}
         >
-          <CheckCircle2 size={16} style={{ color: "#22C55E" }} />
-          <span style={{ color: "#4ADE80" }}>Verified Organization</span>
-          <span className="text-xs text-gray-500">— Your agency is verified on the platform.</span>
+          <CheckCircle2 size={16} style={{ color: "var(--accent)" }} />
+          <span style={{ color: "var(--accent)" }}>Verified Organization</span>
+          <span className="text-xs text-[var(--text-muted)]">— Your agency is verified on the platform.</span>
         </div>
       )}
 
       {/* Basic Info */}
       <section
         className={`rounded-2xl p-6 space-y-5 fade-up delay-100 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
       >
         <h2 className="text-sm font-medium text-gray-300">Organization Details</h2>
 
         <div>
-          <label className="block text-xs text-gray-500 mb-1.5">Organization Name</label>
+          <label className="block text-xs text-[var(--text-muted)] mb-1.5">Organization Name</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
+            className="w-full px-4 py-2.5 rounded-xl text-sm text-[var(--text-primary)] focus:outline-none focus:border-emerald-500/50 transition-colors"
             style={inputStyle}
           />
         </div>
 
         <div>
-          <label className="block text-xs text-gray-500 mb-1.5">Description</label>
+          <label className="block text-xs text-[var(--text-muted)] mb-1.5">Description</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
-            className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors resize-none"
+            className="w-full px-4 py-2.5 rounded-xl text-sm text-[var(--text-primary)] focus:outline-none focus:border-emerald-500/50 transition-colors resize-none"
             style={inputStyle}
           />
         </div>
 
         <div>
-          <label className="block text-xs text-gray-500 mb-1.5">Location</label>
+          <label className="block text-xs text-[var(--text-muted)] mb-1.5">Location</label>
           <input
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
+            className="w-full px-4 py-2.5 rounded-xl text-sm text-[var(--text-primary)] focus:outline-none focus:border-emerald-500/50 transition-colors"
             style={inputStyle}
           />
         </div>
@@ -102,7 +103,7 @@ export default function AgencyOrganization() {
       {/* Subjects */}
       <section
         className={`rounded-2xl p-6 space-y-4 fade-up delay-200 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
       >
         <h2 className="text-sm font-medium text-gray-300">Subjects Offered</h2>
         <div className="flex flex-wrap gap-2">
@@ -114,9 +115,9 @@ export default function AgencyOrganization() {
                 onClick={() => toggleSubject(s)}
                 className="px-3.5 py-2 rounded-lg text-xs font-medium transition-all"
                 style={{
-                  background: selected ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.04)",
-                  border: `1px solid ${selected ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.08)"}`,
-                  color: selected ? "#22C55E" : "#9CA3AF",
+                  background: selected ? "var(--accent-bg)" : "var(--accent-bg)",
+                  border: `1px solid ${selected ? "rgba(34,197,94,0.3)" : "var(--border-color)"}`,
+                  color: selected ? "var(--accent)" : "var(--text-secondary)",
                 }}
               >
                 {selected ? `✓ ${s}` : s}
@@ -129,36 +130,36 @@ export default function AgencyOrganization() {
       {/* Preview */}
       <section
         className={`rounded-2xl p-6 space-y-4 fade-up delay-300 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
       >
         <h2 className="text-sm font-medium text-gray-300">Profile Preview</h2>
         <div
           className="rounded-xl p-5"
-          style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+          style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
         >
           <div className="flex items-center gap-3 mb-3">
             <div
               className="w-11 h-11 rounded-xl flex items-center justify-center text-black font-bold text-sm shrink-0"
-              style={{ background: "linear-gradient(135deg, #22C55E, #16A34A)" }}
+              style={{ background: "var(--accent)" }}
             >
               {name[0] ?? "E"}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-white">{name || "Organization Name"}</span>
+                <span className="text-sm font-semibold text-[var(--text-primary)]">{name || "Organization Name"}</span>
                 {agencyOrganization.isVerified && (
-                  <CheckCircle2 size={14} style={{ color: "#22C55E" }} />
+                  <CheckCircle2 size={14} style={{ color: "var(--accent)" }} />
                 )}
               </div>
-              <div className="text-xs text-gray-500">{location}</div>
+              <div className="text-xs text-[var(--text-muted)]">{location}</div>
             </div>
           </div>
-          <p className="text-xs text-gray-400 leading-relaxed mb-3">
+          <p className="text-xs text-[var(--text-secondary)] leading-relaxed mb-3">
             {description || "Organization description will appear here."}
           </p>
           <div className="flex flex-wrap gap-1.5">
             {subjects.map((s) => (
-              <span key={s} className="px-2 py-0.5 rounded text-xs" style={{ background: "rgba(255,255,255,0.04)", color: "#9CA3AF" }}>
+              <span key={s} className="px-2 py-0.5 rounded text-xs" style={{ background: "var(--accent-bg)", color: "var(--text-secondary)" }}>
                 {s}
               </span>
             ))}

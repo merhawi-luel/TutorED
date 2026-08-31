@@ -13,7 +13,7 @@ export default function Hero(_props: HeroProps) {
   return (
     <section
       className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-32 pb-8 overflow-hidden"
-      style={{ background: isDark ? "linear-gradient(160deg, #000000 0%, #050F07 50%, #000000 100%)" : `linear-gradient(160deg, ${colors.bgPage} 0%, ${colors.bgCard} 50%, ${colors.bgPage} 100%)` }}
+      style={{ background: isDark ? "linear-gradient(160deg, var(--bg-page) 0%, var(--bg-card) 50%, var(--bg-page) 100%)" : `linear-gradient(160deg, ${colors.bgPage} 0%, ${colors.bgCard} 50%, ${colors.bgPage} 100%)` }}
     >
       {/* Glow blobs */}
       <div

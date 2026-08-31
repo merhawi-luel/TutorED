@@ -1,3 +1,4 @@
+import { useTheme } from "@/context/ThemeContext";
 import { useState, useEffect, useCallback } from "react";
 import { useData } from "@/context/DataContext";
 import { agencyApi } from "@/lib/api";
@@ -16,21 +17,21 @@ import {
 import type { ApplicationStatus, TutorProfile } from "@/types";
 
 const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
-  applied: { color: "#9CA3AF", label: "Applied" },
-  under_review: { color: "#60A5FA", label: "Under Review" },
-  shortlisted: { color: "#4ADE80", label: "Shortlisted" },
-  interview: { color: "#C084FC", label: "Interview" },
-  accepted: { color: "#22C55E", label: "Accepted" },
-  rejected: { color: "#F87171", label: "Rejected" },
-  withdrawn: { color: "#6B7280", label: "Withdrawn" },
+  applied: { color: "var(--text-secondary)", label: "Applied" },
+  under_review: { color: "var(--badge-info-color)", label: "Under Review" },
+  shortlisted: { color: "var(--accent)", label: "Shortlisted" },
+  interview: { color: "var(--badge-purple-color)", label: "Interview" },
+  accepted: { color: "var(--accent)", label: "Accepted" },
+  rejected: { color: "var(--danger-color)", label: "Rejected" },
+  withdrawn: { color: "var(--text-muted)", label: "Withdrawn" },
 };
 
 const ACTIONS: { status: ApplicationStatus; label: string; color: string }[] = [
-  { status: "under_review", label: "Review", color: "#60A5FA" },
-  { status: "shortlisted", label: "Shortlist", color: "#4ADE80" },
-  { status: "interview", label: "Interview", color: "#C084FC" },
-  { status: "accepted", label: "Accept", color: "#22C55E" },
-  { status: "rejected", label: "Reject", color: "#F87171" },
+  { status: "under_review", label: "Review", color: "var(--badge-info-color)" },
+  { status: "shortlisted", label: "Shortlist", color: "var(--accent)" },
+  { status: "interview", label: "Interview", color: "var(--badge-purple-color)" },
+  { status: "accepted", label: "Accept", color: "var(--accent)" },
+  { status: "rejected", label: "Reject", color: "var(--danger-color)" },
 ];
 
 interface Applicant {
@@ -139,15 +140,15 @@ export default function AgencyApplicants() {
     <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
       {/* Header */}
       <div className={`fade-up ${inView ? "in-view" : ""}`}>
-        <h1 className="text-2xl font-semibold text-white">Applicants</h1>
-        <p className="text-sm text-gray-400 mt-1">Review and manage applicants across all your vacancies.</p>
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Applicants</h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">Review and manage applicants across all your vacancies.</p>
       </div>
 
       {/* Success */}
       {successMsg && (
         <div
           className="rounded-xl px-5 py-3 flex items-center gap-3 text-sm"
-          style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", color: "#4ADE80" }}
+          style={{ background: "var(--accent-bg)", border: "1px solid var(--accent-border)", color: "var(--accent)" }}
         >
           <CheckCircle2 size={16} /> {successMsg}
         </div>
@@ -156,7 +157,7 @@ export default function AgencyApplicants() {
       {/* Filters */}
       <div
         className={`rounded-2xl p-5 space-y-4 fade-up delay-100 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
       >
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Vacancy Selector */}
@@ -164,15 +165,15 @@ export default function AgencyApplicants() {
             <select
               value={selectedVacancy}
               onChange={(e) => setSelectedVacancy(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none appearance-none"
-              style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+              className="w-full px-4 py-2.5 rounded-xl text-sm text-[var(--text-primary)] focus:outline-none appearance-none"
+              style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
             >
               <option value="all">All Vacancies</option>
               {myVacancies.map((v) => (
                 <option key={v.id} value={v.id}>{v.title}</option>
               ))}
             </select>
-            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
           </div>
         </div>
 
@@ -184,9 +185,9 @@ export default function AgencyApplicants() {
               onClick={() => setStatusFilter(f.value)}
               className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
               style={{
-                background: statusFilter === f.value ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.04)",
-                border: `1px solid ${statusFilter === f.value ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.08)"}`,
-                color: statusFilter === f.value ? "#22C55E" : "#9CA3AF",
+                background: statusFilter === f.value ? "var(--accent-bg)" : "var(--accent-bg)",
+                border: `1px solid ${statusFilter === f.value ? "rgba(34,197,94,0.3)" : "var(--border-color)"}`,
+                color: statusFilter === f.value ? "var(--accent)" : "var(--text-secondary)",
               }}
             >
               {f.label}
@@ -198,9 +199,9 @@ export default function AgencyApplicants() {
       {/* Applicant List */}
       <div className="space-y-3">
         {displayApplicants.length === 0 ? (
-          <div className="rounded-xl p-12 text-center" style={{ background: "#111111", border: "1px solid #1F1F1F" }}>
-            <Send size={32} className="mx-auto mb-3 text-gray-600" />
-            <p className="text-sm text-gray-400">No applicants match this filter.</p>
+          <div className="rounded-xl p-12 text-center" style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}>
+            <Send size={32} className="mx-auto mb-3 text-[var(--text-faint)]" />
+            <p className="text-sm text-[var(--text-secondary)]">No applicants match this filter.</p>
           </div>
         ) : (
           displayApplicants.map((applicant, i) => {
@@ -212,7 +213,7 @@ export default function AgencyApplicants() {
               <div
                 key={applicant.id}
                 className={`rounded-2xl overflow-hidden transition-all fade-up delay-${Math.min((i + 1) * 100, 400)} ${inView ? "in-view" : ""}`}
-                style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+                style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
               >
                 {/* Header */}
                 <div
@@ -222,26 +223,26 @@ export default function AgencyApplicants() {
                   <div className="flex items-center gap-4">
                     <div
                       className="w-11 h-11 rounded-xl flex items-center justify-center text-black font-bold text-sm shrink-0"
-                      style={{ background: "linear-gradient(135deg, #22C55E, #16A34A)" }}
+                      style={{ background: "var(--accent)" }}
                     >
                       {applicant.tutorName.split(" ").map((n: string) => n[0]).join("")}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-white">{applicant.tutorName}</span>
+                        <span className="text-sm font-semibold text-[var(--text-primary)]">{applicant.tutorName}</span>
                         {applicant.tutorProfile?.verificationLevel === "verified" && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium" style={{ background: "rgba(34,197,94,0.15)", color: "#22C55E" }}>
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium" style={{ background: "var(--accent-bg)", color: "var(--accent)" }}>
                             ✓ Verified
                           </span>
                         )}
                         {applicant.tutorProfile?.verificationLevel === "partial" && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium" style={{ background: "rgba(245,158,11,0.12)", color: "#F59E0B" }}>
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium" style={{ background: "var(--badge-pending-bg)", color: "var(--badge-pending-color)" }}>
                             Partial
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-gray-500">{applicant.vacancyTitle}</div>
-                      <div className="text-xs text-gray-600 mt-0.5">Applied {applicant.appliedAt}</div>
+                      <div className="text-xs text-[var(--text-muted)]">{applicant.vacancyTitle}</div>
+                      <div className="text-xs text-[var(--text-faint)] mt-0.5">Applied {applicant.appliedAt}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -253,7 +254,7 @@ export default function AgencyApplicants() {
                     </span>
                     <ChevronDown
                       size={16}
-                      className="text-gray-500 transition-transform"
+                      className="text-[var(--text-muted)] transition-transform"
                       style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0)" }}
                     />
                   </div>
@@ -261,36 +262,36 @@ export default function AgencyApplicants() {
 
                 {/* Expanded Detail */}
                 {isExpanded && (
-                  <div style={{ borderTop: "1px solid #1F1F1F" }} className="px-5 py-5 space-y-4">
+                  <div style={{ borderTop: "1px solid var(--border-color)" }} className="px-5 py-5 space-y-4">
                     {/* Profile Info */}
                     {applicant.tutorProfile && (
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         <div className="flex items-center gap-2">
-                          <GraduationCap size={14} className="text-gray-500" />
+                          <GraduationCap size={14} className="text-[var(--text-muted)]" />
                           <div>
-                            <div className="text-[10px] text-gray-600 uppercase">Education</div>
-                            <div className="text-xs text-white">{applicant.tutorProfile.education}</div>
+                            <div className="text-[10px] text-[var(--text-faint)] uppercase">Education</div>
+                            <div className="text-xs text-[var(--text-primary)]">{applicant.tutorProfile.education}</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Briefcase size={14} className="text-gray-500" />
+                          <Briefcase size={14} className="text-[var(--text-muted)]" />
                           <div>
-                            <div className="text-[10px] text-gray-600 uppercase">Experience</div>
-                            <div className="text-xs text-white">{applicant.tutorProfile.experience} years</div>
+                            <div className="text-[10px] text-[var(--text-faint)] uppercase">Experience</div>
+                            <div className="text-xs text-[var(--text-primary)]">{applicant.tutorProfile.experience} years</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <MapPin size={14} className="text-gray-500" />
+                          <MapPin size={14} className="text-[var(--text-muted)]" />
                           <div>
-                            <div className="text-[10px] text-gray-600 uppercase">Location</div>
-                            <div className="text-xs text-white">{applicant.tutorProfile.location}</div>
+                            <div className="text-[10px] text-[var(--text-faint)] uppercase">Location</div>
+                            <div className="text-xs text-[var(--text-primary)]">{applicant.tutorProfile.location}</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Star size={14} className="text-gray-500" />
+                          <Star size={14} className="text-[var(--text-muted)]" />
                           <div>
-                            <div className="text-[10px] text-gray-600 uppercase">Rating</div>
-                            <div className="text-xs text-white">{applicant.tutorProfile.rating} / 5</div>
+                            <div className="text-[10px] text-[var(--text-faint)] uppercase">Rating</div>
+                            <div className="text-xs text-[var(--text-primary)]">{applicant.tutorProfile.rating} / 5</div>
                           </div>
                         </div>
                       </div>
@@ -300,12 +301,12 @@ export default function AgencyApplicants() {
                     {applicant.tutorProfile && (
                       <div className="flex flex-wrap gap-1.5">
                         {applicant.tutorProfile.subjects.map((s) => (
-                          <span key={s} className="px-2 py-0.5 rounded text-xs" style={{ background: "rgba(255,255,255,0.04)", color: "#9CA3AF" }}>
+                          <span key={s} className="px-2 py-0.5 rounded text-xs" style={{ background: "var(--accent-bg)", color: "var(--text-secondary)" }}>
                             {s}
                           </span>
                         ))}
                         {applicant.tutorProfile.grades.map((g) => (
-                          <span key={g} className="px-2 py-0.5 rounded text-xs" style={{ background: "rgba(255,255,255,0.04)", color: "#6B7280" }}>
+                          <span key={g} className="px-2 py-0.5 rounded text-xs" style={{ background: "var(--accent-bg)", color: "var(--text-muted)" }}>
                             {g}
                           </span>
                         ))}
@@ -316,12 +317,12 @@ export default function AgencyApplicants() {
                     {vacancy && (
                       <div
                         className="rounded-xl px-4 py-3 flex flex-wrap gap-x-6 gap-y-2 text-xs"
-                        style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                        style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
                       >
-                        <span className="text-gray-500">Requirements:</span>
-                        <span className="text-gray-400">Education: {vacancy.requiredEducation}</span>
-                        <span className="text-gray-400">Experience: {vacancy.requiredExperience}+ years</span>
-                        <span className="text-gray-400">Mode: {vacancy.teachingMode}</span>
+                        <span className="text-[var(--text-muted)]">Requirements:</span>
+                        <span className="text-[var(--text-secondary)]">Education: {vacancy.requiredEducation}</span>
+                        <span className="text-[var(--text-secondary)]">Experience: {vacancy.requiredExperience}+ years</span>
+                        <span className="text-[var(--text-secondary)]">Mode: {vacancy.teachingMode}</span>
                       </div>
                     )}
 
@@ -335,7 +336,7 @@ export default function AgencyApplicants() {
                           tutorProfile: applicant.tutorProfile,
                         })}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                        style={{ background: "rgba(34,197,94,0.1)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.2)" }}
+                        style={{ background: "var(--accent-bg)", color: "var(--accent)", border: "1px solid var(--accent-border)" }}
                       >
                         <Eye size={13} /> View Full Profile
                       </button>

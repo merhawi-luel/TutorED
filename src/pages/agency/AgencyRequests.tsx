@@ -1,3 +1,4 @@
+import { useTheme } from "@/context/ThemeContext";
 import { useState, useEffect, useCallback } from "react";
 import { agencyApi } from "@/lib/api";
 import { useInView } from "@/hooks/useInView";
@@ -14,18 +15,18 @@ import {
 } from "lucide-react";
 
 const STATUS_CONFIG: Record<string, { bg: string; color: string; label: string }> = {
-  pending: { bg: "rgba(245,158,11,0.15)", color: "#F59E0B", label: "Pending" },
-  contacted: { bg: "rgba(59,130,246,0.15)", color: "#60A5FA", label: "Contacted" },
-  accepted: { bg: "rgba(34,197,94,0.15)", color: "#4ADE80", label: "Accepted" },
-  completed: { bg: "rgba(34,197,94,0.2)", color: "#22C55E", label: "Completed" },
-  rejected: { bg: "rgba(239,68,68,0.15)", color: "#F87171", label: "Rejected" },
+  pending: { bg: "var(--badge-pending-bg)", color: "var(--badge-pending-color)", label: "Pending" },
+  contacted: { bg: "rgba(59,130,246,0.15)", color: "var(--badge-info-color)", label: "Contacted" },
+  accepted: { bg: "var(--accent-bg)", color: "var(--accent)", label: "Accepted" },
+  completed: { bg: "rgba(34,197,94,0.2)", color: "var(--accent)", label: "Completed" },
+  rejected: { bg: "rgba(239,68,68,0.15)", color: "var(--danger-color)", label: "Rejected" },
 };
 
 const ACTIONS: { status: string; label: string; color: string }[] = [
-  { status: "contacted", label: "Mark Contacted", color: "#60A5FA" },
-  { status: "accepted", label: "Accept", color: "#4ADE80" },
-  { status: "completed", label: "Complete", color: "#22C55E" },
-  { status: "rejected", label: "Reject", color: "#F87171" },
+  { status: "contacted", label: "Mark Contacted", color: "var(--badge-info-color)" },
+  { status: "accepted", label: "Accept", color: "var(--accent)" },
+  { status: "completed", label: "Complete", color: "var(--accent)" },
+  { status: "rejected", label: "Reject", color: "var(--danger-color)" },
 ];
 
 interface Request {
@@ -104,17 +105,17 @@ export default function AgencyRequests() {
       {/* Header */}
       <div className={`fade-up ${inView ? "in-view" : ""}`}>
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-semibold text-white">Recruitment Requests</h1>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Recruitment Requests</h1>
           {pendingCount > 0 && (
             <span
               className="px-2 py-0.5 rounded-full text-xs font-medium"
-              style={{ background: "rgba(245,158,11,0.15)", color: "#F59E0B" }}
+              style={{ background: "var(--badge-pending-bg)", color: "var(--badge-pending-color)" }}
             >
               {pendingCount} pending
             </span>
           )}
         </div>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
           Parents looking for tutors have sent requests to your organization.
         </p>
       </div>
@@ -123,7 +124,7 @@ export default function AgencyRequests() {
       {successMsg && (
         <div
           className="rounded-xl px-5 py-3 flex items-center gap-3 text-sm"
-          style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", color: "#4ADE80" }}
+          style={{ background: "var(--accent-bg)", border: "1px solid var(--accent-border)", color: "var(--accent)" }}
         >
           <CheckCircle size={16} /> {successMsg}
         </div>
@@ -140,9 +141,9 @@ export default function AgencyRequests() {
             onClick={() => setStatusFilter(f.value)}
             className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
             style={{
-              background: statusFilter === f.value ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.04)",
-              border: `1px solid ${statusFilter === f.value ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.08)"}`,
-              color: statusFilter === f.value ? "#22C55E" : "#9CA3AF",
+              background: statusFilter === f.value ? "var(--accent-bg)" : "var(--accent-bg)",
+              border: `1px solid ${statusFilter === f.value ? "rgba(34,197,94,0.3)" : "var(--border-color)"}`,
+              color: statusFilter === f.value ? "var(--accent)" : "var(--text-secondary)",
             }}
           >
             {f.label}
@@ -153,14 +154,14 @@ export default function AgencyRequests() {
       {/* Request List */}
       <div className="space-y-3">
         {loading ? (
-          <div className="flex items-center justify-center gap-2 py-12 text-gray-400 text-sm">
+          <div className="flex items-center justify-center gap-2 py-12 text-[var(--text-secondary)] text-sm">
             <Loader2 size={16} className="animate-spin" />
             Loading requests...
           </div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-xl p-12 text-center" style={{ background: "#111111", border: "1px solid #1F1F1F" }}>
-            <Inbox size={32} className="mx-auto mb-3 text-gray-600" />
-            <p className="text-sm text-gray-400">
+          <div className="rounded-xl p-12 text-center" style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}>
+            <Inbox size={32} className="mx-auto mb-3 text-[var(--text-faint)]" />
+            <p className="text-sm text-[var(--text-secondary)]">
               {requests.length === 0
                 ? "No recruitment requests yet."
                 : "No requests match this filter."}
@@ -175,7 +176,7 @@ export default function AgencyRequests() {
               <div
                 key={req.id}
                 className={`rounded-2xl overflow-hidden transition-all fade-up delay-${Math.min((i + 1) * 100, 400)} ${inView ? "in-view" : ""}`}
-                style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+                style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
               >
                 {/* Header */}
                 <div
@@ -187,11 +188,11 @@ export default function AgencyRequests() {
                       className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
                       style={{ background: "rgba(59,130,246,0.12)" }}
                     >
-                      <User size={18} style={{ color: "#60A5FA" }} />
+                      <User size={18} style={{ color: "var(--badge-info-color)" }} />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-white">
+                        <span className="text-sm font-semibold text-[var(--text-primary)]">
                           {req.parentName || "Parent"}
                         </span>
                         <span
@@ -201,7 +202,7 @@ export default function AgencyRequests() {
                           {cfg.label}
                         </span>
                       </div>
-                      <div className="text-xs text-gray-500 mt-0.5">
+                      <div className="text-xs text-[var(--text-muted)] mt-0.5">
                         <BookOpen size={11} className="inline mr-1" />
                         {req.subject} — {req.grade}
                         {req.location && (
@@ -216,40 +217,40 @@ export default function AgencyRequests() {
                   </div>
                   <ChevronDown
                     size={16}
-                    className="text-gray-500 transition-transform shrink-0"
+                    className="text-[var(--text-muted)] transition-transform shrink-0"
                     style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0)" }}
                   />
                 </div>
 
                 {/* Expanded Detail */}
                 {isExpanded && (
-                  <div style={{ borderTop: "1px solid #1F1F1F" }} className="px-5 py-5 space-y-4">
+                  <div style={{ borderTop: "1px solid var(--border-color)" }} className="px-5 py-5 space-y-4">
                     {/* Contact Info */}
                     <div
                       className="rounded-xl px-4 py-3"
                       style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.12)" }}
                     >
-                      <div className="text-[10px] text-gray-500 uppercase mb-2">Parent Contact Information</div>
+                      <div className="text-[10px] text-[var(--text-muted)] uppercase mb-2">Parent Contact Information</div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                         <div className="flex items-center gap-2">
-                          <User size={13} className="text-gray-500" />
+                          <User size={13} className="text-[var(--text-muted)]" />
                           <div>
-                            <div className="text-gray-500">Name</div>
-                            <div className="text-white">{req.parentName || "—"}</div>
+                            <div className="text-[var(--text-muted)]">Name</div>
+                            <div className="text-[var(--text-primary)]">{req.parentName || "—"}</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Mail size={13} className="text-gray-500" />
+                          <Mail size={13} className="text-[var(--text-muted)]" />
                           <div>
-                            <div className="text-gray-500">Email</div>
-                            <div className="text-white">{req.parentEmail || "—"}</div>
+                            <div className="text-[var(--text-muted)]">Email</div>
+                            <div className="text-[var(--text-primary)]">{req.parentEmail || "—"}</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Phone size={13} className="text-gray-500" />
+                          <Phone size={13} className="text-[var(--text-muted)]" />
                           <div>
-                            <div className="text-gray-500">Phone</div>
-                            <div className="text-white">{req.parentPhone || "—"}</div>
+                            <div className="text-[var(--text-muted)]">Phone</div>
+                            <div className="text-[var(--text-primary)]">{req.parentPhone || "—"}</div>
                           </div>
                         </div>
                       </div>
@@ -257,29 +258,29 @@ export default function AgencyRequests() {
 
                     {/* Request Details */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                      <div className="rounded-lg px-3 py-2" style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}>
-                        <div className="text-[10px] text-gray-600 uppercase">Subject</div>
-                        <div className="text-white">{req.subject}</div>
+                      <div className="rounded-lg px-3 py-2" style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}>
+                        <div className="text-[10px] text-[var(--text-faint)] uppercase">Subject</div>
+                        <div className="text-[var(--text-primary)]">{req.subject}</div>
                       </div>
-                      <div className="rounded-lg px-3 py-2" style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}>
-                        <div className="text-[10px] text-gray-600 uppercase">Grade</div>
-                        <div className="text-white">{req.grade}</div>
+                      <div className="rounded-lg px-3 py-2" style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}>
+                        <div className="text-[10px] text-[var(--text-faint)] uppercase">Grade</div>
+                        <div className="text-[var(--text-primary)]">{req.grade}</div>
                       </div>
-                      <div className="rounded-lg px-3 py-2" style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}>
-                        <div className="text-[10px] text-gray-600 uppercase">Location</div>
-                        <div className="text-white">{req.location || "—"}</div>
+                      <div className="rounded-lg px-3 py-2" style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}>
+                        <div className="text-[10px] text-[var(--text-faint)] uppercase">Location</div>
+                        <div className="text-[var(--text-primary)]">{req.location || "—"}</div>
                       </div>
-                      <div className="rounded-lg px-3 py-2" style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}>
-                        <div className="text-[10px] text-gray-600 uppercase">Received</div>
-                        <div className="text-white">{req.createdAt.split("T")[0] || "—"}</div>
+                      <div className="rounded-lg px-3 py-2" style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}>
+                        <div className="text-[10px] text-[var(--text-faint)] uppercase">Received</div>
+                        <div className="text-[var(--text-primary)]">{req.createdAt.split("T")[0] || "—"}</div>
                       </div>
                     </div>
 
                     {/* Notes */}
                     {req.notes && (
-                      <div className="rounded-xl px-4 py-3" style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}>
-                        <div className="text-[10px] text-gray-600 uppercase mb-1">Notes</div>
-                        <p className="text-xs text-gray-400 italic">"{req.notes}"</p>
+                      <div className="rounded-xl px-4 py-3" style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}>
+                        <div className="text-[10px] text-[var(--text-faint)] uppercase mb-1">Notes</div>
+                        <p className="text-xs text-[var(--text-secondary)] italic">"{req.notes}"</p>
                       </div>
                     )}
 

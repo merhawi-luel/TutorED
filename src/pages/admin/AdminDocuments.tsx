@@ -1,3 +1,4 @@
+import { useTheme } from "@/context/ThemeContext";
 import { useState, useEffect } from "react";
 import { useData } from "@/context/DataContext";
 import { adminApi } from "@/lib/api";
@@ -26,11 +27,11 @@ const DOC_TYPE_LABELS: Record<DocumentType, string> = {
 };
 
 const STATUS_CONFIG: Record<DocumentStatus, { icon: typeof CheckCircle2; color: string; label: string }> = {
-  verified: { icon: CheckCircle2, color: "#22C55E", label: "Verified" },
-  pending: { icon: Clock, color: "#F59E0B", label: "Pending" },
-  under_review: { icon: Eye, color: "#3B82F6", label: "Under Review" },
-  rejected: { icon: XCircle, color: "#EF4444", label: "Rejected" },
-  expired: { icon: AlertCircle, color: "#6B7280", label: "Expired" },
+  verified: { icon: CheckCircle2, color: "var(--accent)", label: "Verified" },
+  pending: { icon: Clock, color: "var(--badge-pending-color)", label: "Pending" },
+  under_review: { icon: Eye, color: "var(--badge-info-color)", label: "Under Review" },
+  rejected: { icon: XCircle, color: "var(--danger-color)", label: "Rejected" },
+  expired: { icon: AlertCircle, color: "var(--text-muted)", label: "Expired" },
 };
 
 const FILTER_OPTIONS: { value: string; label: string }[] = [
@@ -125,8 +126,8 @@ export default function AdminDocuments() {
     <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
       {/* Header */}
       <div className={`fade-up ${inView ? "in-view" : ""}`}>
-        <h1 className="text-2xl font-semibold text-white">Documents</h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Documents</h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
           Review and manage all submitted tutor documents.
         </p>
       </div>
@@ -135,7 +136,7 @@ export default function AdminDocuments() {
       {successMsg && (
         <div
           className="rounded-xl px-5 py-3 flex items-center gap-3 text-sm"
-          style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", color: "#4ADE80" }}
+          style={{ background: "var(--accent-bg)", border: "1px solid var(--accent-border)", color: "var(--accent)" }}
         >
           <CheckCircle2 size={16} />
           {successMsg}
@@ -145,16 +146,16 @@ export default function AdminDocuments() {
       {/* Search + Filters */}
       <div
         className={`rounded-2xl p-5 space-y-4 fade-up delay-100 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
       >
         <div className="relative">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" />
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-faint)]" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by tutor name, document title, or filename..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-white focus:outline-none"
-            style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-[var(--text-primary)] focus:outline-none"
+            style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
           />
         </div>
         <div className="flex gap-1.5 flex-wrap">
@@ -164,9 +165,9 @@ export default function AdminDocuments() {
               onClick={() => setFilter(f.value)}
               className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
               style={{
-                background: filter === f.value ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.04)",
-                border: `1px solid ${filter === f.value ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.08)"}`,
-                color: filter === f.value ? "#22C55E" : "#9CA3AF",
+                background: filter === f.value ? "var(--accent-bg)" : "var(--accent-bg)",
+                border: `1px solid ${filter === f.value ? "rgba(34,197,94,0.3)" : "var(--border-color)"}`,
+                color: filter === f.value ? "var(--accent)" : "var(--text-secondary)",
               }}
             >
               {f.label}
@@ -178,9 +179,9 @@ export default function AdminDocuments() {
       {/* Document Table */}
       <div className="space-y-2">
         {filtered.length === 0 ? (
-          <div className="rounded-xl p-12 text-center" style={{ background: "#111111", border: "1px solid #1F1F1F" }}>
-            <FileText size={32} className="mx-auto mb-3 text-gray-600" />
-            <p className="text-sm text-gray-400">No documents match this filter.</p>
+          <div className="rounded-xl p-12 text-center" style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}>
+            <FileText size={32} className="mx-auto mb-3 text-[var(--text-faint)]" />
+            <p className="text-sm text-[var(--text-secondary)]">No documents match this filter.</p>
           </div>
         ) : (
           filtered.map((doc, i) => {
@@ -193,7 +194,7 @@ export default function AdminDocuments() {
               <div
                 key={doc.id}
                 className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl px-5 py-4 transition-all fade-up delay-${Math.min((i + 1) * 100, 400)} ${inView ? "in-view" : ""}`}
-                style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+                style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
               >
                 <div className="flex items-center gap-4">
                   <div
@@ -203,15 +204,15 @@ export default function AdminDocuments() {
                     <FileText size={18} style={{ color: cfg.color }} />
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-white">{doc.title}</div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-sm font-medium text-[var(--text-primary)]">{doc.title}</div>
+                    <div className="text-xs text-[var(--text-muted)]">
                       {tutorName} · {DOC_TYPE_LABELS[doc.type]} · {doc.fileName}
                     </div>
-                    <div className="text-xs text-gray-600 mt-0.5">
+                    <div className="text-xs text-[var(--text-faint)] mt-0.5">
                       Submitted {doc.submittedAt}
                       {doc.reviewedAt && ` · Reviewed ${doc.reviewedAt}`}
                       {doc.reviewerNote && (
-                        <span style={{ color: "#EF4444" }}> · "{doc.reviewerNote}"</span>
+                        <span style={{ color: "var(--danger-color)" }}> · "{doc.reviewerNote}"</span>
                       )}
                     </div>
                   </div>
@@ -229,28 +230,28 @@ export default function AdminDocuments() {
                     className="p-1.5 rounded-lg transition-colors hover:bg-white/5"
                     title="Preview"
                   >
-                    <Eye size={14} className="text-gray-600 hover:text-blue-400" />
+                    <Eye size={14} className="text-[var(--text-faint)] hover:text-blue-400" />
                   </button>
                   <button
                     onClick={() => handleDownload(doc.id, doc.fileName)}
                     className="p-1.5 rounded-lg transition-colors hover:bg-white/5"
                     title="Download"
                   >
-                    <Download size={14} className="text-gray-600 hover:text-emerald-400" />
+                    <Download size={14} className="text-[var(--text-faint)] hover:text-emerald-400" />
                   </button>
                   {canAct && (
                     <>
                       <button
                         onClick={() => handleApprove(doc.id)}
                         className="px-2.5 py-1 rounded-lg text-xs font-medium transition-all"
-                        style={{ background: "rgba(34,197,94,0.15)", color: "#22C55E" }}
+                        style={{ background: "var(--accent-bg)", color: "var(--accent)" }}
                       >
                         Approve
                       </button>
                       <button
                         onClick={() => setRejectTarget({ id: doc.id, name: doc.title })}
                         className="px-2.5 py-1 rounded-lg text-xs font-medium transition-all"
-                        style={{ background: "rgba(239,68,68,0.12)", color: "#F87171" }}
+                        style={{ background: "var(--danger-bg)", color: "var(--danger-color)" }}
                       >
                         Reject
                       </button>
@@ -278,33 +279,33 @@ export default function AdminDocuments() {
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.7)" }}>
           <div
             className="w-full max-w-md rounded-2xl p-6 space-y-4"
-            style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+            style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "rgba(239,68,68,0.12)" }}>
-                <AlertCircle size={18} style={{ color: "#EF4444" }} />
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "var(--danger-bg)" }}>
+                <AlertCircle size={18} style={{ color: "var(--danger-color)" }} />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-white">Reject Document</h2>
-                <p className="text-xs text-gray-500">{rejectTarget.name}</p>
+                <h2 className="text-sm font-semibold text-[var(--text-primary)]">Reject Document</h2>
+                <p className="text-xs text-[var(--text-muted)]">{rejectTarget.name}</p>
               </div>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1.5">Reason for rejection</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1.5">Reason for rejection</label>
               <textarea
                 value={rejectNote}
                 onChange={(e) => setRejectNote(e.target.value)}
                 placeholder="Explain why this document is being rejected..."
                 rows={3}
-                className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none resize-none"
-                style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                className="w-full px-4 py-2.5 rounded-xl text-sm text-[var(--text-primary)] focus:outline-none resize-none"
+                style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
               />
             </div>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => { setRejectTarget(null); setRejectNote(""); }}
                 className="px-4 py-2 rounded-xl text-sm font-medium"
-                style={{ background: "#161616", color: "#9CA3AF", border: "1px solid #1F1F1F" }}
+                style={{ background: "var(--bg-input)", color: "var(--text-secondary)", border: "1px solid var(--border-color)" }}
               >
                 Cancel
               </button>
@@ -312,7 +313,7 @@ export default function AdminDocuments() {
                 onClick={handleReject}
                 disabled={!rejectNote.trim()}
                 className="px-4 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-40"
-                style={{ background: "rgba(239,68,68,0.2)", color: "#F87171", border: "1px solid rgba(239,68,68,0.3)" }}
+                style={{ background: "var(--danger-bg)", color: "var(--danger-color)", border: "1px solid var(--danger-border)" }}
               >
                 Confirm Reject
               </button>

@@ -1,3 +1,4 @@
+import { useTheme } from "@/context/ThemeContext";
 import { useState } from "react";
 import { useData } from "@/context/DataContext";
 import { useInView } from "@/hooks/useInView";
@@ -14,9 +15,9 @@ import {
 import type { EducationEntryStatus } from "@/types";
 
 const STATUS_CONFIG: Record<EducationEntryStatus, { color: string; label: string; icon: typeof CheckCircle2 }> = {
-  approved: { color: "#22C55E", label: "Approved", icon: CheckCircle2 },
-  pending: { color: "#F59E0B", label: "Pending", icon: Clock },
-  rejected: { color: "#EF4444", label: "Rejected", icon: XCircle },
+  approved: { color: "var(--accent)", label: "Approved", icon: CheckCircle2 },
+  pending: { color: "var(--badge-pending-color)", label: "Pending", icon: Clock },
+  rejected: { color: "var(--danger-color)", label: "Rejected", icon: XCircle },
 };
 
 const FILTER_OPTIONS: { value: string; label: string }[] = [
@@ -63,8 +64,8 @@ export default function AdminEducation() {
     <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
       {/* Header */}
       <div className={`fade-up ${inView ? "in-view" : ""}`}>
-        <h1 className="text-2xl font-semibold text-white">Education Review</h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Education Review</h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
           Review tutor education entries. A tutor is verified only when ALL entries are approved.
         </p>
       </div>
@@ -73,7 +74,7 @@ export default function AdminEducation() {
       {successMsg && (
         <div
           className="rounded-xl px-5 py-3 flex items-center gap-3 text-sm"
-          style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", color: "#4ADE80" }}
+          style={{ background: "var(--accent-bg)", border: "1px solid var(--accent-border)", color: "var(--accent)" }}
         >
           <CheckCircle2 size={16} />
           {successMsg}
@@ -88,9 +89,9 @@ export default function AdminEducation() {
             onClick={() => setFilter(f.value)}
             className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
             style={{
-              background: filter === f.value ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.04)",
-              border: `1px solid ${filter === f.value ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.08)"}`,
-              color: filter === f.value ? "#22C55E" : "#9CA3AF",
+              background: filter === f.value ? "var(--accent-bg)" : "var(--accent-bg)",
+              border: `1px solid ${filter === f.value ? "rgba(34,197,94,0.3)" : "var(--border-color)"}`,
+              color: filter === f.value ? "var(--accent)" : "var(--text-secondary)",
             }}
           >
             {f.label}
@@ -101,9 +102,9 @@ export default function AdminEducation() {
       {/* Entries List */}
       <div className="space-y-3">
         {filtered.length === 0 ? (
-          <div className="rounded-xl p-12 text-center" style={{ background: "#111111", border: "1px solid #1F1F1F" }}>
-            <GraduationCap size={32} className="mx-auto mb-3 text-gray-600" />
-            <p className="text-sm text-gray-400">No education entries match this filter.</p>
+          <div className="rounded-xl p-12 text-center" style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}>
+            <GraduationCap size={32} className="mx-auto mb-3 text-[var(--text-faint)]" />
+            <p className="text-sm text-[var(--text-secondary)]">No education entries match this filter.</p>
           </div>
         ) : (
           filtered.map((entry, i) => {
@@ -116,7 +117,7 @@ export default function AdminEducation() {
               <div
                 key={entry.id}
                 className={`rounded-2xl overflow-hidden transition-all fade-up delay-${Math.min((i + 1) * 100, 400)} ${inView ? "in-view" : ""}`}
-                style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+                style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
               >
                 {/* Entry Header */}
                 <div
@@ -131,9 +132,9 @@ export default function AdminEducation() {
                       <StatusIcon size={18} style={{ color: cfg.color }} />
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-white">{entry.title}</div>
-                      <div className="text-xs text-gray-500 flex items-center gap-2">
-                        <User size={11} className="text-gray-600" />
+                      <div className="text-sm font-medium text-[var(--text-primary)]">{entry.title}</div>
+                      <div className="text-xs text-[var(--text-muted)] flex items-center gap-2">
+                        <User size={11} className="text-[var(--text-faint)]" />
                         {entry.name} · Submitted {entry.submittedAt}
                       </div>
                     </div>
@@ -145,28 +146,28 @@ export default function AdminEducation() {
                     >
                       {cfg.label}
                     </span>
-                    {isExpanded ? <ChevronUp size={16} className="text-gray-500" /> : <ChevronDown size={16} className="text-gray-500" />}
+                    {isExpanded ? <ChevronUp size={16} className="text-[var(--text-muted)]" /> : <ChevronDown size={16} className="text-[var(--text-muted)]" />}
                   </div>
                 </div>
 
                 {/* Expanded Detail */}
                 {isExpanded && (
-                  <div style={{ borderTop: "1px solid #1F1F1F" }} className="px-5 py-5 space-y-4">
+                  <div style={{ borderTop: "1px solid var(--border-color)" }} className="px-5 py-5 space-y-4">
                     {/* Details */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <div className="text-[10px] text-gray-600 uppercase mb-1">Name</div>
-                        <div className="text-sm text-white">{entry.name}</div>
+                        <div className="text-[10px] text-[var(--text-faint)] uppercase mb-1">Name</div>
+                        <div className="text-sm text-[var(--text-primary)]">{entry.name}</div>
                       </div>
                       <div>
-                        <div className="text-[10px] text-gray-600 uppercase mb-1">Title</div>
-                        <div className="text-sm text-white">{entry.title}</div>
+                        <div className="text-[10px] text-[var(--text-faint)] uppercase mb-1">Title</div>
+                        <div className="text-sm text-[var(--text-primary)]">{entry.title}</div>
                       </div>
                     </div>
 
                     {entry.description && (
                       <div>
-                        <div className="text-[10px] text-gray-600 uppercase mb-1">Description</div>
+                        <div className="text-[10px] text-[var(--text-faint)] uppercase mb-1">Description</div>
                         <p className="text-sm text-gray-300 leading-relaxed">{entry.description}</p>
                       </div>
                     )}
@@ -176,8 +177,8 @@ export default function AdminEducation() {
                         className="rounded-xl px-4 py-3"
                         style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)" }}
                       >
-                        <div className="text-[10px] text-gray-500 uppercase mb-1">Rejection Note</div>
-                        <div className="text-sm" style={{ color: "#F87171" }}>{entry.reviewerNote}</div>
+                        <div className="text-[10px] text-[var(--text-muted)] uppercase mb-1">Rejection Note</div>
+                        <div className="text-sm" style={{ color: "var(--danger-color)" }}>{entry.reviewerNote}</div>
                       </div>
                     )}
 
@@ -187,7 +188,7 @@ export default function AdminEducation() {
                         <button
                           onClick={() => handleApprove(entry.id)}
                           className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all"
-                          style={{ background: "#22C55E", color: "black" }}
+                          style={{ background: "var(--accent)", color: "#fff" }}
                         >
                           <CheckCircle2 size={15} />
                           Approve
@@ -195,7 +196,7 @@ export default function AdminEducation() {
                         <button
                           onClick={() => setRejectModal({ id: entry.id, name: `${entry.name} — ${entry.title}` })}
                           className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all"
-                          style={{ background: "rgba(239,68,68,0.12)", color: "#F87171", border: "1px solid rgba(239,68,68,0.25)" }}
+                          style={{ background: "var(--danger-bg)", color: "var(--danger-color)", border: "1px solid var(--danger-border)" }}
                         >
                           <XCircle size={15} />
                           Reject
@@ -215,33 +216,33 @@ export default function AdminEducation() {
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.7)" }}>
           <div
             className="w-full max-w-md rounded-2xl p-6 space-y-4"
-            style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+            style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "rgba(239,68,68,0.12)" }}>
-                <AlertCircle size={18} style={{ color: "#EF4444" }} />
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "var(--danger-bg)" }}>
+                <AlertCircle size={18} style={{ color: "var(--danger-color)" }} />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-white">Reject Education Entry</h2>
-                <p className="text-xs text-gray-500">{rejectModal.name}</p>
+                <h2 className="text-sm font-semibold text-[var(--text-primary)]">Reject Education Entry</h2>
+                <p className="text-xs text-[var(--text-muted)]">{rejectModal.name}</p>
               </div>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1.5">Reason for rejection</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1.5">Reason for rejection</label>
               <textarea
                 value={rejectNote}
                 onChange={(e) => setRejectNote(e.target.value)}
                 placeholder="Explain why this entry is being rejected..."
                 rows={3}
-                className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none resize-none"
-                style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                className="w-full px-4 py-2.5 rounded-xl text-sm text-[var(--text-primary)] focus:outline-none resize-none"
+                style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
               />
             </div>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => { setRejectModal(null); setRejectNote(""); }}
                 className="px-4 py-2 rounded-xl text-sm font-medium"
-                style={{ background: "#161616", color: "#9CA3AF", border: "1px solid #1F1F1F" }}
+                style={{ background: "var(--bg-input)", color: "var(--text-secondary)", border: "1px solid var(--border-color)" }}
               >
                 Cancel
               </button>
@@ -249,7 +250,7 @@ export default function AdminEducation() {
                 onClick={handleReject}
                 disabled={!rejectNote.trim()}
                 className="px-4 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-40"
-                style={{ background: "rgba(239,68,68,0.2)", color: "#F87171", border: "1px solid rgba(239,68,68,0.3)" }}
+                style={{ background: "var(--danger-bg)", color: "var(--danger-color)", border: "1px solid var(--danger-border)" }}
               >
                 Confirm Reject
               </button>

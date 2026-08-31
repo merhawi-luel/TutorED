@@ -1,14 +1,15 @@
+import { useTheme } from "@/context/ThemeContext";
 import { useState, useEffect } from "react";
 import { parentApi } from "@/lib/api";
 import { useInView } from "@/hooks/useInView";
 import { FileText, Clock, CheckCircle, XCircle, MapPin, Phone, Mail } from "lucide-react";
 
 const STATUS_MAP: Record<string, { bg: string; color: string; label: string; icon: typeof Clock }> = {
-  pending: { bg: "rgba(245,158,11,0.15)", color: "#F59E0B", label: "Pending", icon: Clock },
-  contacted: { bg: "rgba(59,130,246,0.15)", color: "#60A5FA", label: "Contacted", icon: Clock },
-  accepted: { bg: "rgba(34,197,94,0.15)", color: "#4ADE80", label: "Accepted", icon: CheckCircle },
-  completed: { bg: "rgba(34,197,94,0.2)", color: "#22C55E", label: "Completed", icon: CheckCircle },
-  rejected: { bg: "rgba(239,68,68,0.15)", color: "#F87171", label: "Rejected", icon: XCircle },
+  pending: { bg: "var(--badge-pending-bg)", color: "var(--badge-pending-color)", label: "Pending", icon: Clock },
+  contacted: { bg: "rgba(59,130,246,0.15)", color: "var(--badge-info-color)", label: "Contacted", icon: Clock },
+  accepted: { bg: "var(--accent-bg)", color: "var(--accent)", label: "Accepted", icon: CheckCircle },
+  completed: { bg: "rgba(34,197,94,0.2)", color: "var(--accent)", label: "Completed", icon: CheckCircle },
+  rejected: { bg: "rgba(239,68,68,0.15)", color: "var(--danger-color)", label: "Rejected", icon: XCircle },
 };
 
 export default function ParentRequests() {
@@ -22,8 +23,8 @@ export default function ParentRequests() {
   return (
     <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
       <div className={`fade-up ${inView ? "in-view" : ""}`}>
-        <h1 className="text-2xl font-semibold text-white">My Requests</h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">My Requests</h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
           Track your recruitment requests and their status.
         </p>
       </div>
@@ -31,11 +32,11 @@ export default function ParentRequests() {
       {requests.length === 0 ? (
         <div
           className={`rounded-xl p-12 text-center fade-up delay-100 ${inView ? "in-view" : ""}`}
-          style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+          style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
         >
-          <FileText size={40} className="mx-auto mb-4" style={{ color: "#2A2A2A" }} />
-          <h3 className="text-sm font-medium text-white mb-1">No requests yet</h3>
-          <p className="text-xs text-gray-500 max-w-sm mx-auto">
+          <FileText size={40} className="mx-auto mb-4" style={{ color: "var(--border-color)" }} />
+          <h3 className="text-sm font-medium text-[var(--text-primary)] mb-1">No requests yet</h3>
+          <p className="text-xs text-[var(--text-muted)] max-w-sm mx-auto">
             When you contact an agency or post a recruitment request, it will appear here.
           </p>
         </div>
@@ -48,12 +49,12 @@ export default function ParentRequests() {
               <div
                 key={req.id}
                 className="rounded-xl p-5"
-                style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+                style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <div className="text-sm font-medium text-white">{req.subject} — {req.grade}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">
+                    <div className="text-sm font-medium text-[var(--text-primary)]">{req.subject} — {req.grade}</div>
+                    <div className="text-xs text-[var(--text-muted)] mt-0.5">
                       {req.organizationName || "General request"} · {req.createdAt?.split("T")[0] || req.createdAt}
                     </div>
                   </div>
@@ -73,22 +74,22 @@ export default function ParentRequests() {
                     style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.12)" }}
                   >
                     {req.parentName && (
-                      <span className="text-gray-400">Contact: <span className="text-white">{req.parentName}</span></span>
+                      <span className="text-[var(--text-secondary)]">Contact: <span className="text-[var(--text-primary)]">{req.parentName}</span></span>
                     )}
                     {req.parentEmail && (
-                      <span className="flex items-center gap-1 text-gray-400"><Mail size={10} /> {req.parentEmail}</span>
+                      <span className="flex items-center gap-1 text-[var(--text-secondary)]"><Mail size={10} /> {req.parentEmail}</span>
                     )}
                     {req.parentPhone && (
-                      <span className="flex items-center gap-1 text-gray-400"><Phone size={10} /> {req.parentPhone}</span>
+                      <span className="flex items-center gap-1 text-[var(--text-secondary)]"><Phone size={10} /> {req.parentPhone}</span>
                     )}
                     {req.location && (
-                      <span className="flex items-center gap-1 text-gray-400"><MapPin size={10} /> {req.location}</span>
+                      <span className="flex items-center gap-1 text-[var(--text-secondary)]"><MapPin size={10} /> {req.location}</span>
                     )}
                   </div>
                 )}
 
                 {req.notes && (
-                  <div className="mt-2 text-xs text-gray-500 italic">"{req.notes}"</div>
+                  <div className="mt-2 text-xs text-[var(--text-muted)] italic">"{req.notes}"</div>
                 )}
               </div>
             );

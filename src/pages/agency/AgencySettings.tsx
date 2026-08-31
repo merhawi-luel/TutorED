@@ -1,3 +1,4 @@
+import { useTheme } from "@/context/ThemeContext";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -91,7 +92,7 @@ export default function AgencySettings() {
 
   const paymentStatus = paymentInfo?.paymentStatus || "unpaid";
 
-  const inputStyle = { background: "#0D0D0D", border: "1px solid #1F1F1F" };
+  const inputStyle = { background: "var(--bg-input)", border: "1px solid var(--border-color)" };
 
   const handlePasswordChange = async () => {
     setPasswordMsg(null);
@@ -137,41 +138,41 @@ export default function AgencySettings() {
     <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
       {/* Header */}
       <div className={`fade-up ${inView ? "in-view" : ""}`}>
-        <h1 className="text-2xl font-semibold text-white">Settings</h1>
-        <p className="text-sm text-gray-400 mt-1">Manage your organization account and preferences.</p>
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Settings</h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">Manage your organization account and preferences.</p>
       </div>
 
       {/* Account Info */}
       <section
         className={`rounded-2xl p-6 space-y-5 fade-up delay-100 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
       >
         <div className="flex items-center gap-2 mb-1">
-          <User size={16} style={{ color: "#22C55E" }} />
+          <User size={16} style={{ color: "var(--accent)" }} />
           <h2 className="text-sm font-medium text-gray-300">Account Information</h2>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs text-gray-500 mb-1.5">Contact Name</label>
+            <label className="block text-xs text-[var(--text-muted)] mb-1.5">Contact Name</label>
             <input
               value={user?.name || ""}
               disabled
-              className="w-full px-4 py-2.5 rounded-xl text-sm text-gray-500"
+              className="w-full px-4 py-2.5 rounded-xl text-sm text-[var(--text-muted)]"
               style={inputStyle}
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1.5">Email</label>
+            <label className="block text-xs text-[var(--text-muted)] mb-1.5">Email</label>
             <input
               value={user?.email || ""}
               disabled
-              className="w-full px-4 py-2.5 rounded-xl text-sm text-gray-500"
+              className="w-full px-4 py-2.5 rounded-xl text-sm text-[var(--text-muted)]"
               style={inputStyle}
             />
           </div>
         </div>
-        <p className="text-xs text-gray-600">
+        <p className="text-xs text-[var(--text-faint)]">
           Organization details can be managed in the Organization tab.
         </p>
       </section>
@@ -179,10 +180,10 @@ export default function AgencySettings() {
       {/* Change Password */}
       <section
         className={`rounded-2xl p-6 space-y-5 fade-up delay-200 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
       >
         <div className="flex items-center gap-2 mb-1">
-          <Lock size={16} style={{ color: "#F59E0B" }} />
+          <Lock size={16} style={{ color: "var(--badge-pending-color)" }} />
           <h2 className="text-sm font-medium text-gray-300">Change Password</h2>
         </div>
 
@@ -190,9 +191,9 @@ export default function AgencySettings() {
           <div
             className="rounded-xl px-4 py-2.5 flex items-center gap-2 text-sm"
             style={{
-              background: passwordMsg.type === "success" ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
-              border: `1px solid ${passwordMsg.type === "success" ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.2)"}`,
-              color: passwordMsg.type === "success" ? "#4ADE80" : "#F87171",
+              background: passwordMsg.type === "success" ? "var(--accent-bg)" : "var(--danger-bg)",
+              border: `1px solid ${passwordMsg.type === "success" ? "rgba(34,197,94,0.25)" : "var(--danger-bg)"}`,
+              color: passwordMsg.type === "success" ? "var(--accent)" : "var(--danger-color)",
             }}
           >
             {passwordMsg.type === "success" ? <CheckCircle size={15} /> : <AlertCircle size={15} />}
@@ -202,24 +203,24 @@ export default function AgencySettings() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs text-gray-500 mb-1.5">New Password</label>
+            <label className="block text-xs text-[var(--text-muted)] mb-1.5">New Password</label>
             <input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none"
+              className="w-full px-4 py-2.5 rounded-xl text-sm text-[var(--text-primary)] focus:outline-none"
               style={inputStyle}
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1.5">Confirm New Password</label>
+            <label className="block text-xs text-[var(--text-muted)] mb-1.5">Confirm New Password</label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none"
+              className="w-full px-4 py-2.5 rounded-xl text-sm text-[var(--text-primary)] focus:outline-none"
               style={inputStyle}
             />
           </div>
@@ -229,7 +230,7 @@ export default function AgencySettings() {
           onClick={handlePasswordChange}
           disabled={passwordLoading || !newPassword || !confirmPassword}
           className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-40 flex items-center gap-2"
-          style={{ background: "rgba(245,158,11,0.15)", color: "#F59E0B", border: "1px solid rgba(245,158,11,0.3)" }}
+          style={{ background: "var(--badge-pending-bg)", color: "var(--badge-pending-color)", border: "1px solid rgba(245,158,11,0.3)" }}
         >
           {passwordLoading ? <Loader2 size={14} className="animate-spin" /> : <Lock size={14} />}
           Update Password
@@ -239,17 +240,17 @@ export default function AgencySettings() {
       {/* Notification Preferences */}
       <section
         className={`rounded-2xl p-6 space-y-5 fade-up delay-300 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
       >
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <Bell size={16} style={{ color: "#3B82F6" }} />
+            <Bell size={16} style={{ color: "var(--badge-info-color)" }} />
             <h2 className="text-sm font-medium text-gray-300">Notification Preferences</h2>
           </div>
           <button
             onClick={handleSaveNotifications}
             className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-medium transition-all"
-            style={{ background: "#22C55E", color: "black" }}
+            style={{ background: "var(--accent)", color: "#fff" }}
           >
             {saved ? <CheckCircle size={13} /> : <Save size={13} />}
             {saved ? "Saved!" : "Save"}
@@ -265,16 +266,16 @@ export default function AgencySettings() {
             <div
               key={item.label}
               className="flex items-center justify-between rounded-xl px-4 py-3"
-              style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+              style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
             >
               <div>
-                <div className="text-sm text-white">{item.label}</div>
-                <div className="text-xs text-gray-500">{item.desc}</div>
+                <div className="text-sm text-[var(--text-primary)]">{item.label}</div>
+                <div className="text-xs text-[var(--text-muted)]">{item.desc}</div>
               </div>
               <button
                 onClick={() => item.onChange(!item.value)}
                 className="relative w-10 h-5 rounded-full transition-colors"
-                style={{ background: item.value ? "#22C55E" : "#2A2A2A" }}
+                style={{ background: item.value ? "var(--accent)" : "var(--border-color)" }}
               >
                 <span
                   className="absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform"
@@ -289,15 +290,15 @@ export default function AgencySettings() {
       {/* Get Verified */}
       <section
         className={`rounded-2xl p-6 space-y-4 fade-up delay-350 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
       >
         <div className="flex items-center gap-2 mb-1">
-          <BadgeCheck size={16} style={{ color: "#22C55E" }} />
+          <BadgeCheck size={16} style={{ color: "var(--accent)" }} />
           <h2 className="text-sm font-medium text-gray-300">Get Verified</h2>
         </div>
 
         {paymentLoading ? (
-          <div className="flex items-center gap-2 text-gray-500 text-sm py-3">
+          <div className="flex items-center gap-2 text-[var(--text-muted)] text-sm py-3">
             <Loader2 size={14} className="animate-spin" />
             Checking verification status...
           </div>
@@ -305,18 +306,18 @@ export default function AgencySettings() {
           <div className="space-y-3">
             <div
               className="rounded-xl px-4 py-3 flex items-center gap-3"
-              style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.25)" }}
+              style={{ background: "var(--accent-bg)", border: "1px solid var(--accent-border)" }}
             >
-              <CheckCircle size={18} style={{ color: "#22C55E" }} />
+              <CheckCircle size={18} style={{ color: "var(--accent)" }} />
               <div>
                 <div className="text-sm text-green-400 font-medium">Agency Verified</div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-[var(--text-muted)]">
                   Your agency has been verified. You can post vacancies and recruit tutors.
                 </div>
               </div>
             </div>
             {paymentInfo?.paidAt && (
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-[var(--text-faint)]">
                 Verified on {new Date(paymentInfo.paidAt).toLocaleDateString()}
               </p>
             )}
@@ -327,10 +328,10 @@ export default function AgencySettings() {
               className="rounded-xl px-4 py-3 flex items-center gap-3"
               style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)" }}
             >
-              <Clock size={18} style={{ color: "#F59E0B" }} />
+              <Clock size={18} style={{ color: "var(--badge-pending-color)" }} />
               <div>
                 <div className="text-sm text-yellow-400 font-medium">Payment Processing</div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-[var(--text-muted)]">
                   Your payment is being processed. This may take a few minutes.
                 </div>
               </div>
@@ -338,20 +339,20 @@ export default function AgencySettings() {
             <button
               onClick={() => window.location.reload()}
               className="px-4 py-2 rounded-xl text-xs font-medium transition-all"
-              style={{ background: "rgba(245,158,11,0.12)", color: "#F59E0B", border: "1px solid rgba(245,158,11,0.25)" }}
+              style={{ background: "var(--badge-pending-bg)", color: "var(--badge-pending-color)", border: "1px solid rgba(245,158,11,0.25)" }}
             >
               Refresh Status
             </button>
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-[var(--text-muted)]">
               Pay a one-time entrance fee to get verified and start posting vacancies.
             </p>
-            <div className="flex items-center justify-between rounded-xl px-4 py-3" style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}>
+            <div className="flex items-center justify-between rounded-xl px-4 py-3" style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}>
               <div>
-                <div className="text-sm text-white">Entrance Fee</div>
-                <div className="text-xs text-gray-500">One-time payment, non-refundable unless rejected</div>
+                <div className="text-sm text-[var(--text-primary)]">Entrance Fee</div>
+                <div className="text-xs text-[var(--text-muted)]">One-time payment, non-refundable unless rejected</div>
               </div>
               <span className="text-lg font-bold text-green-400">5,000 ETB</span>
             </div>
@@ -359,7 +360,7 @@ export default function AgencySettings() {
               onClick={handlePayEntrance}
               disabled={paying}
               className="w-full px-6 py-3 rounded-xl text-sm font-medium transition-all disabled:opacity-60 flex items-center justify-center gap-2"
-              style={{ background: "#22C55E", color: "black" }}
+              style={{ background: "var(--accent)", color: "#fff" }}
             >
               {paying ? (
                 <>
@@ -380,29 +381,29 @@ export default function AgencySettings() {
       {/* Billing */}
       <section
         className={`rounded-2xl p-6 space-y-4 fade-up delay-400 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
       >
         <div className="flex items-center gap-2 mb-1">
-          <CreditCard size={16} style={{ color: "#A855F7" }} />
+          <CreditCard size={16} style={{ color: "var(--badge-purple-color)" }} />
           <h2 className="text-sm font-medium text-gray-300">Billing & Subscription</h2>
         </div>
 
-        <div className="rounded-xl px-4 py-3" style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}>
+        <div className="rounded-xl px-4 py-3" style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-white">Free Plan</div>
-              <div className="text-xs text-gray-500">Limited vacancies and features</div>
+              <div className="text-sm text-[var(--text-primary)]">Free Plan</div>
+              <div className="text-xs text-[var(--text-muted)]">Limited vacancies and features</div>
             </div>
             <span
               className="px-2.5 py-1 rounded-lg text-xs font-medium"
-              style={{ background: "rgba(34,197,94,0.15)", color: "#22C55E" }}
+              style={{ background: "var(--accent-bg)", color: "var(--accent)" }}
             >
               Active
             </span>
           </div>
         </div>
 
-        <p className="text-xs text-gray-600">
+        <p className="text-xs text-[var(--text-faint)]">
           Upgrade to Professional for unlimited vacancies, applicant management, and analytics.
           Coming soon.
         </p>
@@ -411,22 +412,22 @@ export default function AgencySettings() {
       {/* Danger Zone */}
       <section
         className={`rounded-2xl p-6 space-y-4 fade-up delay-500 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid rgba(239,68,68,0.2)" }}
+        style={{ background: "var(--bg-card)", border: "1px solid var(--danger-bg)" }}
       >
         <div className="flex items-center gap-2 mb-1">
-          <Shield size={16} style={{ color: "#EF4444" }} />
+          <Shield size={16} style={{ color: "var(--danger-color)" }} />
           <h2 className="text-sm font-medium text-gray-300">Danger Zone</h2>
         </div>
 
-        <div className="flex items-center justify-between rounded-xl px-4 py-3" style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}>
+        <div className="flex items-center justify-between rounded-xl px-4 py-3" style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}>
           <div>
-            <div className="text-sm text-white">Sign Out</div>
-            <div className="text-xs text-gray-500">Sign out of your account on this device.</div>
+            <div className="text-sm text-[var(--text-primary)]">Sign Out</div>
+            <div className="text-xs text-[var(--text-muted)]">Sign out of your account on this device.</div>
           </div>
           <button
             onClick={() => { logout(); window.location.href = "/"; }}
             className="px-4 py-1.5 rounded-lg text-xs font-medium transition-all"
-            style={{ background: "rgba(239,68,68,0.12)", color: "#F87171", border: "1px solid rgba(239,68,68,0.2)" }}
+            style={{ background: "var(--danger-bg)", color: "var(--danger-color)", border: "1px solid var(--danger-bg)" }}
           >
             Sign Out
           </button>

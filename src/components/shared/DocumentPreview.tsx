@@ -1,3 +1,4 @@
+import { useTheme } from "@/context/ThemeContext";
 import { useState, useEffect } from "react";
 import { X, Download, FileText, Loader2, AlertCircle } from "lucide-react";
 
@@ -52,30 +53,30 @@ export default function DocumentPreview({ downloadUrl, fileName, title, onClose 
     >
       <div
         className="relative flex flex-col w-full h-full sm:w-[90vw] sm:h-[85vh] sm:max-w-5xl sm:rounded-2xl overflow-hidden"
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between px-5 py-3 shrink-0"
-          style={{ borderBottom: "1px solid #1F1F1F" }}
+          style={{ borderBottom: "1px solid var(--border-color)" }}
         >
           <div className="flex items-center gap-3 min-w-0">
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-              style={{ background: "rgba(34,197,94,0.12)" }}
+              style={{ background: "var(--accent-bg)" }}
             >
-              <FileText size={16} style={{ color: "#22C55E" }} />
+              <FileText size={16} style={{ color: "var(--accent)" }} />
             </div>
             <div className="min-w-0">
-              <div className="text-sm font-medium text-white truncate">{title}</div>
-              <div className="text-xs text-gray-500 truncate">{fileName}</div>
+              <div className="text-sm font-medium text-[var(--text-primary)] truncate">{title}</div>
+              <div className="text-xs text-[var(--text-muted)] truncate">{fileName}</div>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handleDownload}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium transition-all"
-              style={{ background: "#22C55E", color: "black" }}
+              style={{ background: "var(--accent)", color: "#fff" }}
             >
               <Download size={14} />
               Download
@@ -83,7 +84,7 @@ export default function DocumentPreview({ downloadUrl, fileName, title, onClose 
             <button
               onClick={onClose}
               className="p-2 rounded-lg transition-colors hover:bg-white/5"
-              style={{ color: "#6B7280" }}
+              style={{ color: "var(--text-muted)" }}
             >
               <X size={18} />
             </button>
@@ -94,18 +95,18 @@ export default function DocumentPreview({ downloadUrl, fileName, title, onClose 
         <div className="flex-1 min-h-0 relative" style={{ background: "#0A0A0A" }}>
           {loading && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <Loader2 size={24} className="animate-spin" style={{ color: "#22C55E" }} />
+              <Loader2 size={24} className="animate-spin" style={{ color: "var(--accent)" }} />
             </div>
           )}
 
           {error && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-              <AlertCircle size={32} style={{ color: "#EF4444" }} />
-              <p className="text-sm text-gray-400">Failed to load preview</p>
+              <AlertCircle size={32} style={{ color: "var(--danger-color)" }} />
+              <p className="text-sm text-[var(--text-secondary)]">Failed to load preview</p>
               <button
                 onClick={handleDownload}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium transition-all"
-                style={{ background: "rgba(34,197,94,0.15)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.3)" }}
+                style={{ background: "var(--accent-bg)", color: "var(--accent)", border: "1px solid var(--accent-border)" }}
               >
                 <Download size={14} />
                 Download instead
@@ -138,12 +139,12 @@ export default function DocumentPreview({ downloadUrl, fileName, title, onClose 
 
           {fileType === "unknown" && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-              <FileText size={32} style={{ color: "#6B7280" }} />
-              <p className="text-sm text-gray-400">Preview not available for this file type</p>
+              <FileText size={32} style={{ color: "var(--text-muted)" }} />
+              <p className="text-sm text-[var(--text-secondary)]">Preview not available for this file type</p>
               <button
                 onClick={handleDownload}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium transition-all"
-                style={{ background: "rgba(34,197,94,0.15)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.3)" }}
+                style={{ background: "var(--accent-bg)", color: "var(--accent)", border: "1px solid var(--accent-border)" }}
               >
                 <Download size={14} />
                 Download file

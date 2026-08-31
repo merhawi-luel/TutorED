@@ -1,3 +1,4 @@
+import { useTheme } from "@/context/ThemeContext";
 import { useState, useEffect } from "react";
 import { adminApi } from "@/lib/api";
 import { useInView } from "@/hooks/useInView";
@@ -15,10 +16,10 @@ import {
 import type { VerificationLevel } from "@/types";
 
 const LEVEL_CONFIG: Record<VerificationLevel, { color: string; label: string }> = {
-  verified: { color: "#22C55E", label: "Verified" },
-  partial: { color: "#F59E0B", label: "Partial" },
-  unverified: { color: "#6B7280", label: "Unverified" },
-  suspended: { color: "#EF4444", label: "Suspended" },
+  verified: { color: "var(--accent)", label: "Verified" },
+  partial: { color: "var(--badge-pending-color)", label: "Partial" },
+  unverified: { color: "var(--text-muted)", label: "Unverified" },
+  suspended: { color: "var(--danger-color)", label: "Suspended" },
 };
 
 export default function AgencyTutors() {
@@ -75,8 +76,8 @@ export default function AgencyTutors() {
     <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
       {/* Header */}
       <div className={`fade-up ${inView ? "in-view" : ""}`}>
-        <h1 className="text-2xl font-semibold text-white">Find Tutors</h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Find Tutors</h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
           Browse verified educators on the platform.
         </p>
       </div>
@@ -84,16 +85,16 @@ export default function AgencyTutors() {
       {/* Filters */}
       <div
         className={`rounded-2xl p-5 space-y-4 fade-up delay-100 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
       >
         <div className="relative">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" />
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-faint)]" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, headline, education, or location..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-white focus:outline-none"
-            style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-[var(--text-primary)] focus:outline-none"
+            style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
           />
         </div>
 
@@ -106,9 +107,9 @@ export default function AgencyTutors() {
                 onClick={() => setSubjectFilter(s)}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                 style={{
-                  background: subjectFilter === s ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.04)",
-                  border: `1px solid ${subjectFilter === s ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.08)"}`,
-                  color: subjectFilter === s ? "#22C55E" : "#9CA3AF",
+                  background: subjectFilter === s ? "var(--accent-bg)" : "var(--accent-bg)",
+                  border: `1px solid ${subjectFilter === s ? "rgba(34,197,94,0.3)" : "var(--border-color)"}`,
+                  color: subjectFilter === s ? "var(--accent)" : "var(--text-secondary)",
                 }}
               >
                 {s}
@@ -121,30 +122,30 @@ export default function AgencyTutors() {
             <select
               value={levelFilter}
               onChange={(e) => setLevelFilter(e.target.value)}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400 focus:outline-none appearance-none pr-7"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--text-secondary)] focus:outline-none appearance-none pr-7"
+              style={{ background: "var(--accent-bg)", border: "1px solid var(--border-color)" }}
             >
               <option value="all">All Verification</option>
               <option value="verified">Verified Only</option>
               <option value="partial">Partial</option>
               <option value="unverified">Unverified</option>
             </select>
-            <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+            <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
           </div>
         </div>
       </div>
 
       {/* Results */}
-      <div className="text-xs text-gray-500">
+      <div className="text-xs text-[var(--text-muted)]">
         {filtered.length} {filtered.length === 1 ? "tutor" : "tutors"} found
       </div>
 
       {/* Tutor Cards */}
       <div className="space-y-3">
         {filtered.length === 0 ? (
-          <div className="rounded-xl p-12 text-center" style={{ background: "#111111", border: "1px solid #1F1F1F" }}>
-            <Search size={32} className="mx-auto mb-3 text-gray-600" />
-            <p className="text-sm text-gray-400">No tutors match your search.</p>
+          <div className="rounded-xl p-12 text-center" style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}>
+            <Search size={32} className="mx-auto mb-3 text-[var(--text-faint)]" />
+            <p className="text-sm text-[var(--text-secondary)]">No tutors match your search.</p>
           </div>
         ) : (
           filtered.map((tutor, i) => {
@@ -157,7 +158,7 @@ export default function AgencyTutors() {
               <div
                 key={tutor.id}
                 className={`rounded-2xl overflow-hidden transition-all fade-up delay-${Math.min((i + 1) * 100, 400)} ${inView ? "in-view" : ""}`}
-                style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+                style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
               >
                 {/* Header */}
                 <div
@@ -167,13 +168,13 @@ export default function AgencyTutors() {
                   <div className="flex items-center gap-4">
                     <div
                       className="w-12 h-12 rounded-xl flex items-center justify-center text-black font-bold text-sm shrink-0"
-                      style={{ background: "linear-gradient(135deg, #22C55E, #16A34A)" }}
+                      style={{ background: "var(--accent)" }}
                     >
                       {tutor.name.split(" ").map((n: string) => n[0]).join("")}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-white">{tutor.name}</span>
+                        <span className="text-sm font-semibold text-[var(--text-primary)]">{tutor.name}</span>
                         <span
                           className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium"
                           style={{ background: `${lvlCfg.color}18`, color: lvlCfg.color }}
@@ -184,8 +185,8 @@ export default function AgencyTutors() {
                           {lvlCfg.label}
                         </span>
                       </div>
-                      <div className="text-xs text-gray-500">{profile.headline}</div>
-                      <div className="flex items-center gap-3 text-xs text-gray-600 mt-0.5">
+                      <div className="text-xs text-[var(--text-muted)]">{profile.headline}</div>
+                      <div className="flex items-center gap-3 text-xs text-[var(--text-faint)] mt-0.5">
                         <span className="flex items-center gap-1"><MapPin size={11} /> {profile.location}</span>
                         <span className="flex items-center gap-1"><Briefcase size={11} /> {profile.experience}y exp</span>
                         <span className="flex items-center gap-1"><Star size={11} /> {profile.rating}</span>
@@ -195,24 +196,24 @@ export default function AgencyTutors() {
                   </div>
                   <ChevronDown
                     size={16}
-                    className="text-gray-500 transition-transform shrink-0"
+                    className="text-[var(--text-muted)] transition-transform shrink-0"
                     style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0)" }}
                   />
                 </div>
 
                 {/* Expanded */}
                 {isExpanded && (
-                  <div style={{ borderTop: "1px solid #1F1F1F" }} className="px-5 py-5 space-y-4">
-                    <p className="text-xs text-gray-400 leading-relaxed">{profile.bio}</p>
+                  <div style={{ borderTop: "1px solid var(--border-color)" }} className="px-5 py-5 space-y-4">
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{profile.bio}</p>
 
                     <div className="flex flex-wrap gap-1.5">
                       {profile.subjects.map((s: string) => (
-                        <span key={s} className="px-2.5 py-1 rounded-lg text-xs font-medium" style={{ background: "rgba(34,197,94,0.12)", color: "#22C55E" }}>
+                        <span key={s} className="px-2.5 py-1 rounded-lg text-xs font-medium" style={{ background: "var(--accent-bg)", color: "var(--accent)" }}>
                           {s}
                         </span>
                       ))}
                       {profile.grades.map((g: string) => (
-                        <span key={g} className="px-2.5 py-1 rounded-lg text-xs" style={{ background: "rgba(255,255,255,0.04)", color: "#9CA3AF" }}>
+                        <span key={g} className="px-2.5 py-1 rounded-lg text-xs" style={{ background: "var(--accent-bg)", color: "var(--text-secondary)" }}>
                           {g}
                         </span>
                       ))}
@@ -225,9 +226,9 @@ export default function AgencyTutors() {
                         { label: "Rating", value: `${profile.rating}/5` },
                         { label: "Applications", value: `${profile.applicationCount}` },
                       ].map((item) => (
-                        <div key={item.label} className="rounded-lg px-3 py-2" style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}>
-                          <div className="text-[10px] text-gray-600 uppercase">{item.label}</div>
-                          <div className="text-xs text-white capitalize">{item.value}</div>
+                        <div key={item.label} className="rounded-lg px-3 py-2" style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}>
+                          <div className="text-[10px] text-[var(--text-faint)] uppercase">{item.label}</div>
+                          <div className="text-xs text-[var(--text-primary)] capitalize">{item.value}</div>
                         </div>
                       ))}
                     </div>
@@ -235,17 +236,17 @@ export default function AgencyTutors() {
                     {/* Verification Details */}
                     <div
                       className="rounded-xl px-4 py-3"
-                      style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                      style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}
                     >
-                      <div className="text-[10px] text-gray-600 uppercase mb-2">Verification Status</div>
+                      <div className="text-[10px] text-[var(--text-faint)] uppercase mb-2">Verification Status</div>
                       <div className="flex items-center gap-4 text-xs">
-                        <span className="flex items-center gap-1.5" style={{ color: "#22C55E" }}>
+                        <span className="flex items-center gap-1.5" style={{ color: "var(--accent)" }}>
                           <CheckCircle2 size={12} /> Identity ✓
                         </span>
-                        <span className="flex items-center gap-1.5" style={{ color: "#22C55E" }}>
+                        <span className="flex items-center gap-1.5" style={{ color: "var(--accent)" }}>
                           <CheckCircle2 size={12} /> Education ✓
                         </span>
-                        <span className="flex items-center gap-1.5" style={{ color: tutor.verifiedDocs >= 3 ? "#22C55E" : "#F59E0B" }}>
+                        <span className="flex items-center gap-1.5" style={{ color: tutor.verifiedDocs >= 3 ? "var(--accent)" : "var(--badge-pending-color)" }}>
                           {tutor.verifiedDocs >= 3 ? <CheckCircle2 size={12} /> : <Clock size={12} />}
                           {tutor.verifiedDocs}/{tutor.docs.length} docs verified
                         </span>

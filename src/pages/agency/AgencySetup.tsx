@@ -1,3 +1,4 @@
+import { useTheme } from "@/context/ThemeContext";
 import { useState } from "react";
 import { Building2, MapPin, BookOpen, CheckCircle2 } from "lucide-react";
 import { agencyApi } from "@/lib/api";
@@ -85,22 +86,22 @@ export default function AgencySetup({ onComplete }: AgencySetupProps) {
   return (
     <div
       className="min-h-screen flex items-center justify-center p-6"
-      style={{ background: "linear-gradient(160deg, #000000 0%, #050F07 50%, #000000 100%)" }}
+      style={{ background: "linear-gradient(160deg, var(--bg-page) 0%, var(--bg-card) 50%, var(--bg-page) 100%)" }}
     >
       <div
         className="w-full max-w-2xl rounded-2xl p-8"
-        style={{ background: "#0A0A0A", border: "1px solid #1F1F1F" }}
+        style={{ background: "#0A0A0A", border: "1px solid var(--border-color)" }}
       >
         {/* Header */}
         <div className="text-center mb-8">
           <div
             className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4"
-            style={{ background: "rgba(34,197,94,0.12)" }}
+            style={{ background: "var(--accent-bg)" }}
           >
-            <Building2 size={32} style={{ color: "#22C55E" }} />
+            <Building2 size={32} style={{ color: "var(--accent)" }} />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome to Mentora!</h1>
-          <p className="text-gray-400">Let's set up your organization to start recruiting tutors</p>
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">Welcome to Mentora!</h1>
+          <p className="text-[var(--text-secondary)]">Let's set up your organization to start recruiting tutors</p>
         </div>
 
         {/* Form */}
@@ -115,10 +116,10 @@ export default function AgencySetup({ onComplete }: AgencySetupProps) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="ABC Education Center"
-              className="w-full px-4 py-3 rounded-lg text-white transition-all"
+              className="w-full px-4 py-3 rounded-lg text-[var(--text-primary)] transition-all"
               style={{
-                background: "#111111",
-                border: "1px solid #1F1F1F",
+                background: "var(--bg-card)",
+                border: "1px solid var(--border-color)",
               }}
               required
             />
@@ -132,10 +133,10 @@ export default function AgencySetup({ onComplete }: AgencySetupProps) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Tell us about your organization..."
               rows={3}
-              className="w-full px-4 py-3 rounded-lg text-white transition-all resize-none"
+              className="w-full px-4 py-3 rounded-lg text-[var(--text-primary)] transition-all resize-none"
               style={{
-                background: "#111111",
-                border: "1px solid #1F1F1F",
+                background: "var(--bg-card)",
+                border: "1px solid var(--border-color)",
               }}
             />
           </div>
@@ -146,17 +147,17 @@ export default function AgencySetup({ onComplete }: AgencySetupProps) {
             <div className="relative">
               <MapPin
                 size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
               />
               <input
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="Addis Ababa"
-                className="w-full pl-10 pr-4 py-3 rounded-lg text-white transition-all"
+                className="w-full pl-10 pr-4 py-3 rounded-lg text-[var(--text-primary)] transition-all"
                 style={{
-                  background: "#111111",
-                  border: "1px solid #1F1F1F",
+                  background: "var(--bg-card)",
+                  border: "1px solid var(--border-color)",
                 }}
               />
             </div>
@@ -178,11 +179,11 @@ export default function AgencySetup({ onComplete }: AgencySetupProps) {
                     onClick={() => toggleSubject(subject)}
                     className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
                     style={{
-                      background: isSelected ? "rgba(34,197,94,0.15)" : "#111111",
+                      background: isSelected ? "var(--accent-bg)" : "var(--bg-card)",
                       border: isSelected
                         ? "1px solid rgba(34,197,94,0.5)"
-                        : "1px solid #1F1F1F",
-                      color: isSelected ? "#22C55E" : "#9CA3AF",
+                        : "1px solid var(--border-color)",
+                      color: isSelected ? "var(--accent)" : "var(--text-secondary)",
                     }}
                   >
                     {isSelected && <CheckCircle2 size={14} className="inline mr-1" />}
@@ -197,7 +198,7 @@ export default function AgencySetup({ onComplete }: AgencySetupProps) {
           {error && (
             <div
               className="px-4 py-3 rounded-lg text-sm"
-              style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}
+              style={{ background: "var(--danger-bg)", border: "1px solid var(--danger-border)" }}
             >
               <span className="text-red-400">{error}</span>
             </div>
@@ -209,7 +210,7 @@ export default function AgencySetup({ onComplete }: AgencySetupProps) {
             disabled={loading || !name.trim()}
             className="w-full px-6 py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
-              background: "#22C55E",
+              background: "var(--accent)",
               color: "black",
             }}
           >
