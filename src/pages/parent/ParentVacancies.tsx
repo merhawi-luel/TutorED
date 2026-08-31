@@ -127,12 +127,14 @@ export default function ParentVacancies() {
   const handleClose = async (vacancyId: string) => {
     try {
       await parentApi.closeVacancy(vacancyId);
-      setVacancies((prev) =>
-        prev.map((v) =>
-          v.id === vacancyId ? { ...v, status: "closed" } : v
-        )
-      );
-      setSuccessMsg("Vacancy closed.");
+      // Remove from local state (hard-delete)
+      setVacancies((prev) => prev.filter((v) => v.id !== vacancyId));
+      setMyVacancyIds((prev) => {
+        const next = new Set(prev);
+        next.delete(vacancyId);
+        return next;
+      });
+      setSuccessMsg("Vacancy deleted.");
       setTimeout(() => setSuccessMsg(null), 2500);
     } catch (err) {
       console.error("Failed to close vacancy:", err);

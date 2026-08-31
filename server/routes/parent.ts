@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db";
-import { parentProfiles, vacancies, organizations, recruitmentRequests, users } from "../db/schema";
+import { parentProfiles, vacancies, organizations, recruitmentRequests, users, applications } from "../db/schema";
 import { requireAuth } from "../middleware/auth";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -156,7 +156,7 @@ router.get("/vacancies/mine", requireAuth, async (req, res) => {
 });
 
 // ─── PUT /api/parent/vacancies/:id/close ─────────────────────
-// Close a vacancy owned by this parent
+// Hard-delete: removes vacancy and all related applications
 
 router.put("/vacancies/:id/close", requireAuth, async (req, res) => {
   try {
@@ -174,13 +174,13 @@ router.put("/vacancies/:id/close", requireAuth, async (req, res) => {
       return res.status(404).json({ error: "Vacancy not found" });
     }
 
-    const [updated] = await db
-      .update(vacancies)
-      .set({ status: "closed" })
-      .where(eq(vacancies.id, req.params.id))
-      .returning();
+    // Delete related applications first
+    await db.delete(applications).where(eq(applications.vacancyId, req.params.id));
 
-    res.json(updated);
+    // Hard-delete the vacancy
+    await db.delete(vacancies).where(eq(vacancies.id, req.params.id));
+
+    res.json({ success: true, deletedId: req.params.id });
   } catch (error) {
     console.error("Close parent vacancy error:", error);
     res.status(500).json({ error: "Internal server error" });

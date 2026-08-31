@@ -501,9 +501,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const closeVacancy = useCallback(
     async (vacancyId: string) => {
-      setVacancies((prev) =>
-        prev.map((v) => (v.id === vacancyId ? { ...v, status: "closed" as VacancyStatus } : v))
-      );
+      // Remove from local state immediately (hard-delete)
+      setVacancies((prev) => prev.filter((v) => v.id !== vacancyId));
       try {
         await agencyApi.closeVacancy(vacancyId);
       } catch (err) {

@@ -51,7 +51,7 @@ export default function AgencyVacancies({ onTabChange }: { onTabChange?: (tab: A
 
   const handleClose = (vacancyId: string) => {
     closeVacancy(vacancyId);
-    setSuccessMsg("Vacancy closed.");
+    setSuccessMsg("Vacancy deleted.");
     setTimeout(() => setSuccessMsg(null), 2500);
   };
 

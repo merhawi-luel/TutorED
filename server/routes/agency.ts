@@ -240,6 +240,7 @@ router.put("/vacancies/:id", requireAuth, requireRole("agency"), async (req, res
 });
 
 // ─── PUT /api/agency/vacancies/:id/close ─────────────────────
+// Hard-delete: removes vacancy and all related applications
 
 router.put("/vacancies/:id/close", requireAuth, requireRole("agency"), async (req, res) => {
   try {
@@ -257,13 +258,13 @@ router.put("/vacancies/:id/close", requireAuth, requireRole("agency"), async (re
       return res.status(404).json({ error: "Vacancy not found" });
     }
 
-    const [updated] = await db
-      .update(vacancies)
-      .set({ status: "closed" })
-      .where(eq(vacancies.id, req.params.id))
-      .returning();
+    // Delete related applications first
+    await db.delete(applications).where(eq(applications.vacancyId, req.params.id));
 
-    res.json(updated);
+    // Hard-delete the vacancy
+    await db.delete(vacancies).where(eq(vacancies.id, req.params.id));
+
+    res.json({ success: true, deletedId: req.params.id });
   } catch (error) {
     console.error("Close vacancy error:", error);
     res.status(500).json({ error: "Internal server error" });
