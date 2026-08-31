@@ -67,6 +67,8 @@ export const tutorApi = {
     request<any>(`/tutor/education-entries/${id}`, { method: "DELETE" }),
 
   getVacancies: () => request<any[]>("/tutor/vacancies"),
+  applyToVacancy: (vacancyId: string) =>
+    request<any>("/tutor/applications", { method: "POST", body: JSON.stringify({ vacancyId }) }),
 };
 
 // ─── Applications ──────────────────────────────────────────────
