@@ -73,6 +73,11 @@ export default function TutorEducation() {
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+      <style>{`
+        @media (max-width: 640px) {
+          .edu-form-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
         <div>
@@ -132,43 +137,50 @@ export default function TutorEducation() {
           marginBottom: '24px', border: `1px solid ${colors.border}`,
           boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
         }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '600', color: colors.primaryText, marginBottom: '20px' }}>
-            Add Education Entry
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.secondaryText, marginBottom: '6px' }}>
-                Title (e.g., "BSc Computer Science")
-              </label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Enter your education title"
-                style={{
-                  width: '100%', padding: '12px 16px', borderRadius: '12px',
-                  border: `1px solid ${colors.border}`, backgroundColor: colors.background,
-                  color: colors.primaryText, fontSize: '15px', outline: 'none',
-                  boxSizing: 'border-box'
-                }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.secondaryText, marginBottom: '6px' }}>
-                Description
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Describe your education, achievements, or credentials"
-                rows={4}
-                style={{
-                  width: '100%', padding: '12px 16px', borderRadius: '12px',
-                  border: `1px solid ${colors.border}`, backgroundColor: colors.background,
-                  color: colors.primaryText, fontSize: '15px', outline: 'none',
-                  resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box'
-                }}
-              />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: colors.primaryText }}>
+              Add Education Entry
+            </h3>
+            <p style={{ fontSize: '13px', color: colors.secondaryText }}>
+              Add your education details for verification
+            </p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="edu-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: colors.secondaryText, marginBottom: '4px' }}>
+                  Title *
+                </label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="e.g., BSc Computer Science"
+                  style={{
+                    width: '100%', padding: '10px 14px', borderRadius: '10px',
+                    border: `1px solid ${colors.border}`, backgroundColor: colors.background,
+                    color: colors.primaryText, fontSize: '14px', outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: colors.secondaryText, marginBottom: '4px' }}>
+                  Description * <span style={{ fontWeight: '400', fontSize: '12px' }}>(e.g., Matric: 464)</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="e.g., Matric: 464"
+                  style={{
+                    width: '100%', padding: '10px 14px', borderRadius: '10px',
+                    border: `1px solid ${colors.border}`, backgroundColor: colors.background,
+                    color: colors.primaryText, fontSize: '14px', outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
             </div>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <button
