@@ -18,7 +18,7 @@ import {
   Shield,
   User,
 } from "lucide-react";
-import type { TutorProfile } from "@/types";
+import type { TutorProfile, EducationEntry } from "@/types";
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -33,6 +33,7 @@ interface Applicant {
   tutorName: string;
   tutorEmail: string;
   tutorProfile: TutorProfile | null;
+  educationEntries: EducationEntry[];
 }
 
 interface TutorDocument {
@@ -94,7 +95,8 @@ export default function ParentApplicants() {
     tutorId: string;
     tutorName: string;
     tutorProfile: TutorProfile | null;
-  }>({ isOpen: false, tutorId: "", tutorName: "", tutorProfile: null });
+    educationEntries: EducationEntry[];
+  }>({ isOpen: false, tutorId: "", tutorName: "", tutorProfile: null, educationEntries: [] });
 
   const fetchApplicants = useCallback(async () => {
     setLoading(true);
@@ -127,6 +129,17 @@ export default function ParentApplicants() {
               verificationLevel: a.tutorProfile.verificationLevel || a.tutorProfile.verification_level || "unverified",
             }
           : null,
+        educationEntries: (a.educationEntries || []).map((e: any) => ({
+          id: e.id,
+          tutorId: e.tutorId || e.tutor_id,
+          name: e.name,
+          title: e.title,
+          description: e.description || "",
+          status: e.status,
+          submittedAt: e.submittedAt || e.submitted_at,
+          reviewedAt: e.reviewedAt || e.reviewed_at || undefined,
+          reviewerNote: e.reviewerNote || e.reviewer_note || undefined,
+        })),
       }));
       setApplicants(mapped);
     } catch (err) {
@@ -333,6 +346,39 @@ export default function ParentApplicants() {
                         )}
                       </div>
 
+                      {/* Education Entries */}
+                      {applicant.educationEntries.length > 0 && (
+                        <div>
+                          <div className="text-[10px] text-gray-600 uppercase mb-2">Verified Education</div>
+                          <div className="space-y-2">
+                            {applicant.educationEntries.map((entry) => (
+                              <div
+                                key={entry.id}
+                                className="flex items-center justify-between rounded-lg px-3 py-2"
+                                style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                              >
+                                <div>
+                                  <div className="text-xs font-medium text-white">{entry.title}</div>
+                                  <div className="text-[10px] text-gray-500">{entry.name}</div>
+                                  {entry.description && (
+                                    <div className="text-[10px] text-gray-600 mt-0.5 max-w-sm truncate">{entry.description}</div>
+                                  )}
+                                </div>
+                                <span
+                                  className="px-2 py-0.5 rounded text-[10px] font-medium capitalize"
+                                  style={{
+                                    background: entry.status === "approved" ? "rgba(34,197,94,0.12)" : entry.status === "pending" ? "rgba(245,158,11,0.12)" : "rgba(239,68,68,0.12)",
+                                    color: entry.status === "approved" ? "#22C55E" : entry.status === "pending" ? "#F59E0B" : "#F87171",
+                                  }}
+                                >
+                                  {entry.status}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {/* View Profile Button */}
                       <div className="flex gap-2 pt-1">
                         <button
@@ -342,6 +388,7 @@ export default function ParentApplicants() {
                               tutorId: applicant.tutorId,
                               tutorName: applicant.tutorName,
                               tutorProfile: applicant.tutorProfile,
+                              educationEntries: applicant.educationEntries,
                             })
                           }
                           className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium transition-all"
@@ -370,6 +417,7 @@ export default function ParentApplicants() {
         tutorId={profileModal.tutorId}
         tutorName={profileModal.tutorName}
         tutorProfile={profileModal.tutorProfile}
+        educationEntries={profileModal.educationEntries}
       />
     </div>
   );
@@ -383,12 +431,14 @@ function ParentApplicantProfileModal({
   tutorId,
   tutorName,
   tutorProfile,
+  educationEntries,
 }: {
   isOpen: boolean;
   onClose: () => void;
   tutorId: string;
   tutorName: string;
   tutorProfile: TutorProfile | null;
+  educationEntries: EducationEntry[];
 }) {
   const [documents, setDocuments] = useState<TutorDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -573,6 +623,41 @@ function ParentApplicantProfileModal({
                       {g}
                     </span>
                   ))}
+                </div>
+              )}
+
+              {/* Education Entries */}
+              {educationEntries.length > 0 && (
+                <div>
+                  <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Education & Credentials</h3>
+                  <div className="space-y-2">
+                    {educationEntries.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="rounded-xl px-4 py-3"
+                        style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-sm text-white font-medium">{entry.title}</div>
+                            <div className="text-xs text-gray-500">{entry.name}</div>
+                            {entry.description && (
+                              <div className="text-xs text-gray-400 mt-1 leading-relaxed">{entry.description}</div>
+                            )}
+                          </div>
+                          <span
+                            className="px-2 py-0.5 rounded text-[10px] font-medium capitalize"
+                            style={{
+                              background: entry.status === "approved" ? "rgba(34,197,94,0.12)" : entry.status === "pending" ? "rgba(245,158,11,0.12)" : "rgba(239,68,68,0.12)",
+                              color: entry.status === "approved" ? "#22C55E" : entry.status === "pending" ? "#F59E0B" : "#F87171",
+                            }}
+                          >
+                            {entry.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 

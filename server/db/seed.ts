@@ -13,6 +13,7 @@ async function seed() {
   await db.delete(schema.vacancies);
   await db.delete(schema.verificationRequests);
   await db.delete(schema.documents);
+  await db.delete(schema.educationEntries);
   await db.delete(schema.tutorProfiles);
   await db.delete(schema.organizationMembers);
   await db.delete(schema.organizations);
@@ -335,6 +336,68 @@ async function seed() {
     .returning({ id: schema.vacancies.id });
 
   console.log("  ✓ Created 7 vacancies");
+
+  // ─── Education Entries ────────────────────────────────────
+
+  await db.insert(schema.educationEntries).values([
+    {
+      tutorId: tutor1.id,
+      name: "Merhawi Luel",
+      title: "BSc Mathematics",
+      description: "Bachelor of Science in Mathematics from Addis Ababa University. Specialized in algebra and calculus.",
+      status: "approved",
+      reviewedAt: new Date("2026-08-10"),
+    },
+    {
+      tutorId: tutor1.id,
+      name: "Merhawi Luel",
+      title: "Teaching Certificate",
+      description: "Certified secondary school mathematics teacher.",
+      status: "pending",
+    },
+    {
+      tutorId: tutor2.id,
+      name: "Hana Tesfaye",
+      title: "BA English Language & Literature",
+      description: "Bachelor of Arts in English from Bahir Dar University.",
+      status: "approved",
+      reviewedAt: new Date("2026-08-12"),
+    },
+    {
+      tutorId: tutor2.id,
+      name: "Hana Tesfaye",
+      title: "TESOL Certification",
+      description: "Teaching English to Speakers of Other Languages — International Certificate.",
+      status: "approved",
+      reviewedAt: new Date("2026-08-12"),
+    },
+    {
+      tutorId: tutor3.id,
+      name: "Daniel Mekonnen",
+      title: "BSc Physics",
+      description: "Bachelor of Science in Physics from Jimma University.",
+      status: "pending",
+    },
+    {
+      tutorId: tutor4.id,
+      name: "Sara Abebe",
+      title: "Diploma in Education",
+      description: "Diploma in Primary Education from ST. Mary's University.",
+      status: "approved",
+      reviewedAt: new Date("2026-08-15"),
+    },
+    {
+      tutorId: tutor5.id,
+      name: "Yonas Tekle",
+      title: "BSc Computer Science",
+      description: "Bachelor of Science in Computer Science from Addis Ababa Institute of Technology.",
+      status: "rejected",
+      reviewedAt: new Date("2026-08-20"),
+      reviewerNote: "Please provide official transcripts.",
+    },
+  ]);
+
+  console.log("  ✓ Created 7 education entries");
 
   // ─── Documents & Verification ──────────────────────────────
   // (none — upload real documents through the UI)
