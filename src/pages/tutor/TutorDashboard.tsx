@@ -1,9 +1,9 @@
 import { useState } from "react";
 import Sidebar, { type TutorTab } from "@/components/layout/TutorSidebar";
+import { useTheme } from "@/context/ThemeContext";
 import TutorOverview from "./TutorOverview";
 import TutorProfile from "./TutorProfile";
-import TutorDocuments from "./TutorDocuments";
-import TutorVerification from "./TutorVerification";
+import TutorDocumentsAndVerification from "./TutorDocumentsAndVerification";
 import TutorEducation from "./TutorEducation";
 import TutorVacancies from "./TutorVacancies";
 import TutorApplications from "./TutorApplications";
@@ -12,8 +12,7 @@ import TutorSettings from "./TutorSettings";
 const TAB_COMPONENTS: Record<TutorTab, React.ComponentType<{ onTabChange?: (tab: TutorTab) => void }>> = {
   overview: TutorOverview,
   profile: TutorProfile,
-  documents: TutorDocuments,
-  verification: TutorVerification,
+  "docs-verification": TutorDocumentsAndVerification,
   education: TutorEducation,
   vacancies: TutorVacancies,
   applications: TutorApplications,
@@ -22,11 +21,12 @@ const TAB_COMPONENTS: Record<TutorTab, React.ComponentType<{ onTabChange?: (tab:
 
 export default function TutorDashboard() {
   const [activeTab, setActiveTab] = useState<TutorTab>("overview");
+  const { isDark } = useTheme();
 
   const Page = TAB_COMPONENTS[activeTab];
 
   return (
-    <div className="flex min-h-screen" style={{ background: "#000000" }}>
+    <div className="flex min-h-screen" style={{ background: isDark ? "#000000" : "#F8FAFC" }}>
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
       <main className="flex-1 min-w-0 p-6 md:p-8 lg:p-10 overflow-y-auto">
         <Page onTabChange={setActiveTab} />

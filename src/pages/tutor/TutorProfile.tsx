@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useData } from "@/context/DataContext";
+import { useTheme } from "@/context/ThemeContext";
 import { useInView } from "@/hooks/useInView";
 import { Save, Plus, X } from "lucide-react";
 import type { TeachingMode } from "@/types";
@@ -34,6 +35,7 @@ const GRADE_OPTIONS = [
 
 export default function TutorProfile() {
   const { tutorProfile, updateProfile } = useData();
+  const { isDark } = useTheme();
   const { ref, inView } = useInView();
 
   const [headline, setHeadline] = useState(tutorProfile?.headline ?? "");
@@ -61,22 +63,27 @@ export default function TutorProfile() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const inputStyle = {
-    background: "#0D0D0D",
-    border: "1px solid #1F1F1F",
-  };
+  const cardBg = isDark ? "#111111" : "#FFFFFF";
+  const cardBorder = isDark ? "#1F1F1F" : "#E2E8F0";
+  const inputBg = isDark ? "#0D0D0D" : "#F1F5F9";
+  const inputBorder = isDark ? "#1F1F1F" : "#E2E8F0";
+  const textPrimary = isDark ? "#FFFFFF" : "#0F172A";
+  const textSecondary = isDark ? "#9CA3AF" : "#475569";
+  const textMuted = isDark ? "#6B7280" : "#94A3B8";
+  const pillBg = isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)";
+  const pillBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
 
   return (
     <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
-      <div className={`flex items-center justify-between fade-up ${inView ? "in-view" : ""}`}>
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 fade-up ${inView ? "in-view" : ""}`}>
         <div>
-          <h1 className="text-2xl font-semibold text-white">My Profile</h1>
-          <p className="text-sm text-gray-400 mt-1">Build your professional teaching identity.</p>
+          <h1 className="text-2xl font-semibold" style={{ color: textPrimary }}>My Profile</h1>
+          <p className="text-sm mt-1" style={{ color: textSecondary }}>Build your professional teaching identity.</p>
         </div>
         <button
           onClick={handleSave}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all"
-          style={{ background: "#22C55E", color: "black" }}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
+          style={{ background: "#22C55E", color: "black", minWidth: 180, justifyContent: "center" }}
         >
           <Save size={16} />
           {saved ? "Saved!" : "Save Profile"}
@@ -86,75 +93,75 @@ export default function TutorProfile() {
       {/* Basic Info */}
       <section
         className={`rounded-2xl p-6 space-y-5 fade-up delay-100 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
       >
-        <h2 className="text-sm font-medium text-gray-300">Basic Information</h2>
+        <h2 className="text-sm font-medium" style={{ color: textSecondary }}>Basic Information</h2>
 
         <div>
-          <label className="block text-xs text-gray-500 mb-1.5">Headline</label>
+          <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Headline</label>
           <input
             value={headline}
             onChange={(e) => setHeadline(e.target.value)}
             placeholder="e.g. Mathematics Tutor"
-            className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
-            style={inputStyle}
+            className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors"
+            style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
           />
         </div>
 
         <div>
-          <label className="block text-xs text-gray-500 mb-1.5">Bio</label>
+          <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Bio</label>
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             placeholder="Tell agencies about your teaching experience and approach..."
             rows={4}
-            className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors resize-none"
-            style={inputStyle}
+            className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors resize-none"
+            style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
           />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs text-gray-500 mb-1.5">Years of Experience</label>
+            <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Years of Experience</label>
             <input
               type="number"
               min={0}
               value={experience}
               onChange={(e) => setExperience(Number(e.target.value))}
-              className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
-              style={inputStyle}
+              className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors"
+              style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1.5">Education</label>
+            <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Education</label>
             <input
               value={education}
               onChange={(e) => setEducation(e.target.value)}
               placeholder="e.g. BSc Mathematics"
-              className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
-              style={inputStyle}
+              className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors"
+              style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs text-gray-500 mb-1.5">Location</label>
+            <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Location</label>
             <input
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="e.g. Addis Ababa"
-              className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
-              style={inputStyle}
+              className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors"
+              style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1.5">Teaching Mode</label>
+            <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Teaching Mode</label>
             <select
               value={teachingMode}
               onChange={(e) => setTeachingMode(e.target.value as TeachingMode)}
-              className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
-              style={inputStyle}
+              className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors"
+              style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
             >
               <option value="in-person">In-person</option>
               <option value="online">Online</option>
@@ -164,13 +171,13 @@ export default function TutorProfile() {
         </div>
 
         <div>
-          <label className="block text-xs text-gray-500 mb-1.5">Availability</label>
+          <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Availability</label>
           <input
             value={availability}
             onChange={(e) => setAvailability(e.target.value)}
             placeholder="e.g. Monday - Saturday"
-            className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
-            style={inputStyle}
+            className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors"
+            style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
           />
         </div>
       </section>
@@ -178,9 +185,9 @@ export default function TutorProfile() {
       {/* Subjects */}
       <section
         className={`rounded-2xl p-6 space-y-4 fade-up delay-200 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
       >
-        <h2 className="text-sm font-medium text-gray-300">Subjects</h2>
+        <h2 className="text-sm font-medium" style={{ color: textSecondary }}>Subjects</h2>
         <div className="flex flex-wrap gap-2">
           {SUBJECT_OPTIONS.map((s) => {
             const selected = subjects.includes(s);
@@ -190,9 +197,9 @@ export default function TutorProfile() {
                 onClick={() => toggleSubject(s)}
                 className="px-3.5 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5"
                 style={{
-                  background: selected ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.04)",
-                  border: `1px solid ${selected ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.08)"}`,
-                  color: selected ? "#22C55E" : "#9CA3AF",
+                  background: selected ? "rgba(34,197,94,0.15)" : pillBg,
+                  border: `1px solid ${selected ? "rgba(34,197,94,0.3)" : pillBorder}`,
+                  color: selected ? "#22C55E" : textSecondary,
                 }}
               >
                 {selected && <X size={12} />}
@@ -202,7 +209,7 @@ export default function TutorProfile() {
           })}
           <button
             className="px-3.5 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5"
-            style={{ background: "transparent", border: "1px dashed rgba(255,255,255,0.12)", color: "#6B7280" }}
+            style={{ background: "transparent", border: `1px dashed ${pillBorder}`, color: textMuted }}
           >
             <Plus size={12} />
             Custom
@@ -213,9 +220,9 @@ export default function TutorProfile() {
       {/* Grades */}
       <section
         className={`rounded-2xl p-6 space-y-4 fade-up delay-300 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
       >
-        <h2 className="text-sm font-medium text-gray-300">Grades</h2>
+        <h2 className="text-sm font-medium" style={{ color: textSecondary }}>Grades</h2>
         <div className="flex flex-wrap gap-2">
           {GRADE_OPTIONS.map((g) => {
             const selected = grades.includes(g);
@@ -225,9 +232,9 @@ export default function TutorProfile() {
                 onClick={() => toggleGrade(g)}
                 className="px-3.5 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5"
                 style={{
-                  background: selected ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.04)",
-                  border: `1px solid ${selected ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.08)"}`,
-                  color: selected ? "#22C55E" : "#9CA3AF",
+                  background: selected ? "rgba(34,197,94,0.15)" : pillBg,
+                  border: `1px solid ${selected ? "rgba(34,197,94,0.3)" : pillBorder}`,
+                  color: selected ? "#22C55E" : textSecondary,
                 }}
               >
                 {selected && <X size={12} />}

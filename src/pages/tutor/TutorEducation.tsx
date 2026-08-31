@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useData } from "@/context/DataContext";
+import { useTheme } from "@/context/ThemeContext";
 import { useInView } from "@/hooks/useInView";
 import {
   GraduationCap,
@@ -21,6 +22,7 @@ const STATUS_CONFIG: Record<EducationEntryStatus, { color: string; label: string
 
 export default function TutorEducation() {
   const { educationEntries, addEducationEntry, removeEducationEntry } = useData();
+  const { isDark } = useTheme();
   const { ref, inView } = useInView();
 
   const [showForm, setShowForm] = useState(false);
@@ -36,7 +38,6 @@ export default function TutorEducation() {
       setError("Name and title are required");
       return;
     }
-
     setSubmitting(true);
     setError(null);
     try {
@@ -57,25 +58,29 @@ export default function TutorEducation() {
     setDeleteConfirm(null);
   };
 
-  const inputStyle = {
-    background: "#0D0D0D",
-    border: "1px solid #1F1F1F",
-  };
+  const cardBg = isDark ? "#111111" : "#FFFFFF";
+  const cardBorder = isDark ? "#1F1F1F" : "#E2E8F0";
+  const inputBg = isDark ? "#0D0D0D" : "#F1F5F9";
+  const inputBorder = isDark ? "#1F1F1F" : "#E2E8F0";
+  const textPrimary = isDark ? "#FFFFFF" : "#0F172A";
+  const textSecondary = isDark ? "#9CA3AF" : "#475569";
+  const textMuted = isDark ? "#6B7280" : "#94A3B8";
+  const textFaint = isDark ? "#4B5563" : "#CBD5E1";
 
   return (
     <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
       {/* Header */}
-      <div className={`flex items-center justify-between fade-up ${inView ? "in-view" : ""}`}>
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 fade-up ${inView ? "in-view" : ""}`}>
         <div>
-          <h1 className="text-2xl font-semibold text-white">Education Verification</h1>
-          <p className="text-sm text-gray-400 mt-1">
+          <h1 className="text-2xl font-semibold" style={{ color: textPrimary }}>Education Verification</h1>
+          <p className="text-sm mt-1" style={{ color: textSecondary }}>
             Add your education credentials for admin verification. You must be approved to be verified.
           </p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all"
-          style={{ background: "#22C55E", color: "black" }}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
+          style={{ background: "#22C55E", color: "black", minWidth: 180, justifyContent: "center" }}
         >
           <Plus size={16} />
           Add Entry
@@ -85,11 +90,11 @@ export default function TutorEducation() {
       {/* Verification Rule */}
       <div
         className={`rounded-xl px-5 py-4 flex items-start gap-3 fade-up delay-100 ${inView ? "in-view" : ""}`}
-        style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.15)" }}
+        style={{ background: isDark ? "rgba(245,158,11,0.06)" : "rgba(234,179,8,0.06)", border: `1px solid ${isDark ? "rgba(245,158,11,0.15)" : "rgba(234,179,8,0.15)"}` }}
       >
         <AlertCircle size={18} className="mt-0.5 shrink-0" style={{ color: "#F59E0B" }} />
-        <div className="text-xs text-gray-400 leading-relaxed">
-          <span className="font-medium text-gray-300">Verification Rule:</span> You are only marked as verified when ALL of your submitted education entries are approved by an admin. If even one entry is pending or rejected, you remain unverified.
+        <div className="text-xs leading-relaxed" style={{ color: textSecondary }}>
+          <span className="font-medium" style={{ color: textPrimary }}>Verification Rule:</span> You are only marked as verified when ALL of your submitted education entries are approved by an admin. If even one entry is pending or rejected, you remain unverified.
         </div>
       </div>
 
@@ -97,42 +102,42 @@ export default function TutorEducation() {
       {showForm && (
         <section
           className={`rounded-2xl p-6 space-y-4 fade-up delay-150 ${inView ? "in-view" : ""}`}
-          style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+          style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
         >
-          <h2 className="text-sm font-medium text-gray-300">New Education Entry</h2>
+          <h2 className="text-sm font-medium" style={{ color: textSecondary }}>New Education Entry</h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-500 mb-1.5">Name</label>
+              <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Name</label>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Merhawi Luel"
-                className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
-                style={inputStyle}
+                className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors"
+                style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1.5">Title</label>
+              <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Title</label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. BSc Computer Science"
-                className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
-                style={inputStyle}
+                className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors"
+                style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs text-gray-500 mb-1.5">Description</label>
+            <label className="block text-xs mb-1.5" style={{ color: textMuted }}>Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe your education or credential..."
               rows={3}
-              className="w-full px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors resize-none"
-              style={inputStyle}
+              className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-500/50 transition-colors resize-none"
+              style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
             />
           </div>
 
@@ -150,25 +155,19 @@ export default function TutorEducation() {
             <button
               onClick={handleSubmit}
               disabled={submitting || !name.trim() || !title.trim()}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-40"
-              style={{ background: "#22C55E", color: "black" }}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
+              style={{ background: "#22C55E", color: "black", minWidth: 180, justifyContent: "center" }}
             >
               {submitting ? (
-                <>
-                  <Loader2 size={14} className="animate-spin" />
-                  Submitting...
-                </>
+                <><Loader2 size={14} className="animate-spin" /> Submitting...</>
               ) : (
-                <>
-                  <Plus size={14} />
-                  Add Entry
-                </>
+                <><Plus size={14} /> Add Entry</>
               )}
             </button>
             <button
               onClick={() => { setShowForm(false); setError(null); }}
               className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all"
-              style={{ background: "#161616", color: "#9CA3AF", border: "1px solid #1F1F1F" }}
+              style={{ background: inputBg, color: textSecondary, border: `1px solid ${inputBorder}` }}
             >
               Cancel
             </button>
@@ -181,11 +180,11 @@ export default function TutorEducation() {
         {educationEntries.length === 0 ? (
           <div
             className={`rounded-2xl p-12 text-center fade-up delay-200 ${inView ? "in-view" : ""}`}
-            style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+            style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
           >
-            <GraduationCap size={32} className="mx-auto mb-3 text-gray-600" />
-            <p className="text-sm text-gray-400">No education entries yet.</p>
-            <p className="text-xs text-gray-600 mt-1">Click "Add Entry" to submit your credentials for verification.</p>
+            <GraduationCap size={32} className="mx-auto mb-3" style={{ color: textFaint }} />
+            <p className="text-sm" style={{ color: textSecondary }}>No education entries yet.</p>
+            <p className="text-xs mt-1" style={{ color: textFaint }}>Click "Add Entry" to submit your credentials for verification.</p>
           </div>
         ) : (
           educationEntries.map((entry, i) => {
@@ -196,8 +195,8 @@ export default function TutorEducation() {
             return (
               <div
                 key={entry.id}
-                className={`rounded-2xl overflow-hidden transition-all fade-up delay-${Math.min((i + 1) * 100, 400)} ${inView ? "in-view" : ""}`}
-                style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+                className={`rounded-2xl overflow-hidden transition-all hover:-translate-y-0.5 fade-up delay-${Math.min((i + 1) * 100, 400)} ${inView ? "in-view" : ""}`}
+                style={{ background: cardBg, border: `1px solid ${cardBorder}`, boxShadow: "var(--shadow-card)" }}
               >
                 <div className="flex items-center justify-between px-5 py-4">
                   <div className="flex items-center gap-4">
@@ -208,12 +207,12 @@ export default function TutorEducation() {
                       <StatusIcon size={18} style={{ color: cfg.color }} />
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-white">{entry.title}</div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-sm font-medium" style={{ color: textPrimary }}>{entry.title}</div>
+                      <div className="text-xs" style={{ color: textMuted }}>
                         {entry.name} · Submitted {entry.submittedAt}
                       </div>
                       {entry.description && (
-                        <div className="text-xs text-gray-600 mt-0.5 max-w-md truncate">{entry.description}</div>
+                        <div className="text-xs mt-0.5 max-w-md truncate" style={{ color: textFaint }}>{entry.description}</div>
                       )}
                       {entry.reviewerNote && (
                         <div className="text-xs mt-0.5" style={{ color: "#EF4444" }}>
@@ -235,7 +234,7 @@ export default function TutorEducation() {
                         className="p-1.5 rounded-lg transition-colors hover:bg-white/5"
                         title="Delete entry"
                       >
-                        <Trash2 size={14} className="text-gray-600 hover:text-red-400" />
+                        <Trash2 size={14} className="hover:text-red-400" style={{ color: textFaint }} />
                       </button>
                     )}
                     {isDeleteConfirming && (
@@ -250,7 +249,7 @@ export default function TutorEducation() {
                         <button
                           onClick={() => setDeleteConfirm(null)}
                           className="px-2.5 py-1 rounded-lg text-xs font-medium transition-all"
-                          style={{ background: "#161616", color: "#9CA3AF" }}
+                          style={{ background: inputBg, color: textSecondary }}
                         >
                           Cancel
                         </button>

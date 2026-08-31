@@ -1,4 +1,5 @@
 import { useData } from "@/context/DataContext";
+import { useTheme } from "@/context/ThemeContext";
 import { useInView } from "@/hooks/useInView";
 import { useState } from "react";
 import {
@@ -35,24 +36,32 @@ const FILTER_OPTIONS: { value: string; label: string }[] = [
 
 export default function TutorApplications() {
   const { applications } = useData();
+  const { isDark } = useTheme();
   const { ref, inView } = useInView();
 
   const [filter, setFilter] = useState("all");
 
   const filtered = filter === "all" ? applications : applications.filter((a) => a.status === filter);
 
-  // Stats
   const total = applications.length;
   const shortlisted = applications.filter((a) => a.status === "shortlisted").length;
   const interviews = applications.filter((a) => a.status === "interview").length;
   const accepted = applications.filter((a) => a.status === "accepted").length;
 
+  const cardBg = isDark ? "#111111" : "#FFFFFF";
+  const cardBorder = isDark ? "#1F1F1F" : "#E2E8F0";
+  const textPrimary = isDark ? "#FFFFFF" : "#0F172A";
+  const textSecondary = isDark ? "#9CA3AF" : "#475569";
+  const textMuted = isDark ? "#6B7280" : "#94A3B8";
+  const pillBg = isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)";
+  const pillBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
+
   return (
     <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
       {/* Header */}
       <div className={`fade-up ${inView ? "in-view" : ""}`}>
-        <h1 className="text-2xl font-semibold text-white">Applications</h1>
-        <p className="text-sm text-gray-400 mt-1">Track your job applications and their status.</p>
+        <h1 className="text-2xl font-semibold" style={{ color: textPrimary }}>Applications</h1>
+        <p className="text-sm mt-1" style={{ color: textSecondary }}>Track your job applications and their status.</p>
       </div>
 
       {/* Stats */}
@@ -63,9 +72,13 @@ export default function TutorApplications() {
           { label: "Interviews", value: interviews, color: "#C084FC" },
           { label: "Accepted", value: accepted, color: "#22C55E" },
         ].map((s) => (
-          <div key={s.label} className="rounded-xl px-4 py-3" style={{ background: "#111111", border: "1px solid #1F1F1F" }}>
+          <div
+            key={s.label}
+            className="rounded-xl px-4 py-3"
+            style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+          >
             <div className="text-2xl font-bold" style={{ color: s.color }}>{s.value}</div>
-            <div className="text-xs text-gray-500">{s.label}</div>
+            <div className="text-xs" style={{ color: textMuted }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -78,9 +91,9 @@ export default function TutorApplications() {
             onClick={() => setFilter(f.value)}
             className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
             style={{
-              background: filter === f.value ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.04)",
-              border: `1px solid ${filter === f.value ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.08)"}`,
-              color: filter === f.value ? "#22C55E" : "#9CA3AF",
+              background: filter === f.value ? "rgba(34,197,94,0.15)" : pillBg,
+              border: `1px solid ${filter === f.value ? "rgba(34,197,94,0.3)" : pillBorder}`,
+              color: filter === f.value ? "#22C55E" : textSecondary,
             }}
           >
             {f.label}
@@ -93,10 +106,10 @@ export default function TutorApplications() {
         {filtered.length === 0 ? (
           <div
             className="rounded-xl p-12 text-center"
-            style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+            style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
           >
-            <Send size={32} className="mx-auto mb-3 text-gray-600" />
-            <p className="text-sm text-gray-400">
+            <Send size={32} className="mx-auto mb-3" style={{ color: textMuted }} />
+            <p className="text-sm" style={{ color: textSecondary }}>
               {applications.length === 0
                 ? "You haven't applied to any vacancies yet."
                 : "No applications match this filter."}
@@ -109,8 +122,8 @@ export default function TutorApplications() {
             return (
               <div
                 key={app.id}
-                className={`rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:-translate-y-0.5 fade-up delay-${Math.min((i + 1) * 100, 400)} ${inView ? "in-view" : ""}`}
-                style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+                className={`rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:-translate-y-1 fade-up delay-${Math.min((i + 1) * 100, 400)} ${inView ? "in-view" : ""}`}
+                style={{ background: cardBg, border: `1px solid ${cardBorder}`, boxShadow: "var(--shadow-card)" }}
               >
                 <div className="flex items-center gap-4">
                   <div
@@ -120,9 +133,9 @@ export default function TutorApplications() {
                     <Briefcase size={18} style={{ color: "#22C55E" }} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-white">{app.vacancyTitle}</h3>
-                    <div className="text-xs text-gray-500">{app.organizationName}</div>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-600">
+                    <h3 className="text-sm font-semibold" style={{ color: textPrimary }}>{app.vacancyTitle}</h3>
+                    <div className="text-xs" style={{ color: textMuted }}>{app.organizationName}</div>
+                    <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: textFaint }}>
                       <span className="flex items-center gap-1">
                         <Clock size={11} /> Applied {app.appliedAt}
                       </span>
@@ -159,5 +172,4 @@ export default function TutorApplications() {
   );
 }
 
-// Need to import React for useState
-
+const textFaint = "#4B5563";

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useData } from "@/context/DataContext";
+import { useTheme } from "@/context/ThemeContext";
 import { useInView } from "@/hooks/useInView";
 import ApplyConsentModal from "@/components/shared/ApplyConsentModal";
 import {
@@ -23,6 +24,7 @@ const FILTER_MODES: { value: string; label: string }[] = [
 
 export default function TutorVacancies() {
   const { vacancies, applications, applyToVacancy } = useData();
+  const { isDark } = useTheme();
   const { ref, inView } = useInView();
 
   const [search, setSearch] = useState("");
@@ -53,12 +55,23 @@ export default function TutorVacancies() {
 
   const appliedIds = new Set(applications.map((a) => a.vacancyId));
 
+  const cardBg = isDark ? "#111111" : "#FFFFFF";
+  const cardBorder = isDark ? "#1F1F1F" : "#E2E8F0";
+  const inputBg = isDark ? "#0D0D0D" : "#F1F5F9";
+  const inputBorder = isDark ? "#1F1F1F" : "#E2E8F0";
+  const textPrimary = isDark ? "#FFFFFF" : "#0F172A";
+  const textSecondary = isDark ? "#9CA3AF" : "#475569";
+  const textMuted = isDark ? "#6B7280" : "#94A3B8";
+  const textFaint = isDark ? "#4B5563" : "#CBD5E1";
+  const pillBg = isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)";
+  const pillBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
+
   return (
     <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
       {/* Header */}
       <div className={`fade-up ${inView ? "in-view" : ""}`}>
-        <h1 className="text-2xl font-semibold text-white">Vacancies</h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <h1 className="text-2xl font-semibold" style={{ color: textPrimary }}>Vacancies</h1>
+        <p className="text-sm mt-1" style={{ color: textSecondary }}>
           Browse open positions from verified agencies.
         </p>
       </div>
@@ -66,23 +79,20 @@ export default function TutorVacancies() {
       {/* Search & Filters */}
       <div
         className={`rounded-2xl p-5 space-y-4 fade-up delay-100 ${inView ? "in-view" : ""}`}
-        style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+        style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
       >
-        {/* Search */}
         <div className="relative">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" />
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: textMuted }} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by title, subject, organization, or location..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-white focus:outline-none"
-            style={{ background: "#0D0D0D", border: "1px solid #1F1F1F" }}
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm focus:outline-none"
+            style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textPrimary }}
           />
         </div>
 
-        {/* Filter Row */}
         <div className="flex flex-wrap gap-3">
-          {/* Subject Pills */}
           <div className="flex gap-1.5 flex-wrap">
             {FILTER_SUBJECTS.map((s) => (
               <button
@@ -90,9 +100,9 @@ export default function TutorVacancies() {
                 onClick={() => setSubjectFilter(s)}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                 style={{
-                  background: subjectFilter === s ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.04)",
-                  border: `1px solid ${subjectFilter === s ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.08)"}`,
-                  color: subjectFilter === s ? "#22C55E" : "#9CA3AF",
+                  background: subjectFilter === s ? "rgba(34,197,94,0.15)" : pillBg,
+                  border: `1px solid ${subjectFilter === s ? "rgba(34,197,94,0.3)" : pillBorder}`,
+                  color: subjectFilter === s ? "#22C55E" : textSecondary,
                 }}
               >
                 {s}
@@ -100,24 +110,21 @@ export default function TutorVacancies() {
             ))}
           </div>
 
-          {/* Mode Select */}
           <select
             value={modeFilter}
             onChange={(e) => setModeFilter(e.target.value)}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400 focus:outline-none"
-            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium focus:outline-none"
+            style={{ background: pillBg, border: `1px solid ${pillBorder}`, color: textSecondary }}
           >
             {FILTER_MODES.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
+              <option key={m.value} value={m.value}>{m.label}</option>
             ))}
           </select>
         </div>
       </div>
 
       {/* Results Count */}
-      <div className="text-xs text-gray-500">
+      <div className="text-xs" style={{ color: textMuted }}>
         {filtered.length} {filtered.length === 1 ? "vacancy" : "vacancies"} found
       </div>
 
@@ -126,10 +133,10 @@ export default function TutorVacancies() {
         {filtered.length === 0 ? (
           <div
             className="rounded-xl p-12 text-center"
-            style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+            style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
           >
-            <Briefcase size={32} className="mx-auto mb-3 text-gray-600" />
-            <p className="text-sm text-gray-400">No vacancies match your filters.</p>
+            <Briefcase size={32} className="mx-auto mb-3" style={{ color: textFaint }} />
+            <p className="text-sm" style={{ color: textSecondary }}>No vacancies match your filters.</p>
           </div>
         ) : (
           filtered.map((vacancy, i) => {
@@ -137,8 +144,8 @@ export default function TutorVacancies() {
             return (
               <div
                 key={vacancy.id}
-                className={`rounded-2xl p-5 md:p-6 transition-all hover:-translate-y-0.5 fade-up delay-${Math.min((i + 1) * 100, 500)} ${inView ? "in-view" : ""}`}
-                style={{ background: "#111111", border: "1px solid #1F1F1F" }}
+                className={`rounded-2xl p-5 md:p-6 transition-all hover:-translate-y-1 fade-up delay-${Math.min((i + 1) * 100, 500)} ${inView ? "in-view" : ""}`}
+                style={{ background: cardBg, border: `1px solid ${cardBorder}`, boxShadow: "var(--shadow-card)" }}
               >
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   <div className="flex-1 min-w-0">
@@ -150,16 +157,16 @@ export default function TutorVacancies() {
                         {vacancy.organizationName[0]}
                       </div>
                       <div>
-                        <h3 className="text-sm font-semibold text-white">{vacancy.title}</h3>
-                        <div className="text-xs text-gray-500">{vacancy.organizationName}</div>
+                        <h3 className="text-sm font-semibold" style={{ color: textPrimary }}>{vacancy.title}</h3>
+                        <div className="text-xs" style={{ color: textMuted }}>{vacancy.organizationName}</div>
                       </div>
                     </div>
 
-                    <p className="text-xs text-gray-400 leading-relaxed mb-3 line-clamp-2">
+                    <p className="text-xs leading-relaxed mb-3 line-clamp-2" style={{ color: textSecondary }}>
                       {vacancy.description}
                     </p>
 
-                    <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-500">
+                    <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs" style={{ color: textMuted }}>
                       <span className="flex items-center gap-1.5">
                         <Briefcase size={12} /> {vacancy.subject} · {vacancy.grade}
                       </span>
@@ -177,32 +184,30 @@ export default function TutorVacancies() {
                       </span>
                     </div>
 
-                    {/* Requirements */}
                     <div className="mt-3 flex flex-wrap gap-2">
                       <span
                         className="px-2 py-0.5 rounded text-xs"
-                        style={{ background: "rgba(255,255,255,0.04)", color: "#9CA3AF" }}
+                        style={{ background: pillBg, color: textSecondary }}
                       >
                         {vacancy.requiredEducation}
                       </span>
                       <span
                         className="px-2 py-0.5 rounded text-xs"
-                        style={{ background: "rgba(255,255,255,0.04)", color: "#9CA3AF" }}
+                        style={{ background: pillBg, color: textSecondary }}
                       >
                         {vacancy.requiredExperience}+ years exp
                       </span>
                       <span
                         className="px-2 py-0.5 rounded text-xs"
-                        style={{ background: "rgba(255,255,255,0.04)", color: "#9CA3AF" }}
+                        style={{ background: pillBg, color: textSecondary }}
                       >
                         {vacancy.availability}
                       </span>
                     </div>
                   </div>
 
-                  {/* Apply Button */}
                   <div className="shrink-0 lg:text-right">
-                    <div className="text-xs text-gray-600 mb-2">
+                    <div className="text-xs mb-2" style={{ color: textFaint }}>
                       Deadline: {vacancy.deadline}
                     </div>
                     {isApplied ? (
@@ -220,7 +225,7 @@ export default function TutorVacancies() {
                           agencyName: vacancy.organizationName,
                           vacancyTitle: vacancy.title,
                         })}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-medium transition-all hover:opacity-90"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
                         style={{ background: "#22C55E", color: "black" }}
                       >
                         <Send size={13} /> Apply Now
@@ -233,7 +238,7 @@ export default function TutorVacancies() {
           })
         )}
       </div>
-      {/* Consent Modal */}
+
       <ApplyConsentModal
         isOpen={consentModal.isOpen}
         onClose={() => setConsentModal({ ...consentModal, isOpen: false })}
