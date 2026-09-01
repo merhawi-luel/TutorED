@@ -1,4 +1,5 @@
 import { useTheme } from "@/context/ThemeContext";
+import { supabase } from "@/lib/supabase";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -83,7 +84,8 @@ export default function VacancyDetail() {
   useEffect(() => {
     const fetchVacancyAndApplicants = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
 
         const vacancyResponse = await fetch(`${API_BASE}/agency/vacancies/${vacancyId}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -111,6 +113,7 @@ export default function VacancyDetail() {
         const applicantsResponse = await fetch(`${API_BASE}/agency/applicants/${vacancyId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        // token already declared above
 
         if (applicantsResponse.ok) {
           const applicantsData = await applicantsResponse.json();
@@ -133,7 +136,8 @@ export default function VacancyDetail() {
 
     setSaving(true);
     try {
-      const token = localStorage.getItem("token");
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       const response = await fetch(`${API_BASE}/agency/vacancies/${vacancyId}`, {
         method: "PUT",
         headers: {

@@ -1,5 +1,6 @@
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
@@ -80,7 +81,8 @@ export default function TutorVacancyDetail() {
 
     const checkApplied = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
         const res = await fetch(`${API_BASE}/tutor/applications`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -104,7 +106,8 @@ export default function TutorVacancyDetail() {
 
     setApplying(true);
     try {
-      const token = localStorage.getItem("token");
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       const res = await fetch(`${API_BASE}/tutor/applications`, {
         method: "POST",
         headers: {

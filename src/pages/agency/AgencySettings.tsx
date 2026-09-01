@@ -42,7 +42,7 @@ export default function AgencySettings() {
     const fetchVerificationStatus = async () => {
       try {
         const response = await fetch(`${API_BASE}/payment/status`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: { Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ""}` },
         });
         if (response.ok) {
           const data = await response.json();

@@ -1,9 +1,19 @@
 import { useTheme } from "@/context/ThemeContext";
 import { useState, useEffect } from "react";
 import { useData } from "@/context/DataContext";
+import { supabase } from "@/lib/supabase";
 import { CheckCircle, Clock, XCircle, Upload, AlertCircle } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
+
+async function getAuthHeaders() {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
 
 export default function AgencyVerification() {
   const { colors } = useTheme();
@@ -29,11 +39,8 @@ export default function AgencyVerification() {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const response = await fetch(`${API_BASE}/payment/status`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        const headers = await getAuthHeaders();
+        const response = await fetch(`${API_BASE}/payment/status`, { headers });
 
         if (!response.ok) {
           throw new Error("Failed to check status");
@@ -99,12 +106,10 @@ export default function AgencyVerification() {
       reader.onload = async () => {
         const base64 = reader.result?.toString().split(",")[1] || "";
 
+        const headers = await getAuthHeaders();
         const response = await fetch(`${API_BASE}/payment/upload-receipt`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+          headers,
           body: JSON.stringify({
             file: base64,
             fileName: file.name,
@@ -125,10 +130,9 @@ export default function AgencyVerification() {
 
         // Poll for verification approval
         const interval = setInterval(async () => {
-          const checkResponse = await fetch(`${API_BASE}/payment/status`, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
+          const pollHeaders = await getAuthHeaders();
+          const checkResponse = await fetch(`${API_BASE}/payment/status", {
+            headers: pollHeaders,
           });
 
           if (checkResponse.ok) {
