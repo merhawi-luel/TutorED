@@ -16,6 +16,7 @@ import {
   CheckCircle,
   Loader2,
 } from "lucide-react";
+import { ALL_SUBJECTS, ALL_GRADES } from "@/data/constants";
 import type { TeachingMode } from "@/types";
 
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
@@ -38,8 +39,8 @@ interface VacancyDetail {
   id: string;
   title: string;
   description: string;
-  subject: string;
-  grade: string;
+  subjects: string[];
+  grades: string[];
   requiredEducation: string;
   requiredExperience: number;
   location: string;
@@ -70,8 +71,8 @@ export default function VacancyDetail() {
   const [editForm, setEditForm] = useState({
     title: "",
     description: "",
-    subject: "",
-    grade: "",
+    subjects: [] as string[],
+    grades: [] as string[],
     requiredEducation: "",
     requiredExperience: 0,
     location: "",
@@ -98,8 +99,8 @@ export default function VacancyDetail() {
           setEditForm({
             title: vacancyData.title || "",
             description: vacancyData.description || "",
-            subject: vacancyData.subject || "",
-            grade: vacancyData.grade || "",
+            subjects: vacancyData.subjects || (vacancyData.subject ? [vacancyData.subject] : []),
+            grades: vacancyData.grades || (vacancyData.grade ? [vacancyData.grade] : []),
             requiredEducation: vacancyData.requiredEducation || "",
             requiredExperience: vacancyData.requiredExperience || 0,
             location: vacancyData.location || "",
@@ -132,7 +133,7 @@ export default function VacancyDetail() {
   }, [vacancyId]);
 
   const handleSave = async () => {
-    if (!vacancyId || !editForm.title || !editForm.subject || !editForm.grade) return;
+    if (!vacancyId || !editForm.title || editForm.subjects.length === 0 || editForm.grades.length === 0) return;
 
     setSaving(true);
     try {
@@ -170,8 +171,8 @@ export default function VacancyDetail() {
       setEditForm({
         title: vacancy.title,
         description: vacancy.description,
-        subject: vacancy.subject,
-        grade: vacancy.grade,
+        subjects: vacancy.subjects || [],
+        grades: vacancy.grades || [],
         requiredEducation: vacancy.requiredEducation,
         requiredExperience: vacancy.requiredExperience,
         location: vacancy.location,
@@ -276,7 +277,7 @@ export default function VacancyDetail() {
                       {vacancy.title}
                     </h1>
                     <p style={{ color: colors.textSecondary }}>
-                      {vacancy.subject} • Grade {vacancy.grade}
+                      {(vacancy.subjects?.join(', ') || '—')}{vacancy.grades?.length ? ' • ' + vacancy.grades.join(', ') : ''}
                     </p>
                   </>
                 )}
@@ -310,7 +311,7 @@ export default function VacancyDetail() {
                     </button>
                     <button
                       onClick={handleSave}
-                      disabled={saving || !editForm.title || !editForm.subject || !editForm.grade}
+                      disabled={saving || !editForm.title || editForm.subjects.length === 0 || editForm.grades.length === 0}
                       className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-50"
                       style={{ background: colors.accent, color: colors.bgPage }}
                     >
@@ -330,23 +331,53 @@ export default function VacancyDetail() {
               {/* Subject & Grade (edit mode) */}
               {editing && (
                 <>
-                  <div>
-                    <label className="block text-xs mb-1.5" style={{ color: colors.textMuted }}>Subject *</label>
-                    <input
-                      value={editForm.subject}
-                      onChange={(e) => setEditForm({ ...editForm, subject: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl text-sm focus:outline-none"
-                      style={inputStyle}
-                    />
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs mb-1.5" style={{ color: colors.textMuted }}>Subjects *</label>
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {editForm.subjects.map((s) => (
+                        <span key={s} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium" style={{ background: colors.primaryLight, color: colors.primary }}>
+                          {s}
+                          <button type="button" onClick={() => setEditForm({ ...editForm, subjects: editForm.subjects.filter((x) => x !== s) })} className="hover:opacity-70"><X size={12} /></button>
+                        </span>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 p-2 rounded-xl" style={{ background: colors.bgInput, border: `1px solid ${colors.borderColor}` }}>
+                      {ALL_SUBJECTS.map((s) => {
+                        const checked = editForm.subjects.includes(s);
+                        return (
+                          <button key={s} type="button" onClick={() => setEditForm({ ...editForm, subjects: checked ? editForm.subjects.filter((x) => x !== s) : [...editForm.subjects, s] })} className="flex items-center gap-1.5 px-2 py-1.5 rounded text-[11px] transition-all text-left" style={{ background: checked ? colors.primaryLight : 'transparent', color: checked ? colors.primary : colors.textMuted }}>
+                            <div className="w-3 h-3 rounded flex items-center justify-center shrink-0" style={{ border: `1.5px solid ${checked ? colors.primary : colors.borderColor}`, background: checked ? colors.primary : 'transparent' }}>
+                              {checked && <svg width="7" height="7" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                            </div>
+                            {s}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs mb-1.5" style={{ color: colors.textMuted }}>Grade *</label>
-                    <input
-                      value={editForm.grade}
-                      onChange={(e) => setEditForm({ ...editForm, grade: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl text-sm focus:outline-none"
-                      style={inputStyle}
-                    />
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs mb-1.5" style={{ color: colors.textMuted }}>Grades *</label>
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {editForm.grades.map((g) => (
+                        <span key={g} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium" style={{ background: colors.primaryLight, color: colors.primary }}>
+                          {g}
+                          <button type="button" onClick={() => setEditForm({ ...editForm, grades: editForm.grades.filter((x) => x !== g) })} className="hover:opacity-70"><X size={12} /></button>
+                        </span>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 p-2 rounded-xl" style={{ background: colors.bgInput, border: `1px solid ${colors.borderColor}` }}>
+                      {ALL_GRADES.map((g) => {
+                        const checked = editForm.grades.includes(g);
+                        return (
+                          <button key={g} type="button" onClick={() => setEditForm({ ...editForm, grades: checked ? editForm.grades.filter((x) => x !== g) : [...editForm.grades, g] })} className="flex items-center gap-1.5 px-2 py-1.5 rounded text-[11px] transition-all text-left" style={{ background: checked ? colors.primaryLight : 'transparent', color: checked ? colors.primary : colors.textMuted }}>
+                            <div className="w-3 h-3 rounded flex items-center justify-center shrink-0" style={{ border: `1.5px solid ${checked ? colors.primary : colors.borderColor}`, background: checked ? colors.primary : 'transparent' }}>
+                              {checked && <svg width="7" height="7" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                            </div>
+                            {g}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </>
               )}

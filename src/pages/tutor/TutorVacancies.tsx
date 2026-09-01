@@ -23,16 +23,16 @@ export default function TutorVacancies() {
   const filteredVacancies = useMemo(() => {
     return vacancies.filter(v => {
       const matchesSearch = v.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        v.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (v.subjects || []).some(s => s.toLowerCase().includes(searchTerm.toLowerCase())) ||
         v.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesSubject = selectedSubject === 'All' || v.subject === selectedSubject;
+      const matchesSubject = selectedSubject === 'All' || (v.subjects || []).includes(selectedSubject);
       const matchesType = selectedType === 'All' || v.teachingMode === selectedType;
       return matchesSearch && matchesSubject && matchesType;
     });
   }, [vacancies, searchTerm, selectedSubject, selectedType]);
 
   const uniqueSubjects = useMemo(() => {
-    return ['All', ...new Set(vacancies.map(v => v.subject))];
+    return ['All', ...new Set(vacancies.flatMap(v => v.subjects || []))];
   }, [vacancies]);
 
   const uniqueTypes = useMemo(() => {
@@ -205,7 +205,7 @@ export default function TutorVacancies() {
                       padding: '4px 10px', borderRadius: '6px',
                       backgroundColor: colors.background, color: colors.primaryText, fontWeight: '500'
                     }}>
-                      {vacancy.subject}
+                      {vacancy.subjects?.join(', ') || vacancy.subject}
                     </span>
                   </div>
                   {vacancy.location && (

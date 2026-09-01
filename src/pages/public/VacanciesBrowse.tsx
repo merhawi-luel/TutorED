@@ -37,16 +37,16 @@ export default function VacanciesBrowse() {
     fetchVacancies();
   }, []);
 
-  const subjects = ["All", ...Array.from(new Set(vacancies.map((v) => v.subject).filter(Boolean)))];
+  const subjects = ["All", ...Array.from(new Set(vacancies.flatMap((v) => v.subjects || []).filter(Boolean)))];
 
   const filtered = vacancies.filter((v) => {
     const matchesSearch =
       search === "" ||
       v.title.toLowerCase().includes(search.toLowerCase()) ||
       (v.organizationName || "").toLowerCase().includes(search.toLowerCase()) ||
-      v.subject.toLowerCase().includes(search.toLowerCase()) ||
+      (v.subjects || []).some((s) => s.toLowerCase().includes(search.toLowerCase())) ||
       v.location.toLowerCase().includes(search.toLowerCase());
-    const matchesSubject = subjectFilter === "All" || v.subject === subjectFilter;
+    const matchesSubject = subjectFilter === "All" || (v.subjects || []).includes(subjectFilter);
     const matchesMode =
       modeFilter === "All" || v.teachingMode === modeFilter.toLowerCase().replace("-", "-");
     return matchesSearch && matchesSubject && matchesMode;
@@ -223,7 +223,7 @@ export default function VacanciesBrowse() {
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
                       </svg>
-                      <span>{v.subject} · Grade {v.grade}</span>
+                      <span>{(v.subjects || []).join(', ') || '—'}{v.grades?.length ? ' · ' + v.grades.join(', ') : ''}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs" style={{ color: colors.textSecondary }}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

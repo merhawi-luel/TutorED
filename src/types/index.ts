@@ -110,8 +110,8 @@ export interface Vacancy {
   organizationName: string;
   title: string;
   description: string;
-  subject: string;
-  grade: string;
+  subjects: string[];
+  grades: string[];
   requiredEducation: string;
   requiredExperience: number;
   location: string;

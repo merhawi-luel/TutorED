@@ -192,7 +192,7 @@ export default function AgencyMyPosts({ onTabChange }: { onTabChange?: (tab: Age
 
                   {/* Subject & Grade */}
                   <p style={{ color: colors.textMuted }} className="text-sm mb-3">
-                    {vacancy.subject} • Grade {vacancy.grade}
+                    {(vacancy.subjects?.join(', ') || vacancy.subject) + (vacancy.grades?.length ? ' • ' + vacancy.grades.join(', ') : vacancy.grade ? ' • Grade ' + vacancy.grade : '')}
                   </p>
 
                   {/* Details Row */}

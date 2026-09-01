@@ -109,13 +109,13 @@ router.get("/vacancies", requireAuth, async (req, res) => {
 router.post("/vacancies", requireAuth, async (req, res) => {
   try {
     const {
-      title, description, subject, grade,
+      title, description, subjects, grades,
       requiredEducation, requiredExperience,
       location, teachingMode, salary, availability, deadline,
     } = req.body;
 
-    if (!title || !subject || !grade) {
-      return res.status(400).json({ error: "Title, subject, and grade are required" });
+    if (!title || !subjects?.length || !grades?.length) {
+      return res.status(400).json({ error: "Title, at least one subject, and at least one grade are required" });
     }
 
     const [vacancy] = await db
@@ -124,8 +124,8 @@ router.post("/vacancies", requireAuth, async (req, res) => {
         parentId: req.user!.userId,
         title,
         description: description || "",
-        subject,
-        grade,
+        subjects,
+        grades,
         requiredEducation: requiredEducation || "",
         requiredExperience: requiredExperience || 0,
         location: location || "",
@@ -199,10 +199,10 @@ router.put("/vacancies/:id/close", requireAuth, async (req, res) => {
 
 router.post("/contact-agency", requireAuth, async (req, res) => {
   try {
-    const { organizationId, subject, grade, location, notes, parentName, parentEmail, parentPhone } = req.body;
+    const { organizationId, subjects, grades, location, notes, parentName, parentEmail, parentPhone } = req.body;
 
-    if (!subject || !grade) {
-      return res.status(400).json({ error: "Subject and grade are required" });
+    if (!subjects?.length || !grades?.length) {
+      return res.status(400).json({ error: "At least one subject and one grade are required" });
     }
 
     const [request] = await db
@@ -213,8 +213,8 @@ router.post("/contact-agency", requireAuth, async (req, res) => {
         parentName: parentName || "",
         parentEmail: parentEmail || "",
         parentPhone: parentPhone || "",
-        subject,
-        grade,
+        subjects,
+        grades,
         location: location || "",
         notes: notes || "",
         status: "pending",

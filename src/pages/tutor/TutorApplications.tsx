@@ -164,7 +164,7 @@ export default function TutorApplications() {
                       backgroundColor: colors.primaryLight, color: colors.primary,
                       fontSize: '12px', fontWeight: '500'
                     }}>
-                      {app.vacancy.subject}
+                      {app.vacancy.subjects?.join(', ') || app.vacancy.subject}
                     </span>
                     {app.vacancy.location && (
                       <span style={{ fontSize: '13px', color: colors.secondaryText, display: 'flex', alignItems: 'center', gap: '4px' }}>

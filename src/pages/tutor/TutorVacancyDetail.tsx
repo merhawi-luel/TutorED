@@ -28,8 +28,8 @@ interface VacancyData {
   id: string;
   title: string;
   description: string;
-  subject: string;
-  grade: string;
+  subjects: string[];
+  grades: string[];
   requiredEducation: string;
   requiredExperience: number;
   location: string;
@@ -256,7 +256,7 @@ export default function TutorVacancyDetail() {
                     <BookOpen size={18} className="mx-auto mb-1.5" style={{ color: colors.accent }} />
                     <p className="text-xs" style={{ color: colors.textMuted }}>Subject</p>
                     <p className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
-                      {vacancy.subject}
+                      {vacancy.subjects?.join(', ') || vacancy.subject}
                     </p>
                   </div>
                   <div
@@ -266,7 +266,7 @@ export default function TutorVacancyDetail() {
                     <GraduationCap size={18} className="mx-auto mb-1.5" style={{ color: colors.accent }} />
                     <p className="text-xs" style={{ color: colors.textMuted }}>Grade</p>
                     <p className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
-                      {vacancy.grade}
+                      {vacancy.grades?.join(', ') || vacancy.grade}
                     </p>
                   </div>
                   <div

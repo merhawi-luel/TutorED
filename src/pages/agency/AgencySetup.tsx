@@ -100,7 +100,7 @@ export default function AgencySetup({ onComplete }: AgencySetupProps) {
           >
             <Building2 size={32} style={{ color: "var(--accent)" }} />
           </div>
-          <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">Welcome to Mentora!</h1>
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">Welcome to EduVerify!</h1>
           <p className="text-[var(--text-secondary)]">Let's set up your organization to start recruiting tutors</p>
         </div>
 

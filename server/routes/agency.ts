@@ -169,16 +169,16 @@ router.post("/vacancies", requireAuth, requireRole("agency"), async (req, res) =
     console.log(`🏢 Organization found and verified: ${org.name} (ID: ${org.id})`);
 
     const {
-      title, description, subject, grade,
+      title, description, subjects, grades,
       requiredEducation, requiredExperience,
       location, teachingMode, salary, availability, deadline,
     } = req.body;
 
-    console.log(`📋 Vacancy details:`, { title, subject, grade, location });
+    console.log(`📋 Vacancy details:`, { title, subjects, grades, location });
 
-    if (!title || !subject || !grade) {
+    if (!title || !subjects?.length || !grades?.length) {
       console.log(`❌ Missing required fields`);
-      return res.status(400).json({ error: "Title, subject, and grade are required" });
+      return res.status(400).json({ error: "Title, at least one subject, and at least one grade are required" });
     }
 
     const [vacancy] = await db
@@ -187,8 +187,8 @@ router.post("/vacancies", requireAuth, requireRole("agency"), async (req, res) =
         organizationId: org.id,
         title,
         description: description || "",
-        subject,
-        grade,
+        subjects,
+        grades,
         requiredEducation: requiredEducation || "",
         requiredExperience: requiredExperience || 0,
         location: location || "",
@@ -201,7 +201,7 @@ router.post("/vacancies", requireAuth, requireRole("agency"), async (req, res) =
       .returning();
 
     console.log(`✅ Vacancy created successfully: ${vacancy.id}`);
-    console.log(`📍 Organization: ${org.name}, Title: ${vacancy.title}, Grade: ${vacancy.grade}`);
+    console.log(`📍 Organization: ${org.name}, Title: ${vacancy.title}, Subjects: ${vacancy.subjects?.join(', ')}, Grades: ${vacancy.grades?.join(', ')}`);
 
     res.status(201).json(vacancy);
   } catch (error) {

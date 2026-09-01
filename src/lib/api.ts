@@ -175,7 +175,7 @@ export const parentApi = {
     request<any>(`/parent/vacancies/${id}/close`, { method: "PUT" }),
   getAgencies: () => request<any[]>("/parent/agencies"),
   getSubjects: () => request<string[]>("/parent/subjects"),
-  contactAgency: (data: { organizationId?: string; subject: string; grade: string; location?: string; notes?: string; parentName?: string; parentEmail?: string; parentPhone?: string }) =>
+  contactAgency: (data: { organizationId?: string; subjects: string[]; grades: string[]; location?: string; notes?: string; parentName?: string; parentEmail?: string; parentPhone?: string }) =>
     request<any>("/parent/contact-agency", { method: "POST", body: JSON.stringify(data) }),
   getRequests: () => request<any[]>("/parent/requests"),
 

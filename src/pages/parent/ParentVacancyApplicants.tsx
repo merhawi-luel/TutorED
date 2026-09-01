@@ -30,8 +30,8 @@ import type { TutorProfile } from "@/types";
 interface VacancyInfo {
   id: string;
   title: string;
-  subject: string;
-  grade: string;
+  subjects: string[];
+  grades: string[];
   location: string;
   salary: string;
   deadline: string;
@@ -301,10 +301,10 @@ export default function ParentVacancyApplicants({ vacancyId, onBack }: Props) {
 
           <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--text-muted)]">
             <span className="flex items-center gap-1.5">
-              <GraduationCap size={12} /> {vacancy.grade}
+              <GraduationCap size={12} /> {vacancy.grades?.join(', ') || '—'}
             </span>
             <span className="flex items-center gap-1.5">
-              <Briefcase size={12} /> {vacancy.subject}
+              <Briefcase size={12} /> {vacancy.subjects?.join(', ') || '—'}
             </span>
             <span className="flex items-center gap-1.5">
               <MapPin size={12} /> {vacancy.location || "TBD"}
