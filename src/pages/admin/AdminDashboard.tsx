@@ -9,6 +9,7 @@ import AdminTutors from "./AdminTutors";
 import AdminAgencies from "./AdminAgencies";
 import AdminAdmins from "./AdminAdmins";
 import AdminSettings from "./AdminSettings";
+import AdminAgencyReceipts from "./AdminAgencyReceipts";
 
 const TAB_COMPONENTS: Record<AdminTab, React.ComponentType<{ onTabChange?: (tab: AdminTab) => void }>> = {
   overview: AdminOverview,
@@ -17,6 +18,7 @@ const TAB_COMPONENTS: Record<AdminTab, React.ComponentType<{ onTabChange?: (tab:
   education: AdminEducation,
   tutors: AdminTutors,
   agencies: AdminAgencies,
+  "agency-receipts": AdminAgencyReceipts,
   admins: AdminAdmins,
   settings: AdminSettings,
 };

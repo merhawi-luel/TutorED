@@ -4,6 +4,7 @@ import { DataProvider } from "@/context/DataContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import Landing from "@/pages/public/Landing";
 import VacanciesBrowse from "@/pages/public/VacanciesBrowse";
+import TutorVacancyDetail from "@/pages/tutor/TutorVacancyDetail";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
 import TutorDashboard from "@/pages/tutor/TutorDashboard";
@@ -13,6 +14,7 @@ import ParentDashboard from "@/pages/parent/ParentDashboard";
 import Callback from "@/pages/auth/Callback";
 import Confirm from "@/pages/auth/Confirm";
 import PaymentStatus from "@/pages/agency/PaymentStatus";
+import VacancyDetail from "@/pages/agency/VacancyDetail";
 import type { ReactNode } from "react";
 
 // ─── Protected Route ───────────────────────────────────────────
@@ -57,6 +59,7 @@ function AppRoutes() {
       <Route path="/auth/callback" element={<Callback />} />
       <Route path="/auth/confirm" element={<Confirm />} />
       <Route path="/vacancies" element={<VacanciesBrowse />} />
+      <Route path="/vacancies/:vacancyId" element={<TutorVacancyDetail />} />
 
 
       {/* Tutor Dashboard */}
@@ -75,6 +78,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={["agency"]}>
             <PaymentStatus />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/agency/vacancy/:vacancyId"
+        element={
+          <ProtectedRoute allowedRoles={["agency"]}>
+            <VacancyDetail />
           </ProtectedRoute>
         }
       />

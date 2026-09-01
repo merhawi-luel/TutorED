@@ -210,6 +210,32 @@ router.post("/vacancies", requireAuth, requireRole("agency"), async (req, res) =
   }
 });
 
+// ─── GET /api/agency/vacancies/:id ───────────────────────────
+// Get a single vacancy by ID (must belong to this agency)
+
+router.get("/vacancies/:id", requireAuth, requireRole("agency"), async (req, res) => {
+  try {
+    const org = await getAgencyOrg(req.user!.userId);
+    if (!org) {
+      return res.status(404).json({ error: "Organization not found" });
+    }
+
+    const [vacancy] = await db
+      .select()
+      .from(vacancies)
+      .where(and(eq(vacancies.id, req.params.id), eq(vacancies.organizationId, org.id)));
+
+    if (!vacancy) {
+      return res.status(404).json({ error: "Vacancy not found" });
+    }
+
+    res.json(vacancy);
+  } catch (error) {
+    console.error("Get vacancy error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // ─── PUT /api/agency/vacancies/:id ───────────────────────────
 
 router.put("/vacancies/:id", requireAuth, requireRole("agency"), async (req, res) => {

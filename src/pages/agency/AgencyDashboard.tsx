@@ -3,6 +3,8 @@ import AgencySidebar, { type AgencyTab } from "@/components/layout/AgencySidebar
 import { useTheme } from "@/context/ThemeContext";
 import AgencyOverview from "./AgencyOverview";
 import AgencyVacancies from "./AgencyVacancies";
+import AgencyMyPosts from "./AgencyMyPosts";
+import AgencyVerification from "./AgencyVerification";
 import AgencyApplicants from "./AgencyApplicants";
 import AgencyTutors from "./AgencyTutors";
 import AgencyOrganization from "./AgencyOrganization";
@@ -14,6 +16,8 @@ import { useData } from "@/context/DataContext";
 const TAB_COMPONENTS: Record<AgencyTab, React.ComponentType<{ onTabChange?: (tab: AgencyTab) => void }>> = {
   overview: AgencyOverview,
   vacancies: AgencyVacancies,
+  "my-posts": AgencyMyPosts,
+  verification: AgencyVerification,
   applicants: AgencyApplicants,
   requests: AgencyRequests,
   tutors: AgencyTutors,

@@ -551,7 +551,7 @@ router.get("/agencies", requireAuth, requireRole("admin"), async (_req, res) => 
         description: organizations.description,
         location: organizations.location,
         isVerified: organizations.isVerified,
-        paymentStatus: organizations.paymentStatus,
+        verificationStatus: organizations.verificationStatus,
         createdAt: organizations.createdAt,
         ownerUserId: organizations.ownerUserId,
       })
@@ -606,8 +606,8 @@ router.put("/agencies/:id/verify", requireAuth, requireRole("admin"), async (req
       .update(organizations)
       .set({ 
         isVerified: true, 
-        paymentStatus: "paid",
-        paidAt: new Date(),
+        verificationStatus: "verified",
+        verifiedAt: new Date(),
       })
       .where(eq(organizations.id, orgIdFromBody))
       .returning();
@@ -643,12 +643,12 @@ router.put("/agencies/:id/reject", requireAuth, requireRole("admin"), async (req
       return res.status(404).json({ error: "Organization not found" });
     }
 
-    // Reset payment status and ask for resubmission
+    // Reset verification status and ask for resubmission
     const [updated] = await db
       .update(organizations)
       .set({ 
         isVerified: false,
-        paymentStatus: "unpaid",
+        verificationStatus: "unverified",
       })
       .where(eq(organizations.id, orgId))
       .returning();
@@ -662,6 +662,125 @@ router.put("/agencies/:id/reject", requireAuth, requireRole("admin"), async (req
     });
   } catch (error) {
     console.error("❌ Reject agency error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── GET /api/admin/agency-receipts ────────────────────────
+// Fetch organizations with pending verification receipts
+
+router.get("/agency-receipts", requireAuth, requireRole("admin"), async (_req, res) => {
+  try {
+    // Get all organizations with pending verification
+    const pendingOrgs = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.verificationStatus, "pending"))
+      .orderBy(desc(organizations.createdAt));
+
+    // Enrich with owner info and receipt document
+    const enriched = await Promise.all(
+      pendingOrgs.map(async (org) => {
+        const [owner] = await db
+          .select({ name: users.name, email: users.email })
+          .from(users)
+          .where(eq(users.id, org.ownerUserId));
+
+        // Get the receipt document uploaded by the owner
+        const [receipt] = org.ownerUserId
+          ? await db
+              .select()
+              .from(documents)
+              .where(
+                and(
+                  eq(documents.tutorId, org.ownerUserId),
+                  eq(documents.type, "government_id")
+                )
+              )
+              .orderBy(desc(documents.submittedAt))
+              .limit(1)
+          : [undefined];
+
+        return {
+          orgId: org.id,
+          orgName: org.name,
+          orgDescription: org.description,
+          orgLocation: org.location,
+          ownerName: owner?.name || "Unknown",
+          ownerEmail: owner?.email || "",
+          receipt: receipt
+            ? {
+                id: receipt.id,
+                fileName: receipt.fileName,
+                fileKey: receipt.fileKey,
+                status: receipt.status,
+                submittedAt: receipt.submittedAt,
+                reviewerNote: receipt.reviewerNote,
+              }
+            : null,
+          createdAt: org.createdAt,
+        }
+      })
+    );
+
+    res.json(enriched);
+  } catch (error) {
+    console.error("❌ Get agency receipts error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── GET /api/admin/agency-receipts/:orgId/preview ──────────
+// Preview a receipt document for an agency
+
+router.get("/agency-receipts/:orgId/preview", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const [org] = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.id, req.params.orgId));
+
+    if (!org) {
+      return res.status(404).json({ error: "Organization not found" });
+    }
+
+    if (!org.ownerUserId) {
+      return res.status(404).json({ error: "Organization has no owner" });
+    }
+
+    // Get the most recent receipt from the owner
+    const [receipt] = await db
+      .select()
+      .from(documents)
+      .where(
+        and(
+          eq(documents.tutorId, org.ownerUserId),
+          eq(documents.type, "government_id")
+        )
+      )
+      .orderBy(desc(documents.submittedAt))
+      .limit(1);
+
+    if (!receipt || !receipt.fileKey) {
+      return res.status(404).json({ error: "No receipt found" });
+    }
+
+    const { data, error } = await storageClient.storage
+      .from(BUCKET_NAME)
+      .createSignedUrl(receipt.fileKey, 7200);
+
+    if (error) {
+      console.error("Supabase signed URL error:", error);
+      return res.status(500).json({ error: "Failed to generate preview URL" });
+    }
+
+    res.json({
+      previewUrl: data.signedUrl,
+      fileName: receipt.fileName,
+      orgName: org.name,
+    });
+  } catch (error) {
+    console.error("❌ Preview receipt error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

@@ -43,11 +43,17 @@ router.post("/upload-receipt", requireAuth, requireRole("agency"), async (req, r
     const buffer = Buffer.from(file, "base64");
     const filePath = `receipts/${org.id}/${Date.now()}-${fileName}`;
 
+    // Determine content type from file extension
+    const ext = fileName.split(".").pop()?.toLowerCase() || "";
+    const contentType = ext === "pdf" ? "application/pdf"
+      : ext === "png" ? "image/png"
+      : "image/jpeg";
+
     // Upload to Supabase Storage
     const { error: uploadError } = await supabase.storage
       .from(BUCKET_NAME)
       .upload(filePath, buffer, {
-        contentType: "application/pdf",
+        contentType,
         upsert: false,
       });
 
@@ -56,26 +62,24 @@ router.post("/upload-receipt", requireAuth, requireRole("agency"), async (req, r
       return res.status(500).json({ error: "Failed to upload file" });
     }
 
-    // Create document record
+    // Create document record (using government_id type for receipt)
     const [doc] = await db
       .insert(documents)
       .values({
-        userId: req.user!.userId,
-        type: "receipt",
-        documentUrl: filePath,
+        tutorId: req.user!.userId,
+        type: "government_id",
+        title: description || "Payment receipt for agency verification",
+        fileName: fileName,
+        fileKey: filePath,
         status: "pending",
-        metadata: JSON.stringify({
-          organizationId: org.id,
-          description: description || "Payment receipt for agency verification",
-        }),
       })
       .returning();
 
-    // Update organization status
+    // Update organization verification status
     await db
       .update(organizations)
       .set({
-        paymentStatus: "pending",
+        verificationStatus: "pending",
       })
       .where(eq(organizations.id, org.id));
 
@@ -98,9 +102,9 @@ router.get("/status", requireAuth, requireRole("agency"), async (req, res) => {
   try {
     const [org] = await db
       .select({
-        paymentStatus: organizations.paymentStatus,
+        verificationStatus: organizations.verificationStatus,
         isVerified: organizations.isVerified,
-        paidAt: organizations.paidAt,
+        verifiedAt: organizations.verifiedAt,
       })
       .from(organizations)
       .where(eq(organizations.ownerUserId, req.user!.userId));
@@ -110,9 +114,9 @@ router.get("/status", requireAuth, requireRole("agency"), async (req, res) => {
     }
 
     res.json({
-      paymentStatus: org.paymentStatus,
+      verificationStatus: org.verificationStatus,
       isVerified: org.isVerified,
-      paidAt: org.paidAt,
+      verifiedAt: org.verifiedAt,
     });
   } catch (error) {
     console.error("Payment status error:", error);

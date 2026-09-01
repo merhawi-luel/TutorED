@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/context/AuthContext";
@@ -256,23 +257,13 @@ export default function VacanciesBrowse() {
                         <span className="text-xs ml-2" style={{ color: colors.textMuted }}>Due {v.deadline}</span>
                       )}
                     </div>
-                    {user?.role === "tutor" ? (
-                      <a
-                        href="/tutor"
-                        className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all hover:brightness-110"
-                        style={{ background: colors.accent, color: "#fff" }}
-                      >
-                        Apply
-                      </a>
-                    ) : (
-                      <a
-                        href="/login"
-                        className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all hover:brightness-110"
-                        style={{ background: colors.accentBg, color: colors.accent, border: `1px solid ${colors.accentBorder}` }}
-                      >
-                        Log in to Apply
-                      </a>
-                    )}
+                    <Link
+                      to={`/vacancies/${v.id}`}
+                      className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all hover:brightness-110"
+                      style={{ background: colors.accent, color: "#fff" }}
+                    >
+                      View Details
+                    </Link>
                   </div>
                 </div>
               ))}

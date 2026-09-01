@@ -144,6 +144,13 @@ export const adminApi = {
 
   getTutors: () => request<any[]>("/admin/tutors"),
   getAgencies: () => request<any[]>("/admin/agencies"),
+  getAgencyReceipts: () => request<any[]>("/admin/agency-receipts"),
+  previewAgencyReceipt: (orgId: string) =>
+    request<{ previewUrl: string; fileName: string; orgName: string }>(`/admin/agency-receipts/${orgId}/preview`),
+  verifyAgency: (orgId: string) =>
+    request<any>(`/admin/agencies/${orgId}/verify`, { method: "PUT" }),
+  rejectAgency: (orgId: string, reason?: string) =>
+    request<any>(`/admin/agencies/${orgId}/reject`, { method: "PUT", body: JSON.stringify({ reason }) }),
   getAdmins: () => request<any[]>("/admin/admins"),
   createAdmin: (data: { name: string; email: string; password: string }) =>
     request<any>("/admin/create-admin", { method: "POST", body: JSON.stringify(data) }),

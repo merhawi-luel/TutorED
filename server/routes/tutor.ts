@@ -382,6 +382,58 @@ router.get("/vacancies", async (req, res) => {
   }
 });
 
+// ─── GET /api/tutor/vacancies/:id (public single vacancy) ──
+
+router.get("/vacancies/:id", async (req, res) => {
+  try {
+    const [vacancy] = await db
+      .select()
+      .from(vacancies)
+      .where(eq(vacancies.id, req.params.id));
+
+    if (!vacancy) {
+      return res.status(404).json({ error: "Vacancy not found" });
+    }
+
+    // Enrich with organization or parent info
+    let organizationName = "Unknown";
+    let organizationLocation = "";
+    let organizationDescription = "";
+    let postedBy = "";
+
+    if (vacancy.organizationId) {
+      const [org] = await db
+        .select()
+        .from(organizations)
+        .where(eq(organizations.id, vacancy.organizationId));
+      if (org) {
+        organizationName = org.name;
+        organizationLocation = org.location || "";
+        organizationDescription = org.description || "";
+        postedBy = org.name;
+      }
+    } else if (vacancy.parentId) {
+      const [parent] = await db
+        .select({ name: users.name })
+        .from(users)
+        .where(eq(users.id, vacancy.parentId));
+      organizationName = parent?.name ?? "Parent";
+      postedBy = parent?.name ?? "Parent";
+    }
+
+    res.json({
+      ...vacancy,
+      organizationName,
+      organizationLocation,
+      organizationDescription,
+      postedBy,
+    });
+  } catch (error) {
+    console.error("Get vacancy detail error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // ─── POST /api/applications ──────────────────────────────────
 
 router.post("/applications", requireAuth, requireRole("tutor"), async (req, res) => {

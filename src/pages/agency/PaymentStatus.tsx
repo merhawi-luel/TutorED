@@ -34,7 +34,7 @@ export default function PaymentStatus() {
           setStatus("verified");
           setMessage("Your agency is verified! You can now post vacancies.");
           setTimeout(() => navigate("/agency"), 3000);
-        } else if (data.paymentStatus === "pending") {
+        } else if (data.verificationStatus === "pending") {
           setStatus("pending");
           setMessage("Your receipt is under review. Please wait for admin approval.");
         } else {

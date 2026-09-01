@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Sun,
   Moon,
+  Receipt,
 } from "lucide-react";
 
 export type AdminTab =
@@ -25,6 +26,7 @@ export type AdminTab =
   | "education"
   | "tutors"
   | "agencies"
+  | "agency-receipts"
   | "admins"
   | "settings";
 
@@ -40,6 +42,7 @@ const NAV_ITEMS: { tab: AdminTab; label: string; icon: typeof LayoutDashboard }[
   { tab: "education", label: "Education Review", icon: GraduationCap },
   { tab: "tutors", label: "Tutors", icon: Users },
   { tab: "agencies", label: "Agencies", icon: Building2 },
+  { tab: "agency-receipts", label: "Agency Receipts", icon: Receipt },
   { tab: "admins", label: "Admins", icon: Shield },
 ];
 

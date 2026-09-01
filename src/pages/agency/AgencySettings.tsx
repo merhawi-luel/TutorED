@@ -7,7 +7,6 @@ import {
   User,
   Lock,
   Bell,
-  CreditCard,
   Shield,
   Save,
   CheckCircle,
@@ -15,7 +14,6 @@ import {
   Loader2,
   Clock,
   BadgeCheck,
-  XCircle,
 } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
@@ -36,61 +34,30 @@ export default function AgencySettings() {
   const [vacancyDeadlines, setVacancyDeadlines] = useState(true);
   const [saved, setSaved] = useState(false);
 
-  // Payment state
-  const [paymentInfo, setPaymentInfo] = useState<{ paymentStatus: string; txRef: string | null; paidAt: string | null; isVerified: boolean } | null>(null);
-  const [paymentLoading, setPaymentLoading] = useState(true);
-  const [paying, setPaying] = useState(false);
+  // Verification state
+  const [verificationInfo, setVerificationInfo] = useState<{ verificationStatus: string; isVerified: boolean; verifiedAt: string | null } | null>(null);
+  const [verificationLoading, setVerificationLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPaymentStatus = async () => {
+    const fetchVerificationStatus = async () => {
       try {
         const response = await fetch(`${API_BASE}/payment/status`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         if (response.ok) {
           const data = await response.json();
-          setPaymentInfo(data);
+          setVerificationInfo(data);
         }
       } catch (err) {
-        console.error("Failed to fetch payment status:", err);
+        console.error("Failed to fetch verification status:", err);
       } finally {
-        setPaymentLoading(false);
+        setVerificationLoading(false);
       }
     };
-    fetchPaymentStatus();
+    fetchVerificationStatus();
   }, []);
 
-  const handlePayEntrance = async () => {
-    if (!user) return;
-    setPaying(true);
-    try {
-      const [firstName, ...lastNameParts] = (user.name || "").split(" ");
-      const response = await fetch(`${API_BASE}/agency/pay-entrance`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          email: user.email,
-          firstName: firstName || "Agency",
-          lastName: lastNameParts.join(" ") || "User",
-        }),
-      });
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || "Failed to initialize payment");
-      }
-      const { checkoutUrl } = await response.json();
-      window.location.href = checkoutUrl;
-    } catch (err: any) {
-      alert(err.message || "Payment failed. Please try again.");
-    } finally {
-      setPaying(false);
-    }
-  };
-
-  const paymentStatus = paymentInfo?.paymentStatus || "unpaid";
+  const verificationStatus = verificationInfo?.verificationStatus || "unverified";
 
   const inputStyle = { background: "var(--bg-input)", border: "1px solid var(--border-color)" };
 
@@ -287,22 +254,22 @@ export default function AgencySettings() {
         </div>
       </section>
 
-      {/* Get Verified */}
+      {/* Verification Status */}
       <section
         className={`rounded-2xl p-6 space-y-4 fade-up delay-350 ${inView ? "in-view" : ""}`}
         style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}
       >
         <div className="flex items-center gap-2 mb-1">
           <BadgeCheck size={16} style={{ color: "var(--accent)" }} />
-          <h2 className="text-sm font-medium text-gray-300">Get Verified</h2>
+          <h2 className="text-sm font-medium text-gray-300">Organization Verification</h2>
         </div>
 
-        {paymentLoading ? (
+        {verificationLoading ? (
           <div className="flex items-center gap-2 text-[var(--text-muted)] text-sm py-3">
             <Loader2 size={14} className="animate-spin" />
             Checking verification status...
           </div>
-        ) : paymentStatus === "paid" ? (
+        ) : verificationStatus === "verified" ? (
           <div className="space-y-3">
             <div
               className="rounded-xl px-4 py-3 flex items-center gap-3"
@@ -316,13 +283,13 @@ export default function AgencySettings() {
                 </div>
               </div>
             </div>
-            {paymentInfo?.paidAt && (
+            {verificationInfo?.verifiedAt && (
               <p className="text-xs text-[var(--text-faint)]">
-                Verified on {new Date(paymentInfo.paidAt).toLocaleDateString()}
+                Verified on {new Date(verificationInfo.verifiedAt).toLocaleDateString()}
               </p>
             )}
           </div>
-        ) : paymentStatus === "pending" ? (
+        ) : verificationStatus === "pending" ? (
           <div className="space-y-3">
             <div
               className="rounded-xl px-4 py-3 flex items-center gap-3"
@@ -330,50 +297,26 @@ export default function AgencySettings() {
             >
               <Clock size={18} style={{ color: "var(--badge-pending-color)" }} />
               <div>
-                <div className="text-sm text-yellow-400 font-medium">Payment Processing</div>
+                <div className="text-sm text-yellow-400 font-medium">Verification Under Review</div>
                 <div className="text-xs text-[var(--text-muted)]">
-                  Your payment is being processed. This may take a few minutes.
+                  Your receipt is being reviewed by our admin team.
                 </div>
               </div>
             </div>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 rounded-xl text-xs font-medium transition-all"
-              style={{ background: "var(--badge-pending-bg)", color: "var(--badge-pending-color)", border: "1px solid rgba(245,158,11,0.25)" }}
-            >
-              Refresh Status
-            </button>
           </div>
         ) : (
           <div className="space-y-3">
             <p className="text-xs text-[var(--text-muted)]">
-              Pay a one-time entrance fee to get verified and start posting vacancies.
+              Upload a payment receipt to get verified and start posting vacancies.
             </p>
-            <div className="flex items-center justify-between rounded-xl px-4 py-3" style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}>
-              <div>
-                <div className="text-sm text-[var(--text-primary)]">Entrance Fee</div>
-                <div className="text-xs text-[var(--text-muted)]">One-time payment, non-refundable unless rejected</div>
-              </div>
-              <span className="text-lg font-bold text-green-400">5,000 ETB</span>
-            </div>
-            <button
-              onClick={handlePayEntrance}
-              disabled={paying}
-              className="w-full px-6 py-3 rounded-xl text-sm font-medium transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+            <a
+              href="/agency"
+              className="w-full px-6 py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2"
               style={{ background: "var(--accent)", color: "#fff" }}
             >
-              {paying ? (
-                <>
-                  <Loader2 size={14} className="animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <CreditCard size={14} />
-                  Pay Entrance Fee
-                </>
-              )}
-            </button>
+              <BadgeCheck size={14} />
+              Go to Verification Page
+            </a>
           </div>
         )}
       </section>

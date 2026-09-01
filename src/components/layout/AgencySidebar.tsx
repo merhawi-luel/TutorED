@@ -15,13 +15,17 @@ import {
   Inbox,
   Sun,
   Moon,
+  ShieldCheck,
+  FileText,
 } from "lucide-react";
 
 export type AgencyTab =
   | "overview"
   | "vacancies"
+  | "my-posts"
   | "applicants"
   | "requests"
+  | "verification"
   | "tutors"
   | "organization"
   | "settings";
@@ -34,9 +38,11 @@ interface SidebarProps {
 
 const NAV_ITEMS: { tab: AgencyTab; label: string; icon: typeof LayoutDashboard }[] = [
   { tab: "overview", label: "Overview", icon: LayoutDashboard },
-  { tab: "vacancies", label: "Vacancies", icon: Briefcase },
+  { tab: "vacancies", label: "Create Vacancy", icon: Briefcase },
+  { tab: "my-posts", label: "My Posts", icon: FileText },
   { tab: "applicants", label: "Applicants", icon: Send },
   { tab: "requests", label: "Recruit Requests", icon: Inbox },
+  { tab: "verification", label: "Verify Organization", icon: ShieldCheck },
   { tab: "tutors", label: "Find Tutors", icon: Search },
   { tab: "organization", label: "Organization", icon: Building2 },
 ];
