@@ -20,7 +20,7 @@ import {
   Shield,
   User,
 } from "lucide-react";
-import type { TutorProfile, EducationEntry } from "@/types";
+import type { ApplicationStatus, TutorProfile, EducationEntry } from "@/types";
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -86,6 +86,14 @@ const VERIFICATION_CONFIG: Record<string, { color: string; label: string }> = {
   suspended: { color: "var(--danger-color)", label: "Suspended" },
 };
 
+const ACTIONS: { status: ApplicationStatus; label: string; color: string }[] = [
+  { status: "under_review", label: "Review", color: "var(--badge-info-color)" },
+  { status: "shortlisted", label: "Shortlist", color: "var(--accent)" },
+  { status: "interview", label: "Interview", color: "var(--badge-purple-color)" },
+  { status: "accepted", label: "Accept", color: "var(--accent)" },
+  { status: "rejected", label: "Reject", color: "var(--danger-color)" },
+];
+
 // ─── Main Component ─────────────────────────────────────────────
 
 export default function ParentApplicants() {
@@ -109,6 +117,19 @@ export default function ParentApplicants() {
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewDescription, setReviewDescription] = useState("");
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  const handleStatusChange = async (appId: string, status: ApplicationStatus) => {
+    try {
+      await parentApi.updateApplicationStatus(appId, status);
+      const label = STATUS_CONFIG[status]?.label ?? status;
+      setSuccessMsg(`Application updated to "${label}".`);
+      setTimeout(() => setSuccessMsg(null), 2500);
+      fetchApplicants();
+    } catch (err) {
+      console.error("Failed to update status:", err);
+    }
+  };
 
   const fetchApplicants = useCallback(async () => {
     setLoading(true);
@@ -216,6 +237,16 @@ export default function ParentApplicants() {
           <span className="font-medium text-gray-300">Privacy Notice:</span> When a tutor applies to your vacancy, they consent to sharing their full profile and verified documents with you. You can view their education, experience, subjects, and uploaded documents (ID, degrees, certificates). This information is confidential and should only be used for recruitment purposes.
         </div>
       </div>
+
+      {/* Success */}
+      {successMsg && (
+        <div
+          className="rounded-xl px-5 py-3 flex items-center gap-3 text-sm"
+          style={{ background: "var(--accent-bg)", border: "1px solid var(--accent-border)", color: "var(--accent)" }}
+        >
+          <CheckCircle2 size={16} /> {successMsg}
+        </div>
+      )}
 
       {/* Loading */}
       {loading && (
@@ -436,6 +467,24 @@ export default function ParentApplicants() {
                         >
                           <Eye size={13} /> View Full Profile & Documents
                         </button>
+                        {ACTIONS.map((action) => {
+                          const isActive = applicant.status === action.status;
+                          return (
+                            <button
+                              key={action.status}
+                              onClick={() => handleStatusChange(applicant.id, action.status)}
+                              className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                              style={{
+                                background: isActive ? `${action.color}25` : `${action.color}10`,
+                                color: action.color,
+                                border: `1.5px solid ${isActive ? action.color : `${action.color}40`}`,
+                                opacity: isActive ? 1 : 0.8,
+                              }}
+                            >
+                              {action.label}
+                            </button>
+                          );
+                        })}
                         {applicant.status === "completed" && !hasReviewed(applicant.id) && (
                           <button
                             onClick={() => setReviewModal({ isOpen: true, applicationId: applicant.id, tutorName: applicant.tutorName })}

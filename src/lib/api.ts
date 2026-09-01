@@ -184,6 +184,10 @@ export const parentApi = {
   downloadTutorDocument: (docId: string) =>
     request<{ downloadUrl: string; fileName: string }>(`/parent/documents/${docId}/download`),
 
+  // Applicant status
+  updateApplicationStatus: (appId: string, status: string) =>
+    request<any>(`/parent/applications/${appId}/status`, { method: "PUT", body: JSON.stringify({ status }) }),
+
   // Reviews
   submitReview: (data: { applicationId: string; rating: number; description?: string }) =>
     request<any>("/parent/reviews", { method: "POST", body: JSON.stringify(data) }),

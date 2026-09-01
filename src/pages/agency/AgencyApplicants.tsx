@@ -350,8 +350,8 @@ export default function AgencyApplicants() {
                             style={{
                               background: isActive ? `${action.color}25` : `${action.color}10`,
                               color: action.color,
-                              border: `1px solid ${isActive ? action.color : `${action.color}30`}`,
-                              opacity: isActive ? 1 : 0.7,
+                              border: `1.5px solid ${isActive ? action.color : `${action.color}40`}`,
+                              opacity: isActive ? 1 : 0.8,
                             }}
                           >
                             {action.label}

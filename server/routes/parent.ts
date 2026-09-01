@@ -557,6 +557,48 @@ router.get("/documents/:id/download", requireAuth, async (req, res) => {
   }
 });
 
+// ─── PUT /api/parent/applications/:id/status ─────────────
+router.put("/applications/:id/status", requireAuth, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const validStatuses = ["applied", "under_review", "shortlisted", "interview", "accepted", "rejected"];
+
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: "Invalid status" });
+    }
+
+    const userId = req.user!.userId;
+
+    // Find the application and verify it belongs to this parent's vacancy
+    const [app] = await db
+      .select()
+      .from(applications)
+      .innerJoin(vacancies, eq(applications.vacancyId, vacancies.id))
+      .where(
+        and(
+          eq(applications.id, req.params.id),
+          eq(vacancies.parentId, userId)
+        )
+      )
+      .limit(1);
+
+    if (!app) {
+      return res.status(404).json({ error: "Application not found or not authorized" });
+    }
+
+    const [updated] = await db
+      .update(applications)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(applications.id, req.params.id))
+      .returning();
+
+    res.json(updated);
+  } catch (error) {
+    console.error("Update application status error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // ─── POST /api/parent/reviews ─────────────────────────────
 router.post("/reviews", requireAuth, async (req, res) => {
   try {
