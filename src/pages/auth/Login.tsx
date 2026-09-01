@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { LogIn, AlertCircle, Eye, EyeOff, CheckCircle, ArrowLeft } from "lucide-react";
@@ -7,14 +7,12 @@ import { LogIn, AlertCircle, Eye, EyeOff, CheckCircle, ArrowLeft } from "lucide-
 export default function Login() {
   const { login, loginWithGoogle, verifyEmail, resendVerification } = useAuth();
   const { colors, isDark } = useTheme();
-  const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState<"tutor" | "agency" | "parent">("tutor");
 
   const [showVerify, setShowVerify] = useState(false);
   const [verifyCode, setVerifyCode] = useState("");
@@ -40,16 +38,16 @@ export default function Login() {
       return;
     }
 
-    const loginUser = result.user;
-    const redirect = loginUser?.role === "agency" ? "/agency" : loginUser?.role === "parent" ? "/parent" : loginUser?.role === "admin" ? "/admin" : "/tutor";
-    navigate(redirect);
+    // Login successful - AuthContext will update and PublicOnlyRoute will redirect
+    // No explicit navigation needed here
   };
 
   const handleGoogleLogin = async () => {
     setError(null);
     setLoading(true);
-    const err = await loginWithGoogle(role);
+    const err = await loginWithGoogle();
     if (err) { setError(err); setLoading(false); }
+    // Success - AuthContext will update and PublicOnlyRoute will handle redirect
   };
 
   const handleVerifyEmail = async () => {
