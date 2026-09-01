@@ -271,8 +271,8 @@ router.get("/subjects", requireAuth, async (_req, res) => {
     const orgSubjects = orgs.flatMap((o) => o.subjects || []);
 
     // Collect subjects from vacancies
-    const vacs = await db.select({ subject: vacancies.subject }).from(vacancies);
-    const vacSubjects = vacs.map((v) => v.subject).filter(Boolean);
+    const vacs = await db.select({ subjects: vacancies.subjects }).from(vacancies);
+    const vacSubjects = vacs.flatMap((v) => v.subjects || []);
 
     // Deduplicate and sort
     const all = Array.from(new Set([...orgSubjects, ...vacSubjects])).sort();
