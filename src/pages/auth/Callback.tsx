@@ -16,12 +16,7 @@ export default function Callback() {
       if (data.session) {
         const pendingRole = localStorage.getItem("pending_oauth_role") || "tutor";
         localStorage.removeItem("pending_oauth_role");
-        let role = data.session.user.user_metadata?.role;
-        if (!role) {
-          const { error: updateError } = await supabase.auth.updateUser({ data: { role: pendingRole } });
-          if (updateError) console.error(updateError);
-          role = pendingRole;
-        }
+        
         try {
           const API_BASE = import.meta.env.VITE_API_URL || "/api";
           const response = await fetch(`${API_BASE}/auth/callback`, {
@@ -29,10 +24,22 @@ export default function Callback() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ access_token: data.session.access_token, refresh_token: data.session.refresh_token }),
           });
-          if (!response.ok) { const d = await response.json(); throw new Error(d.error || "Failed to sync"); }
-        } catch (syncError: any) { setError(`Database sync failed: ${syncError.message}`); return; }
-        const redirect = role === "tutor" ? "/tutor" : role === "agency" ? "/agency" : role === "parent" ? "/parent" : "/admin";
-        navigate(redirect, { replace: true });
+          
+          if (!response.ok) { 
+            const d = await response.json(); 
+            throw new Error(d.error || "Failed to sync"); 
+          }
+          
+          // Get the user role from the backend response
+          const responseData = await response.json();
+          const role = responseData.user?.role || pendingRole;
+          
+          const redirect = role === "tutor" ? "/tutor" : role === "agency" ? "/agency" : role === "parent" ? "/parent" : "/admin";
+          navigate(redirect, { replace: true });
+        } catch (syncError: any) { 
+          setError(`Database sync failed: ${syncError.message}`); 
+          return;
+        }
       } else {
         navigate("/login", { replace: true });
       }
