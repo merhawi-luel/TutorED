@@ -32,20 +32,42 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
 ];
+
+// Add production and preview frontend URLs
 if (process.env.FRONTEND_URL) {
-  allowedOrigins.push(process.env.FRONTEND_URL);
+  // Support comma-separated origins
+  const frontendUrls = process.env.FRONTEND_URL.split(',').map(url => url.trim());
+  allowedOrigins.push(...frontendUrls);
 }
+
+console.log("🔒 CORS Configuration:");
+console.log("   Allowed origins:", allowedOrigins);
+console.log("   FRONTEND_URL:", process.env.FRONTEND_URL || "NOT SET");
+
 app.use(cors({
   origin: (origin, callback) => {
+    console.log(`🌐 CORS request from origin: ${origin || 'no-origin'}`);
+    
     // Allow requests with no origin (mobile apps, curl, etc.)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
+    if (!origin) {
+      console.log("   ✓ Allowed (no origin)");
       return callback(null, true);
     }
+    
+    if (allowedOrigins.includes(origin)) {
+      console.log("   ✓ Allowed (in allowedOrigins list)");
+      return callback(null, true);
+    }
+    
     // In production, also allow the frontend URL
     if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) {
+      console.log("   ✓ Allowed (matches FRONTEND_URL)");
       return callback(null, true);
     }
+    
+    console.log("   ✗ Blocked - not in allowed origins");
+    console.log("   Origin:", origin);
+    console.log("   Allowed:", allowedOrigins);
     callback(new Error("Not allowed by CORS"));
   },
   credentials: true,
@@ -61,6 +83,31 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/parent", parentRoutes);
 app.use("/api/payment", paymentRoutes);
+
+// ─── Debug endpoint ──────────────────────────────────────────
+
+app.get("/api/debug/routes", (_req, res) => {
+  res.json({
+    message: "API is working",
+    routes: {
+      auth: "/api/auth/*",
+      tutor: "/api/tutor/*",
+      agency: "/api/agency/*",
+      admin: "/api/admin/*",
+      upload: "/api/upload/*",
+      parent: "/api/parent/*",
+      payment: "/api/payment/*",
+    },
+    important: {
+      publicVacancies: "/api/tutor/vacancies",
+      health: "/api/health",
+    },
+    cors: {
+      allowedOrigins: allowedOrigins,
+      frontendUrl: process.env.FRONTEND_URL || "not set",
+    },
+  });
+});
 
 // ─── Health check ────────────────────────────────────────────
 
@@ -125,3 +172,20 @@ server.on("error", (error: any) => {
 setInterval(() => {
   // Heartbeat to prevent process from exiting
 }, 1000 * 60 * 60); // Every hour
+
+// ─── Keep-alive ping (prevent Render cold starts) ────────────
+
+if (process.env.NODE_ENV === 'production' && process.env.BACKEND_URL) {
+  // Ping self every 14 minutes to prevent Render from spinning down
+  setInterval(async () => {
+    try {
+      const url = `${process.env.BACKEND_URL}/api/health`;
+      console.log('⏰ Keep-alive ping:', url);
+      await fetch(url);
+    } catch (error) {
+      console.error('❌ Keep-alive ping failed:', error);
+    }
+  }, 14 * 60 * 1000); // 14 minutes
+  
+  console.log('🔄 Keep-alive enabled - pinging every 14 minutes');
+}

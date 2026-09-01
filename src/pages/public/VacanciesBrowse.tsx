@@ -23,13 +23,29 @@ export default function VacanciesBrowse() {
     const fetchVacancies = async () => {
       try {
         const API_BASE = import.meta.env.VITE_API_URL || "/api";
-        const res = await fetch(`${API_BASE}/tutor/vacancies`);
-        if (!res.ok) throw new Error("Failed to load vacancies");
+        console.log("Fetching vacancies from:", `${API_BASE}/tutor/vacancies`);
+        
+        const res = await fetch(`${API_BASE}/tutor/vacancies`, {
+          // Add timeout and retry support for cold starts
+          signal: AbortSignal.timeout(30000), // 30 second timeout for cold starts
+        });
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
         const data = await res.json();
+        console.log("Vacancies loaded:", data.length);
         setVacancies(data);
-      } catch (err) {
-        setError("Could not load vacancies. Please try again later.");
-        console.error(err);
+      } catch (err: any) {
+        console.error("Fetch vacancies error:", err);
+        
+        // Better error message for timeout (likely cold start)
+        if (err.name === 'AbortError' || err.name === 'TimeoutError') {
+          setError("Server is waking up (this can take 30-60 seconds on first load). Please refresh the page.");
+        } else {
+          setError("Could not load vacancies. Please try again later.");
+        }
       } finally {
         setLoading(false);
       }

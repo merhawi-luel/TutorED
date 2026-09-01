@@ -326,10 +326,11 @@ router.get("/verification", requireAuth, requireRole("tutor"), async (req, res) 
   }
 });
 
-// ─── GET /api/vacancies (browse all open) ────────────────────
+// ─── GET /api/tutor/vacancies (browse all open) ────────────────────
 
 router.get("/vacancies", async (req, res) => {
   try {
+    console.log("📋 GET /api/tutor/vacancies - Fetching all open vacancies");
     const allVacancies = await db
       .select({
         id: vacancies.id,
@@ -354,6 +355,8 @@ router.get("/vacancies", async (req, res) => {
       .where(eq(vacancies.status, "open"))
       .orderBy(desc(vacancies.createdAt));
 
+    console.log(`✅ Found ${allVacancies.length} open vacancies`);
+
     // Enrich with organization name (or parent name for parent-posted vacancies)
     const enriched = await Promise.all(
       allVacancies.map(async (v) => {
@@ -375,10 +378,20 @@ router.get("/vacancies", async (req, res) => {
       })
     );
 
+    console.log(`✅ Enriched vacancies, returning ${enriched.length} results`);
     res.json(enriched);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Get vacancies error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error details:", {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      cause: error.cause,
+    });
+    res.status(500).json({ 
+      error: "Internal server error",
+      message: error.cause?.detail || error.message 
+    });
   }
 });
 
