@@ -222,9 +222,33 @@ router.post("/contact-agency", requireAuth, async (req, res) => {
       .returning();
 
     res.status(201).json(request);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Contact agency error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error details:", {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      cause: error.cause,
+    });
+    
+    // Check for foreign key violation
+    if (error.cause?.code === "23503") {
+      if (error.cause?.constraint_name === "recruitment_requests_parent_id_fkey") {
+        return res.status(400).json({ 
+          error: "User account not found. Please log out and log in again." 
+        });
+      }
+      if (error.cause?.constraint_name === "recruitment_requests_organization_id_fkey") {
+        return res.status(400).json({ 
+          error: "Selected organization not found. Please try again." 
+        });
+      }
+    }
+    
+    res.status(500).json({ 
+      error: "Internal server error", 
+      message: error.cause?.detail || error.message 
+    });
   }
 });
 
