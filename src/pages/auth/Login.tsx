@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { LogIn, AlertCircle, Eye, EyeOff, CheckCircle, ArrowLeft } from "lucide-react";
@@ -7,6 +7,7 @@ import { LogIn, AlertCircle, Eye, EyeOff, CheckCircle, ArrowLeft } from "lucide-
 export default function Login() {
   const { login, loginWithGoogle, verifyEmail, resendVerification } = useAuth();
   const { colors, isDark } = useTheme();
+  const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,8 +39,19 @@ export default function Login() {
       return;
     }
 
-    // Login successful - AuthContext will update and PublicOnlyRoute will redirect
-    // No explicit navigation needed here
+    // Login successful - redirect based on user role
+    if (result.user) {
+      const redirectPath = 
+        result.user.role === "agency" ? "/agency" : 
+        result.user.role === "parent" ? "/parent" : 
+        result.user.role === "admin" ? "/admin" : 
+        "/tutor";
+      
+      // Small delay to ensure state updates
+      setTimeout(() => {
+        navigate(redirectPath, { replace: true });
+      }, 100);
+    }
   };
 
   const handleGoogleLogin = async () => {
