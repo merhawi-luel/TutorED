@@ -117,7 +117,7 @@ export const PRICING = [
   },
   {
     name: "Professional",
-    price: "$79",
+    price: "5000 Birr",
     period: "per month",
     desc: "For agencies actively recruiting.",
     features: [
