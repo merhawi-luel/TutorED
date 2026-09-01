@@ -1,7 +1,7 @@
 import { useTheme } from "@/context/ThemeContext";
 
 const FOOTER_COLUMNS = [
-  { title: "Platform", links: ["For Tutors", "For Agencies", "Verification", "Pricing"] },
+  { title: "Platform", links: ["For Tutors", "For Agencies", "For Parents", "Verification", "Pricing"] },
   { title: "Company", links: ["About", "Blog", "Careers", "Contact"] },
   { title: "Legal", links: ["Privacy", "Terms", "Security"] },
 ];

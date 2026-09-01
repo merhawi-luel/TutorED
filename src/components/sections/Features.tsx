@@ -1,25 +1,27 @@
 import { useTheme } from "@/context/ThemeContext";
-import { FEATURES_TUTOR, FEATURES_AGENCY } from "@/data/landing";
+import { FEATURES_TUTOR, FEATURES_AGENCY, FEATURES_PARENT } from "@/data/landing";
 import SectionHeader from "@/components/shared/SectionHeader";
 import { useInView } from "@/hooks/useInView";
 import { useLocation } from "react-router-dom";
 
-type Tab = "tutors" | "agencies";
+type Tab = "tutors" | "agencies" | "parents";
 
 function getTabFromHash(hash: string): Tab {
-  return hash === "for-agencies" ? "agencies" : "tutors";
+  if (hash === "for-agencies") return "agencies";
+  if (hash === "for-parents") return "parents";
+  return "tutors";
 }
 
 export default function Features() {
   const location = useLocation();
   const hash = location.hash.replace("#", "");
   const activeTab = getTabFromHash(hash);
-  const features = activeTab === "tutors" ? FEATURES_TUTOR : FEATURES_AGENCY;
+  const features = activeTab === "tutors" ? FEATURES_TUTOR : activeTab === "agencies" ? FEATURES_AGENCY : FEATURES_PARENT;
   const { ref: sectionRef, inView } = useInView();
   const { colors, isDark } = useTheme();
 
   const handleTabClick = (tab: Tab) => {
-    const sectionId = tab === "tutors" ? "for-tutors" : "for-agencies";
+    const sectionId = tab === "tutors" ? "for-tutors" : tab === "agencies" ? "for-agencies" : "for-parents";
     window.history.replaceState(null, "", `#${sectionId}`);
     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
   };
@@ -31,8 +33,9 @@ export default function Features() {
       className="py-16 sm:py-24 px-4 sm:px-6 md:px-12"
       style={{ background: isDark ? "linear-gradient(160deg, var(--bg-page) 0%, var(--bg-card) 50%, var(--bg-page) 100%)" : `linear-gradient(160deg, ${colors.bgPage} 0%, ${colors.bgCard} 50%, ${colors.bgPage} 100%)` }}
     >
-      {/* Anchor for "For Agencies" navbar link */}
+      {/* Anchors for navbar links */}
       <div id="for-agencies" style={{ height: 0, margin: 0, padding: 0 }} />
+      <div id="for-parents" style={{ height: 0, margin: 0, padding: 0 }} />
       <div className="max-w-6xl mx-auto">
         <div className={`fade-up ${inView ? "in-view" : ""}`}>
           <SectionHeader label="Features" title="Built for every role" />
@@ -41,7 +44,7 @@ export default function Features() {
         {/* Tab Switcher */}
         <div className={`text-center mb-10 sm:mb-12 fade-up delay-100 ${inView ? "in-view" : ""}`}>
           <div className="inline-flex rounded-xl p-1 gap-1" style={{ background: colors.bgInput }}>
-            {(["tutors", "agencies"] as const).map((tab) => (
+            {(["tutors", "agencies", "parents"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => handleTabClick(tab)}
@@ -52,7 +55,7 @@ export default function Features() {
                     : { color: colors.textMuted }
                 }
               >
-                {tab === "tutors" ? "For Tutors" : "For Agencies"}
+                {tab === "tutors" ? "For Tutors" : tab === "agencies" ? "For Agencies" : "For Parents"}
               </button>
             ))}
           </div>

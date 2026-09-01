@@ -1,4 +1,4 @@
-export const NAV_LINKS = ["For Tutors", "For Agencies", "How it Works", "Pricing"];
+export const NAV_LINKS = ["For Tutors", "For Agencies", "For Parents", "How it Works", "Pricing"];
 
 export const STATS = [
   { value: "500+", label: "Verified Tutors" },
@@ -15,7 +15,7 @@ export const PROBLEMS = [
       "No centralized professional identity",
       "Repeatedly submit the same CVs and documents",
       "Scattered vacancy posts across Telegram groups",
-      "Contact agencies one by one",
+      "No way to build a reputation over time",
     ],
   },
   {
@@ -25,7 +25,7 @@ export const PROBLEMS = [
       "Manual, time-consuming recruitment",
       "Re-request and re-check the same documents",
       "No centralized pool of verified educators",
-      "No reliable way to trust credentials",
+      "No visibility into tutor reviews or track record",
     ],
   },
   {
@@ -33,9 +33,9 @@ export const PROBLEMS = [
     icon: "",
     pain: [
       "Hard to verify if a tutor is truly qualified",
-      "Difficult to compare experience and reputation",
+      "Difficult to compare experience, reviews, and reputation",
       "Heavy reliance on informal referrals",
-      "No transparent credential trail",
+      "No way to leave feedback after a tutoring engagement",
     ],
   },
 ];
@@ -44,7 +44,7 @@ export const HOW_IT_WORKS = [
   {
     step: "01",
     title: "Build Your Profile",
-    desc: "Tutors create a rich professional identity — subjects, grades, teaching mode, experience, and availability.",
+    desc: "Tutors create a rich professional identity — subjects, grades, teaching mode, experience, education, and availability.",
     icon: "✦",
   },
   {
@@ -55,23 +55,40 @@ export const HOW_IT_WORKS = [
   },
   {
     step: "03",
-    title: "Apply Anywhere",
-    desc: "Your verified badge travels with you. Apply to agency vacancies without re-submitting documents.",
+    title: "Apply & Get Hired",
+    desc: "Your verified badge travels with you. Apply to vacancies, get shortlisted, and accepted by agencies or parents.",
     icon: "⟡",
+  },
+  {
+    step: "04",
+    title: "Build Reputation",
+    desc: "After completing jobs, parents leave reviews and star ratings. Your reputation grows with every successful placement.",
+    icon: "★",
   },
 ];
 
 export const FEATURES_TUTOR = [
-  { title: "Verified Credential Badge", desc: "Display proof of identity and qualifications on every application." },
-  { title: "Single Document Vault", desc: "Upload once, share everywhere. No more hunting for degree scans." },
-  { title: "Vacancy Discovery", desc: "Browse structured vacancies filtered by subject, grade, location, and mode." },
-  { title: "Application Tracker", desc: "See every application status in one dashboard — shortlisted, interviewed, hired." },
+  { title: "Verified Credential Badge", desc: "Display proof of identity and qualifications on every application. Your badge travels with you." },
+  { title: "Single Document Vault", desc: "Upload once, share everywhere. Government IDs, degrees, certificates — all in one secure vault." },
+  { title: "Education & Credentials", desc: "Showcase your degrees, certifications, and teaching credentials. Verified by our team." },
+  { title: "Vacancy Discovery", desc: "Browse structured vacancies filtered by subject, grade, location, teaching mode, and salary." },
+  { title: "Application Tracker", desc: "See every application status in one dashboard — applied, shortlisted, interviewed, accepted, completed." },
+  { title: "Reviews & Reputation", desc: "Receive star ratings and reviews from parents. Build your reputation on the platform over time." },
+];
+
+export const FEATURES_PARENT = [
+  { title: "Self-Recruitment", desc: "Create your own vacancies, browse tutor profiles, and hire directly without an agency." },
+  { title: "Full Applicant View", desc: "See tutor education, verified documents, and reviews from other parents before deciding." },
+  { title: "Application Workflows", desc: "Review, shortlist, interview, accept, or reject applicants with clear status management." },
+  { title: "Leave Reviews & Ratings", desc: "Rate tutors after completed jobs. Your feedback helps other parents make informed decisions." },
+  { title: "Agency-Assisted Hiring", desc: "Contact verified agencies to handle the entire recruitment process for you." },
 ];
 
 export const FEATURES_AGENCY = [
-  { title: "Recruitment Dashboard", desc: "Manage vacancies, applicants, and hiring pipelines from a single workspace." },
-  { title: "Verified Tutor Profiles", desc: "See credential verification results without accessing private documents." },
-  { title: "Smart Search & Filters", desc: "Filter by subject, grade, location, mode, availability, and verification status." },
+  { title: "Recruitment Dashboard", desc: "Create vacancies, manage applicants, and track hiring pipelines from a single workspace." },
+  { title: "Full Applicant Profiles", desc: "View tutor education, documents, verification status, and parent reviews — all in one place." },
+  { title: "Application Management", desc: "Review, shortlist, interview, accept, or reject applicants with clear status workflows." },
+  { title: "Smart Search & Filters", desc: "Filter applicants by subject, grade, location, mode, availability, and verification status." },
   { title: "Team Management", desc: "Invite recruiters, assign roles, and collaborate across your organization." },
 ];
 
@@ -88,7 +105,13 @@ export const PRICING = [
     price: "$0",
     period: "forever",
     desc: "Get started with the basics.",
-    features: ["Organization profile", "Up to 3 vacancies", "Basic applicant list", "Verified profile viewing"],
+    features: [
+      "Organization profile",
+      "Up to 3 vacancies",
+      "Basic applicant list",
+      "View verified tutor profiles & documents",
+      "Parent self-recruitment (unlimited)",
+    ],
     cta: "Start Free",
     highlight: false,
   },
@@ -100,7 +123,9 @@ export const PRICING = [
     features: [
       "Unlimited vacancies",
       "Full applicant management",
+      "View tutor education & reviews",
       "Advanced tutor search & filters",
+      "Application status workflows",
       "Analytics dashboard",
       "Team up to 5 recruiters",
     ],

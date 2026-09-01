@@ -22,10 +22,10 @@ export default function HowItWorks() {
           />
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 sm:gap-8 relative">
+        <div className="grid md:grid-cols-4 gap-6 sm:gap-8 relative">
           {/* Connector line */}
           <div
-            className="hidden md:block absolute top-8 left-1/4 right-1/4 h-px opacity-20"
+            className="hidden md:block absolute top-8 left-[12.5%] right-[12.5%] h-px opacity-20"
             style={{ background: `linear-gradient(to right, transparent, ${colors.accent}, transparent)` }}
           />
 
@@ -59,7 +59,7 @@ export default function HowItWorks() {
           className={`mt-12 sm:mt-16 rounded-2xl p-6 md:p-8 flex flex-wrap items-center justify-center gap-3 text-center fade-up delay-400 ${inView ? "in-view" : ""}`}
           style={{ background: colors.accentBg, border: `1px solid ${colors.accentBorder}` }}
         >
-          {["Tutor Registration", "→", "Create Profile", "→", "Upload Docs", "→", "Verification Queue", "→", "✓ Verified Badge"].map(
+          {["Tutor Registration", "→", "Create Profile", "→", "Upload Docs", "→", "Verification Queue", "→", "✓ Verified Badge", "→", "Get Hired", "→", "★ Reviews"].map(
             (item, i) => (
               <span
                 key={i}

@@ -612,6 +612,8 @@ function ParentApplicantProfileModal({
   tutorProfile: TutorProfile | null;
 }) {
   const [documents, setDocuments] = useState<TutorDocument[]>([]);
+  const [educationEntries, setEducationEntries] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [previewDoc, setPreviewDoc] = useState<TutorDocument | null>(null);
@@ -620,19 +622,25 @@ function ParentApplicantProfileModal({
   useEffect(() => {
     if (isOpen && tutorId) {
       setConsentAccepted(false);
-      fetchDocuments();
+      fetchAll();
     }
   }, [isOpen, tutorId]);
 
-  const fetchDocuments = async () => {
+  const fetchAll = async () => {
     setLoading(true);
     setError(null);
     try {
-      const docs = await parentApi.getTutorDocuments(tutorId);
-      setDocuments(docs);
+      const [docs, edu, rev] = await Promise.allSettled([
+        parentApi.getTutorDocuments(tutorId),
+        parentApi.getTutorEducationEntries(tutorId),
+        parentApi.getTutorReviews(tutorId),
+      ]);
+      if (docs.status === "fulfilled") setDocuments(docs.value);
+      if (edu.status === "fulfilled") setEducationEntries(edu.value);
+      if (rev.status === "fulfilled") setReviews(rev.value);
     } catch (err) {
-      setError("Failed to load documents");
-      console.error("Error fetching documents:", err);
+      setError("Failed to load profile data");
+      console.error("Error fetching profile data:", err);
     } finally {
       setLoading(false);
     }
@@ -661,6 +669,7 @@ function ParentApplicantProfileModal({
   const verification = VERIFICATION_CONFIG[tutorProfile?.verificationLevel || "unverified"];
   const verifiedDocs = documents.filter((d) => d.status === "verified");
   const pendingDocs = documents.filter((d) => d.status === "pending" || d.status === "under_review");
+  const avgRating = reviews.length > 0 ? (reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length).toFixed(1) : "0.0";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -910,6 +919,81 @@ function ParentApplicantProfileModal({
                         );
                       })}
                     </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Education Entries */}
+              {educationEntries.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <GraduationCap size={14} className="text-[var(--text-muted)]" />
+                    <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Education & Credentials</span>
+                  </div>
+                  <div className="space-y-2">
+                    {educationEntries.map((entry: any) => (
+                      <div key={entry.id} className="rounded-xl px-4 py-3" style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-sm text-[var(--text-primary)] font-medium">{entry.title}</div>
+                            <div className="text-xs text-[var(--text-muted)]">{entry.name}</div>
+                            {entry.description && (
+                              <div className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">{entry.description}</div>
+                            )}
+                          </div>
+                          <span
+                            className="px-2 py-0.5 rounded text-[10px] font-medium capitalize"
+                            style={{
+                              background: entry.status === "approved" ? "var(--accent-bg)" : entry.status === "pending" ? "var(--badge-pending-bg)" : "var(--danger-bg)",
+                              color: entry.status === "approved" ? "var(--accent)" : entry.status === "pending" ? "var(--badge-pending-color)" : "var(--danger-color)",
+                            }}
+                          >
+                            {entry.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Reviews */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Star size={14} className="text-[var(--text-muted)]" />
+                    <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Reviews from Parents</span>
+                  </div>
+                  {reviews.length > 0 && (
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: "var(--accent-bg)" }}>
+                      <Star size={12} style={{ color: "var(--accent)" }} fill="var(--accent)" />
+                      <span className="text-xs font-semibold" style={{ color: "var(--accent)" }}>{avgRating}</span>
+                    </div>
+                  )}
+                </div>
+                {reviews.length === 0 ? (
+                  <div className="rounded-xl p-6 text-center" style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}>
+                    <Star size={24} className="mx-auto mb-2 text-[var(--text-faint)]" />
+                    <p className="text-sm text-[var(--text-muted)]">No reviews yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {reviews.map((review: any) => (
+                      <div key={review.id} className="rounded-xl px-4 py-3" style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-[var(--text-primary)]">{review.parentName || "Parent"}</span>
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star key={i} size={12} style={{ color: i < review.rating ? "var(--accent)" : "var(--text-faint)" }} fill={i < review.rating ? "var(--accent)" : "none"} />
+                            ))}
+                          </div>
+                        </div>
+                        {review.description && (
+                          <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{review.description}</p>
+                        )}
+                        <p className="text-[10px] text-[var(--text-faint)] mt-2">{new Date(review.createdAt).toLocaleDateString()}</p>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

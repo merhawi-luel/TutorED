@@ -438,6 +438,48 @@ router.get("/tutors/:tutorId/documents", requireAuth, async (req, res) => {
   }
 });
 
+// ─── GET /api/parent/tutors/:tutorId/reviews ─────────────────
+router.get("/tutors/:tutorId/reviews", requireAuth, async (req, res) => {
+  try {
+    const reviews = await db
+      .select({
+        id: tutorReviews.id,
+        applicationId: tutorReviews.applicationId,
+        parentId: tutorReviews.parentId,
+        tutorId: tutorReviews.tutorId,
+        rating: tutorReviews.rating,
+        description: tutorReviews.description,
+        createdAt: tutorReviews.createdAt,
+        parentName: users.name,
+      })
+      .from(tutorReviews)
+      .innerJoin(users, eq(tutorReviews.parentId, users.id))
+      .where(eq(tutorReviews.tutorId, req.params.tutorId))
+      .orderBy(desc(tutorReviews.createdAt));
+
+    res.json(reviews);
+  } catch (error) {
+    console.error("Get tutor reviews error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── GET /api/parent/tutors/:tutorId/education-entries ───────
+router.get("/tutors/:tutorId/education-entries", requireAuth, async (req, res) => {
+  try {
+    const entries = await db
+      .select()
+      .from(educationEntries)
+      .where(eq(educationEntries.tutorId, req.params.tutorId))
+      .orderBy(desc(educationEntries.submittedAt));
+
+    res.json(entries);
+  } catch (error) {
+    console.error("Get tutor education entries error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // ─── GET /api/parent/documents/:id/preview ────────────────────
 // Preview a document (only verified documents)
 

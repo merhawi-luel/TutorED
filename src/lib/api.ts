@@ -108,6 +108,10 @@ export const agencyApi = {
 
   getTutorDocuments: (tutorId: string) =>
     request<any[]>(`/agency/tutors/${tutorId}/documents`),
+  getTutorReviews: (tutorId: string) =>
+    request<any[]>(`/agency/tutors/${tutorId}/reviews`),
+  getTutorEducationEntries: (tutorId: string) =>
+    request<any[]>(`/agency/tutors/${tutorId}/education-entries`),
   previewTutorDocument: (docId: string) =>
     request<{ previewUrl: string; fileName: string; type: string; title: string }>(`/agency/documents/${docId}/preview`),
   downloadTutorDocument: (docId: string) =>
@@ -179,6 +183,10 @@ export const parentApi = {
   getApplicants: () => request<any[]>("/parent/applicants"),
   getTutorDocuments: (tutorId: string) =>
     request<any[]>(`/parent/tutors/${tutorId}/documents`),
+  getTutorReviews: (tutorId: string) =>
+    request<any[]>(`/parent/tutors/${tutorId}/reviews`),
+  getTutorEducationEntries: (tutorId: string) =>
+    request<any[]>(`/parent/tutors/${tutorId}/education-entries`),
   previewTutorDocument: (docId: string) =>
     request<{ previewUrl: string; fileName: string; type: string; title: string }>(`/parent/documents/${docId}/preview`),
   downloadTutorDocument: (docId: string) =>
