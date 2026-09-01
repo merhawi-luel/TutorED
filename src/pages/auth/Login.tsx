@@ -145,21 +145,6 @@ export default function Login() {
             </div>
           )}
 
-          <div className="mb-4">
-            <label className="block text-sm mb-2" style={{ color: colors.textSecondary }}>I am a</label>
-            <div className="grid grid-cols-3 gap-2">
-              {(["tutor", "agency", "parent"] as const).map((v) => {
-                const isActive = role === v;
-                return (
-                  <button key={v} type="button" onClick={() => setRole(v)} className="px-3 py-2 rounded-lg text-xs font-medium transition-all capitalize"
-                    style={{ background: isActive ? colors.accentBg : "transparent", border: `1px solid ${isActive ? colors.accentBorder : colors.borderColor}`, color: isActive ? colors.accent : colors.textMuted }}>
-                    {v}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
           <button onClick={handleGoogleLogin} disabled={loading}
             className="w-full py-2.5 rounded-xl text-sm font-medium transition-all hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-3 mb-4"
             style={{ background: isDark ? "#FFFFFF" : colors.bgInput, color: isDark ? "#000000" : colors.textPrimary, border: `1px solid ${colors.borderColor}` }}>
