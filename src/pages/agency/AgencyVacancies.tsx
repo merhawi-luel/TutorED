@@ -2,6 +2,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useState } from "react";
 import { useData } from "@/context/DataContext";
 import { useInView } from "@/hooks/useInView";
+import { useNavigate } from "react-router-dom";
 import {
   Plus,
   Briefcase,
@@ -19,9 +20,12 @@ import type { AgencyTab } from "@/components/layout/AgencySidebar";
 export default function AgencyVacancies({ onTabChange }: { onTabChange?: (tab: AgencyTab) => void }) {
   const { getAgencyVacancies, createVacancy, closeVacancy, getVacancyApplicants } = useData();
   const { ref, inView } = useInView();
+  const navigate = useNavigate();
 
   const [showCreate, setShowCreate] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   // Create form state
   const [title, setTitle] = useState("");
@@ -38,21 +42,40 @@ export default function AgencyVacancies({ onTabChange }: { onTabChange?: (tab: A
 
   const myVacancies = getAgencyVacancies();
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!title || !subject || !grade) return;
-    createVacancy({
-      title, description, subject, grade, requiredEducation, requiredExperience,
-      location, teachingMode, salary, availability, deadline,
-    });
-    resetForm();
-    setShowCreate(false);
-    setSuccessMsg("Vacancy created successfully!");
-    setTimeout(() => setSuccessMsg(null), 2500);
+    
+    setIsCreating(true);
+    setErrorMsg(null);
+    
+    try {
+      await createVacancy({
+        title, description, subject, grade, requiredEducation, requiredExperience,
+        location, teachingMode, salary, availability, deadline,
+      });
+      resetForm();
+      setShowCreate(false);
+      setSuccessMsg("Vacancy created successfully!");
+      setTimeout(() => setSuccessMsg(null), 2500);
+    } catch (error: any) {
+      console.error("Create vacancy error:", error);
+      const message = error.message || "Failed to create vacancy";
+      
+      if (message.includes("not verified") || message.includes("verification")) {
+        setErrorMsg(message);
+        // Show link to verification page
+      } else {
+        setErrorMsg(message);
+      }
+      setTimeout(() => setErrorMsg(null), 5000);
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const handleClose = (vacancyId: string) => {
     closeVacancy(vacancyId);
-    setSuccessMsg("Vacancy deleted.");
+    setSuccessMsg("Vacancy closed.");
     setTimeout(() => setSuccessMsg(null), 2500);
   };
 
@@ -82,13 +105,33 @@ export default function AgencyVacancies({ onTabChange }: { onTabChange?: (tab: A
         </button>
       </div>
 
-      {/* Success */}
+      {/* Success Message */}
       {successMsg && (
         <div
           className="rounded-xl px-5 py-3 flex items-center gap-3 text-sm"
           style={{ background: "var(--accent-bg)", border: "1px solid var(--accent-border)", color: "var(--accent)" }}
         >
           <CheckCircle2 size={16} /> {successMsg}
+        </div>
+      )}
+
+      {/* Error Message */}
+      {errorMsg && (
+        <div
+          className="rounded-xl px-5 py-3 space-y-3 text-sm"
+          style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)", color: "#ef4444" }}
+        >
+          <div className="flex items-center gap-3">
+            <XCircle size={16} /> {errorMsg}
+          </div>
+          {errorMsg.includes("not verified") && (
+            <button
+              onClick={() => navigate("/agency/payment-status")}
+              className="text-xs px-3 py-1.5 rounded bg-red-500/20 hover:bg-red-500/30 transition-colors"
+            >
+              Upload Payment Receipt →
+            </button>
+          )}
         </div>
       )}
 
@@ -153,11 +196,11 @@ export default function AgencyVacancies({ onTabChange }: { onTabChange?: (tab: A
 
           <button
             onClick={handleCreate}
-            disabled={!title || !subject || !grade}
+            disabled={!title || !subject || !grade || isCreating}
             className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-40"
             style={{ background: "var(--accent)", color: "#fff" }}
           >
-            Create Vacancy
+            {isCreating ? "Creating..." : "Create Vacancy"}
           </button>
         </div>
       )}

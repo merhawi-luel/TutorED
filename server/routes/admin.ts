@@ -537,4 +537,133 @@ router.put("/education-entries/:id/reject", requireAuth, requireRole("admin"), a
   }
 });
 
+// ─── GET /api/admin/agencies ─────────────────────────────────
+// List all agencies for verification
+
+router.get("/agencies", requireAuth, requireRole("admin"), async (_req, res) => {
+  try {
+    console.log("🔍 Admin fetching agencies for verification...");
+    
+    const agencies = await db
+      .select({
+        id: organizations.id,
+        name: organizations.name,
+        description: organizations.description,
+        location: organizations.location,
+        isVerified: organizations.isVerified,
+        paymentStatus: organizations.paymentStatus,
+        createdAt: organizations.createdAt,
+        ownerUserId: organizations.ownerUserId,
+      })
+      .from(organizations)
+      .orderBy(desc(organizations.createdAt));
+
+    // Enrich with owner info
+    const enriched = await Promise.all(
+      agencies.map(async (org) => {
+        const [owner] = await db
+          .select({ name: users.name, email: users.email })
+          .from(users)
+          .where(eq(users.id, org.ownerUserId));
+
+        return {
+          ...org,
+          ownerName: owner?.name || "Unknown",
+          ownerEmail: owner?.email || "",
+        };
+      })
+    );
+
+    console.log(`📋 Found ${enriched.length} agencies`);
+    res.json(enriched);
+  } catch (error) {
+    console.error("❌ Get agencies error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── PUT /api/admin/agencies/:id/verify ──────────────────────
+// Admin verifies an agency after checking payment receipt
+
+router.put("/agencies/:id/verify", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const { orgId } = req.params;
+    const orgIdFromBody = req.body.id || req.params.id;
+
+    console.log(`✅ Admin verifying agency: ${orgIdFromBody}`);
+
+    const [org] = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.id, orgIdFromBody));
+
+    if (!org) {
+      return res.status(404).json({ error: "Organization not found" });
+    }
+
+    // Mark organization as verified
+    const [updated] = await db
+      .update(organizations)
+      .set({ 
+        isVerified: true, 
+        paymentStatus: "paid",
+        paidAt: new Date(),
+      })
+      .where(eq(organizations.id, orgIdFromBody))
+      .returning();
+
+    console.log(`✅ Agency verified: ${org.name} (${orgIdFromBody})`);
+
+    res.json({
+      message: "Agency verified successfully",
+      organization: updated,
+    });
+  } catch (error) {
+    console.error("❌ Verify agency error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── PUT /api/admin/agencies/:id/reject ──────────────────────
+// Admin rejects an agency (payment proof not valid)
+
+router.put("/agencies/:id/reject", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const orgId = req.params.id;
+
+    console.log(`❌ Admin rejecting agency: ${orgId}, Reason: ${reason}`);
+
+    const [org] = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.id, orgId));
+
+    if (!org) {
+      return res.status(404).json({ error: "Organization not found" });
+    }
+
+    // Reset payment status and ask for resubmission
+    const [updated] = await db
+      .update(organizations)
+      .set({ 
+        isVerified: false,
+        paymentStatus: "unpaid",
+      })
+      .where(eq(organizations.id, orgId))
+      .returning();
+
+    console.log(`✅ Agency rejection recorded: ${org.name}`);
+
+    res.json({
+      message: "Agency verification rejected. They can resubmit.",
+      reason,
+      organization: updated,
+    });
+  } catch (error) {
+    console.error("❌ Reject agency error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;

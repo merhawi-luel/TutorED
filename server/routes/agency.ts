@@ -158,7 +158,15 @@ router.post("/vacancies", requireAuth, requireRole("agency"), async (req, res) =
       return res.status(404).json({ error: "Organization not found. Please contact support." });
     }
 
-    console.log(`🏢 Organization found: ${org.name} (ID: ${org.id})`);
+    // ✅ NEW: Check if organization is verified
+    if (!org.isVerified) {
+      console.log(`❌ Organization not verified: ${org.id}`);
+      return res.status(403).json({ 
+        error: "Your agency must be verified before posting vacancies. Please upload your payment receipt and wait for admin approval." 
+      });
+    }
+
+    console.log(`🏢 Organization found and verified: ${org.name} (ID: ${org.id})`);
 
     const {
       title, description, subject, grade,

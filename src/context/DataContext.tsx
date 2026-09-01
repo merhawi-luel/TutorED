@@ -589,8 +589,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const created = await agencyApi.createVacancy(data);
         const newVacancy = mapVacancy({ ...created, organizationName: agencyOrganization.name });
         setVacancies((prev) => [newVacancy, ...prev]);
-      } catch (err) {
+        return { success: true };
+      } catch (err: any) {
         console.error("Failed to create vacancy:", err);
+        // Return error details for the component to handle
+        if (err.message?.includes("not verified")) {
+          throw new Error("Your agency must be verified before posting vacancies. Please upload your payment receipt.");
+        }
+        throw err;
       }
     },
     [agencyOrganization.name]
