@@ -26,6 +26,7 @@ const SUBJECT_OPTIONS = [
   "Business Studies",
   "Spanish",
   "French",
+"All Subject"
 ];
 
 export default function AgencySetup({ onComplete }: AgencySetupProps) {
@@ -135,7 +136,7 @@ export default function AgencySetup({ onComplete }: AgencySetupProps) {
             <Building2 size={32} style={{ color: colors.accent }} />
           </div>
           <h1 className="text-3xl font-bold mb-2" style={{ color: colors.textPrimary }}>
-            Welcome to Mentora!
+            Welcome to EduVerify!
           </h1>
           <p style={{ color: colors.textSecondary }}>
             Let's set up your organization to start recruiting tutors
