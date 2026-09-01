@@ -31,6 +31,7 @@ const ACTIONS: { status: ApplicationStatus; label: string; color: string }[] = [
   { status: "shortlisted", label: "Shortlist", color: "var(--accent)" },
   { status: "interview", label: "Interview", color: "var(--badge-purple-color)" },
   { status: "accepted", label: "Accept", color: "var(--accent)" },
+  { status: "completed", label: "Complete", color: "var(--accent)" },
   { status: "rejected", label: "Reject", color: "var(--danger-color)" },
 ];
 

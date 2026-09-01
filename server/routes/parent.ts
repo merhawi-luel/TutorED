@@ -561,7 +561,7 @@ router.get("/documents/:id/download", requireAuth, async (req, res) => {
 router.put("/applications/:id/status", requireAuth, async (req, res) => {
   try {
     const { status } = req.body;
-    const validStatuses = ["applied", "under_review", "shortlisted", "interview", "accepted", "rejected"];
+    const validStatuses = ["applied", "under_review", "shortlisted", "interview", "accepted", "completed", "rejected"];
 
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: "Invalid status" });
