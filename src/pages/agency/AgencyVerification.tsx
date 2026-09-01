@@ -131,7 +131,7 @@ export default function AgencyVerification() {
         // Poll for verification approval
         const interval = setInterval(async () => {
           const pollHeaders = await getAuthHeaders();
-          const checkResponse = await fetch(`${API_BASE}/payment/status", {
+          const checkResponse = await fetch(`${API_BASE}/payment/status`, {
             headers: pollHeaders,
           });
 
