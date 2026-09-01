@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 export default function TutorVacancies() {
   const { colors } = useTheme();
-  const { vacancies, applications } = useData();
+  const { vacancies, applications, loading } = useData();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('All');
@@ -146,11 +146,22 @@ export default function TutorVacancies() {
 
       {/* Results Count */}
       <p style={{ fontSize: '14px', color: colors.secondaryText, marginBottom: '16px' }}>
-        {filteredVacancies.length} {filteredVacancies.length === 1 ? 'vacancy' : 'vacancies'} found
+        {loading ? 'Loading...' : `${filteredVacancies.length} ${filteredVacancies.length === 1 ? 'vacancy' : 'vacancies'} found`}
       </p>
 
+      {/* Loading State */}
+      {loading && (
+        <div style={{
+          backgroundColor: colors.card, borderRadius: '16px', padding: '48px',
+          textAlign: 'center', border: `1px solid ${colors.border}`
+        }}>
+          <p style={{ fontSize: '16px', color: colors.secondaryText }}>Loading vacancies...</p>
+        </div>
+      )}
+
       {/* Vacancy Cards */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {!loading && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {filteredVacancies.length === 0 ? (
           <div style={{
             backgroundColor: colors.card, borderRadius: '16px', padding: '48px',
@@ -255,6 +266,17 @@ export default function TutorVacancies() {
           })
         )}
       </div>
+      )}
+
+      {/* Debug info - remove after testing */}
+      {!loading && (
+        <div style={{ marginTop: '20px', padding: '12px', backgroundColor: colors.bgInput, borderRadius: '8px', fontSize: '12px', color: colors.textMuted }}>
+          <strong>Debug Info:</strong><br />
+          Total vacancies from context: {vacancies.length}<br />
+          Filtered vacancies: {filteredVacancies.length}<br />
+          Loading: {loading ? 'true' : 'false'}
+        </div>
+      )}
     </div>
   );
 }
