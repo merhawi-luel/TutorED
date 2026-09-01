@@ -102,7 +102,7 @@ export const VACANCIES_PREVIEW = [
 export const PRICING = [
   {
     name: "Free",
-    price: "$0",
+    price: "0 Birr",
     period: "forever",
     desc: "Get started with the basics.",
     features: [
