@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 export default function TutorVacancies() {
   const { colors } = useTheme();
-  const { vacancies, applications, loading } = useData();
+  const { vacancies, applications, loading, applyToVacancy } = useData();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('All');
@@ -42,7 +42,7 @@ export default function TutorVacancies() {
   const handleApply = async (vacancyId: string) => {
     setApplying(vacancyId);
     try {
-      await tutorApi.applyToVacancy(vacancyId);
+      await applyToVacancy(vacancyId);
       toast.success('Application submitted successfully!');
     } catch (error) {
       console.error('Error applying:', error);
