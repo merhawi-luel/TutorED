@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
@@ -15,37 +15,13 @@ export default function TutorVacancies() {
   const [selectedType, setSelectedType] = useState('All');
   const [showFilters, setShowFilters] = useState(false);
   const [applying, setApplying] = useState<string | null>(null);
-  
-  // Fallback: fetch vacancies directly if context returns empty
-  const [directVacancies, setDirectVacancies] = useState<any[]>([]);
-  const [directLoading, setDirectLoading] = useState(false);
-
-  useEffect(() => {
-    // If DataContext vacancies are empty and not loading, fetch directly
-    if (!loading && vacancies.length === 0 && directVacancies.length === 0) {
-      setDirectLoading(true);
-      const API_BASE = import.meta.env.VITE_API_URL || "/api";
-      fetch(`${API_BASE}/tutor/vacancies`)
-        .then(res => res.json())
-        .then(data => {
-          console.log("Direct fetch result:", data);
-          setDirectVacancies(data);
-        })
-        .catch(err => console.error("Direct fetch error:", err))
-        .finally(() => setDirectLoading(false));
-    }
-  }, [loading, vacancies.length, directVacancies.length]);
-
-  // Use direct vacancies if context is empty
-  const effectiveVacancies = vacancies.length > 0 ? vacancies : directVacancies;
-  const effectiveLoading = loading || directLoading;
 
   const appliedVacancyIds = useMemo(() => {
     return new Set(applications.filter(a => a.tutorId === user?.id).map(a => a.vacancyId));
   }, [applications, user?.id]);
 
   const filteredVacancies = useMemo(() => {
-    return effectiveVacancies.filter(v => {
+    return vacancies.filter(v => {
       const matchesSearch = v.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (v.subjects || []).some(s => s.toLowerCase().includes(searchTerm.toLowerCase())) ||
         v.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -53,15 +29,15 @@ export default function TutorVacancies() {
       const matchesType = selectedType === 'All' || v.teachingMode === selectedType;
       return matchesSearch && matchesSubject && matchesType;
     });
-  }, [effectiveVacancies, searchTerm, selectedSubject, selectedType]);
+  }, [vacancies, searchTerm, selectedSubject, selectedType]);
 
   const uniqueSubjects = useMemo(() => {
-    return ['All', ...new Set(effectiveVacancies.flatMap(v => v.subjects || []))];
-  }, [effectiveVacancies]);
+    return ['All', ...new Set(vacancies.flatMap(v => v.subjects || []))];
+  }, [vacancies]);
 
   const uniqueTypes = useMemo(() => {
-    return ['All', ...new Set(effectiveVacancies.map(v => v.teachingMode))];
-  }, [effectiveVacancies]);
+    return ['All', ...new Set(vacancies.map(v => v.teachingMode))];
+  }, [vacancies]);
 
   const handleApply = async (vacancyId: string) => {
     setApplying(vacancyId);
@@ -170,11 +146,11 @@ export default function TutorVacancies() {
 
       {/* Results Count */}
       <p style={{ fontSize: '14px', color: colors.secondaryText, marginBottom: '16px' }}>
-        {effectiveLoading ? 'Loading...' : `${filteredVacancies.length} ${filteredVacancies.length === 1 ? 'vacancy' : 'vacancies'} found`}
+        {loading ? 'Loading...' : `${filteredVacancies.length} ${filteredVacancies.length === 1 ? 'vacancy' : 'vacancies'} found`}
       </p>
 
       {/* Loading State */}
-      {effectiveLoading && (
+      {loading && (
         <div style={{
           backgroundColor: colors.card, borderRadius: '16px', padding: '48px',
           textAlign: 'center', border: `1px solid ${colors.border}`
@@ -184,7 +160,7 @@ export default function TutorVacancies() {
       )}
 
       {/* Vacancy Cards */}
-      {!effectiveLoading && (
+      {!loading && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {filteredVacancies.length === 0 ? (
           <div style={{
@@ -290,19 +266,6 @@ export default function TutorVacancies() {
           })
         )}
       </div>
-      )}
-
-      {/* Debug info - remove after testing */}
-      {!effectiveLoading && (
-        <div style={{ marginTop: '20px', padding: '12px', backgroundColor: colors.bgInput, borderRadius: '8px', fontSize: '12px', color: colors.textMuted }}>
-          <strong>Debug Info:</strong><br />
-          Total vacancies from context: {vacancies.length}<br />
-          Total vacancies from direct fetch: {directVacancies.length}<br />
-          Effective vacancies (used): {effectiveVacancies.length}<br />
-          Filtered vacancies: {filteredVacancies.length}<br />
-          Context loading: {loading ? 'true' : 'false'}<br />
-          Direct loading: {directLoading ? 'true' : 'false'}
-        </div>
       )}
     </div>
   );

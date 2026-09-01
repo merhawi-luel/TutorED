@@ -54,14 +54,15 @@ app.use(cors({
       return callback(null, true);
     }
     
+    // Check against exact allowed origins
     if (allowedOrigins.includes(origin)) {
       console.log("   ✓ Allowed (in allowedOrigins list)");
       return callback(null, true);
     }
     
-    // In production, also allow the frontend URL
-    if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) {
-      console.log("   ✓ Allowed (matches FRONTEND_URL)");
+    // Allow all Vercel preview deployments (*.vercel.app)
+    if (origin.endsWith('.vercel.app')) {
+      console.log("   ✓ Allowed (Vercel deployment)");
       return callback(null, true);
     }
     
@@ -71,7 +72,12 @@ app.use(cors({
     callback(new Error("Not allowed by CORS"));
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
+// Handle OPTIONS requests explicitly to prevent 500 errors
+app.options('*', cors());
 
 app.use(express.json({ limit: "10mb" }));
 // ─── Routes ──────────────────────────────────────────────────
