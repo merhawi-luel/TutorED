@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Sun,
   Moon,
+  Star,
 } from "lucide-react";
 
 export type TutorTab =
@@ -24,6 +25,7 @@ export type TutorTab =
   | "education"
   | "vacancies"
   | "applications"
+  | "reviews"
   | "settings";
 
 interface SidebarProps {
@@ -38,6 +40,7 @@ const NAV_ITEMS: { tab: TutorTab; label: string; icon: typeof LayoutDashboard }[
   { tab: "education", label: "Education", icon: GraduationCap },
   { tab: "vacancies", label: "Vacancies", icon: Briefcase },
   { tab: "applications", label: "Applications", icon: Send },
+  { tab: "reviews", label: "Reviews", icon: Star },
 ];
 
 export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {

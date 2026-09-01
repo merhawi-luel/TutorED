@@ -15,6 +15,7 @@ import Callback from "@/pages/auth/Callback";
 import Confirm from "@/pages/auth/Confirm";
 import PaymentStatus from "@/pages/agency/PaymentStatus";
 import VacancyDetail from "@/pages/agency/VacancyDetail";
+import { Toaster } from "sonner";
 import type { ReactNode } from "react";
 
 // ─── Protected Route ───────────────────────────────────────────
@@ -142,6 +143,7 @@ function App() {
           <DataProvider>
             <AppRoutes />
           </DataProvider>
+          <Toaster position="top-right" richColors />
         </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>

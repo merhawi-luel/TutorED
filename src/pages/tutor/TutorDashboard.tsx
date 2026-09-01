@@ -7,6 +7,7 @@ import TutorDocumentsAndVerification from "./TutorDocumentsAndVerification";
 import TutorEducation from "./TutorEducation";
 import TutorVacancies from "./TutorVacancies";
 import TutorApplications from "./TutorApplications";
+import TutorReviews from "./TutorReviews";
 import TutorSettings from "./TutorSettings";
 
 const TAB_COMPONENTS: Record<TutorTab, React.ComponentType<{ onTabChange?: (tab: TutorTab) => void }>> = {
@@ -16,6 +17,7 @@ const TAB_COMPONENTS: Record<TutorTab, React.ComponentType<{ onTabChange?: (tab:
   education: TutorEducation,
   vacancies: TutorVacancies,
   applications: TutorApplications,
+  reviews: TutorReviews,
   settings: TutorSettings,
 };
 

@@ -15,6 +15,7 @@ import {
   Users,
   Sun,
   Moon,
+  Star,
 } from "lucide-react";
 
 export type ParentTab =
@@ -23,6 +24,7 @@ export type ParentTab =
   | "recruitment"
   | "vacancies"
   | "applicants"
+  | "reviews"
   | "requests"
   | "settings";
 
@@ -37,6 +39,7 @@ const NAV_ITEMS: { tab: ParentTab; label: string; icon: typeof LayoutDashboard }
   { tab: "recruitment", label: "Find a Tutor", icon: Building2 },
   { tab: "vacancies", label: "Browse Vacancies", icon: Briefcase },
   { tab: "applicants", label: "Applicants", icon: Users },
+  { tab: "reviews", label: "Leave Review", icon: Star },
   { tab: "requests", label: "My Requests", icon: FileText },
 ];
 

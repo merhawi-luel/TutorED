@@ -7,6 +7,7 @@ import ParentRecruitment from "./ParentRecruitment";
 import ParentVacancies from "./ParentVacancies";
 import ParentApplicants from "./ParentApplicants";
 import ParentVacancyApplicants from "./ParentVacancyApplicants";
+import ParentReviews from "./ParentReviews";
 import ParentRequests from "./ParentRequests";
 import ParentSettings from "./ParentSettings";
 
@@ -40,6 +41,8 @@ export default function ParentDashboard() {
         );
       case "applicants":
         return <ParentApplicants />;
+      case "reviews":
+        return <ParentReviews />;
       case "requests":
         return <ParentRequests />;
       case "settings":

@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 export default function TutorVacancies() {
   const { colors } = useTheme();
-  const { vacancies, applications, refreshData } = useData();
+  const { vacancies, applications } = useData();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('All');
@@ -26,7 +26,7 @@ export default function TutorVacancies() {
         v.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
         v.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesSubject = selectedSubject === 'All' || v.subject === selectedSubject;
-      const matchesType = selectedType === 'All' || v.type === selectedType;
+      const matchesType = selectedType === 'All' || v.teachingMode === selectedType;
       return matchesSearch && matchesSubject && matchesType;
     });
   }, [vacancies, searchTerm, selectedSubject, selectedType]);
@@ -36,14 +36,13 @@ export default function TutorVacancies() {
   }, [vacancies]);
 
   const uniqueTypes = useMemo(() => {
-    return ['All', ...new Set(vacancies.map(v => v.type))];
+    return ['All', ...new Set(vacancies.map(v => v.teachingMode))];
   }, [vacancies]);
 
   const handleApply = async (vacancyId: string) => {
     setApplying(vacancyId);
     try {
       await tutorApi.applyToVacancy(vacancyId);
-      await refreshData();
       toast.success('Application submitted successfully!');
     } catch (error) {
       console.error('Error applying:', error);
@@ -184,7 +183,7 @@ export default function TutorVacancies() {
                       {vacancy.title}
                     </h3>
                     <p style={{ fontSize: '14px', color: colors.secondaryText }}>
-                      Posted by {vacancy.parentName || 'Parent'}
+                      Posted by {vacancy.organizationName || 'Parent'}
                     </p>
                   </div>
                   <span style={{
@@ -192,7 +191,7 @@ export default function TutorVacancies() {
                     backgroundColor: colors.primaryLight, color: colors.primary,
                     fontSize: '13px', fontWeight: '500'
                   }}>
-                    {vacancy.type}
+                    {vacancy.teachingMode}
                   </span>
                 </div>
 
@@ -214,9 +213,9 @@ export default function TutorVacancies() {
                       <MapPin size={14} /> {vacancy.location}
                     </div>
                   )}
-                  {vacancy.rate && (
+                  {vacancy.salary && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: colors.secondaryText }}>
-                      <DollarSign size={14} /> {vacancy.rate}/hr
+                      <DollarSign size={14} /> {vacancy.salary}
                     </div>
                   )}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: colors.secondaryText }}>
