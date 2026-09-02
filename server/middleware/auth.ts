@@ -1,5 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { supabaseAdmin } from "../lib/supabase";
+import { db } from "../db";
+import { users } from "../db/schema";
+import { eq } from "drizzle-orm";
 
 // Extend Express Request to include user
 declare global {
@@ -34,13 +37,20 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       return res.status(401).json({ error: "Invalid or expired token" });
     }
 
-    // Get role from user metadata or database
-    const role = user.user_metadata?.role || "tutor";
+    // Get role from OUR database (database is the source of truth, not user_metadata)
+    const [dbUser] = await db
+      .select({ role: users.role })
+      .from(users)
+      .where(eq(users.id, user.id));
+
+    if (!dbUser) {
+      return res.status(404).json({ error: "User not found in database" });
+    }
 
     req.user = {
       userId: user.id,
       email: user.email || "",
-      role,
+      role: dbUser.role,
     };
 
     next();
