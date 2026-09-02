@@ -2,14 +2,13 @@ import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useData } from '../../context/DataContext';
-import { tutorApi } from '../../lib/api';
 import { User, Bell, Shield, Save, Sun, Moon, Monitor } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function TutorSettings() {
   const { user, logout } = useAuth();
   const { colors, theme, setTheme } = useTheme();
-  const { profile, refreshData } = useData();
+  const { tutorProfile } = useData();
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({
     emailNotifications: true,

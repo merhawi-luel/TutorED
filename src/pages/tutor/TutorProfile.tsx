@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useData } from '../../context/DataContext';
-import { tutorApi } from '../../lib/api';
-import { User, Mail, Phone, MapPin, Save, X, Check, Plus, Trash2 } from 'lucide-react';
+import { User, Mail, MapPin, Save, X, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 const subjects = [
@@ -24,53 +23,46 @@ interface SubjectTag {
 export default function TutorProfile() {
   const { user } = useAuth();
   const { colors } = useTheme();
-  const { profile, refreshData } = useData();
+  const { tutorProfile, updateProfile } = useData();
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: profile?.firstName || '',
-    lastName: profile?.lastName || '',
+    headline: tutorProfile?.headline || '',
     email: user?.email || '',
-    phone: profile?.phone || '',
-    location: profile?.location || '',
-    bio: profile?.bio || '',
+    location: tutorProfile?.location || '',
+    bio: tutorProfile?.bio || '',
   });
   const [selectedSubjects, setSelectedSubjects] = useState<SubjectTag[]>(
-    profile?.subjects?.map((s: string) => ({ subject: s.split(' - ')[0], level: s.split(' - ')[1] || '' })) || []
+    tutorProfile?.subjects?.map((s: string) => ({ subject: s.split(' - ')[0], level: s.split(' - ')[1] || '' })) || []
   );
   const [showSubjectPicker, setShowSubjectPicker] = useState(false);
   const [newSubject, setNewSubject] = useState('');
   const [newLevel, setNewLevel] = useState('GCSE');
 
   useEffect(() => {
-    if (profile) {
+    if (tutorProfile) {
       setFormData({
-        firstName: profile.firstName || '',
-        lastName: profile.lastName || '',
+        headline: tutorProfile.headline || '',
         email: user?.email || '',
-        phone: profile.phone || '',
-        location: profile.location || '',
-        bio: profile.bio || '',
+        location: tutorProfile.location || '',
+        bio: tutorProfile.bio || '',
       });
       setSelectedSubjects(
-        profile.subjects?.map((s: string) => ({ subject: s.split(' - ')[0], level: s.split(' - ')[1] || '' })) || []
+        tutorProfile.subjects?.map((s: string) => ({ subject: s.split(' - ')[0], level: s.split(' - ')[1] || '' })) || []
       );
     }
-  }, [profile, user]);
+  }, [tutorProfile, user]);
 
   const handleSave = async () => {
     setLoading(true);
     try {
       const subjectsStr = selectedSubjects.map(s => `${s.subject} - ${s.level}`);
-      await tutorApi.updateProfile({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phone: formData.phone,
+      await updateProfile({
+        headline: formData.headline,
         location: formData.location,
         bio: formData.bio,
         subjects: subjectsStr,
       });
-      await refreshData();
       setEditMode(false);
       toast.success('Profile updated successfully');
     } catch (error) {
@@ -170,15 +162,16 @@ export default function TutorProfile() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-          <div>
+          <div style={{ gridColumn: 'span 2' }}>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.secondaryText, marginBottom: '8px' }}>
-              First Name
+              Headline
             </label>
             {editMode ? (
               <input
                 type="text"
-                value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                value={formData.headline}
+                onChange={(e) => setFormData({ ...formData, headline: e.target.value })}
+                placeholder="e.g. Experienced GCSE Mathematics Tutor"
                 style={{
                   width: '100%', padding: '12px 16px', borderRadius: '12px',
                   border: `1px solid ${colors.border}`, backgroundColor: colors.background,
@@ -188,30 +181,7 @@ export default function TutorProfile() {
               />
             ) : (
               <div style={{ padding: '12px 0', color: colors.primaryText, fontSize: '15px' }}>
-                {formData.firstName || 'Not set'}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.secondaryText, marginBottom: '8px' }}>
-              Last Name
-            </label>
-            {editMode ? (
-              <input
-                type="text"
-                value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                style={{
-                  width: '100%', padding: '12px 16px', borderRadius: '12px',
-                  border: `1px solid ${colors.border}`, backgroundColor: colors.background,
-                  color: colors.primaryText, fontSize: '15px', outline: 'none',
-                  boxSizing: 'border-box'
-                }}
-              />
-            ) : (
-              <div style={{ padding: '12px 0', color: colors.primaryText, fontSize: '15px' }}>
-                {formData.lastName || 'Not set'}
+                {formData.headline || 'Not set'}
               </div>
             )}
           </div>
@@ -230,30 +200,6 @@ export default function TutorProfile() {
                 Verified
               </span>
             </div>
-          </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.secondaryText, marginBottom: '8px' }}>
-              <Phone size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-              Phone
-            </label>
-            {editMode ? (
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                style={{
-                  width: '100%', padding: '12px 16px', borderRadius: '12px',
-                  border: `1px solid ${colors.border}`, backgroundColor: colors.background,
-                  color: colors.primaryText, fontSize: '15px', outline: 'none',
-                  boxSizing: 'border-box'
-                }}
-              />
-            ) : (
-              <div style={{ padding: '12px 0', color: colors.primaryText, fontSize: '15px' }}>
-                {formData.phone || 'Not set'}
-              </div>
-            )}
           </div>
 
           <div style={{ gridColumn: 'span 2' }}>

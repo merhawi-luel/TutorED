@@ -4,6 +4,16 @@ import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
 import { FileText, Clock, CheckCircle, XCircle, AlertCircle, Filter, MapPin, DollarSign } from 'lucide-react';
 
+type ApplicationStatus = 
+  | 'applied' 
+  | 'under_review' 
+  | 'shortlisted' 
+  | 'interview' 
+  | 'accepted' 
+  | 'completed' 
+  | 'rejected' 
+  | 'withdrawn';
+
 export default function TutorApplications() {
   const { colors } = useTheme();
   const { applications, vacancies } = useData();
@@ -17,7 +27,7 @@ export default function TutorApplications() {
         const vacancy = vacancies.find(v => v.id === a.vacancyId);
         return { ...a, vacancy };
       })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime());
   }, [applications, vacancies, user?.id]);
 
   const filteredApplications = useMemo(() => {
@@ -27,27 +37,58 @@ export default function TutorApplications() {
 
   const stats = useMemo(() => ({
     total: myApplications.length,
-    pending: myApplications.filter(a => a.status === 'pending').length,
-    accepted: myApplications.filter(a => a.status === 'accepted').length,
-    rejected: myApplications.filter(a => a.status === 'rejected').length,
+    inProgress: myApplications.filter(a => 
+      a.status === 'applied' || a.status === 'under_review' || 
+      a.status === 'shortlisted' || a.status === 'interview'
+    ).length,
+    accepted: myApplications.filter(a => a.status === 'accepted' || a.status === 'completed').length,
+    rejected: myApplications.filter(a => a.status === 'rejected' || a.status === 'withdrawn').length,
   }), [myApplications]);
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: ApplicationStatus) => {
     switch (status) {
-      case 'accepted': return <CheckCircle size={16} color="#16A34A" />;
-      case 'rejected': return <XCircle size={16} color="#DC2626" />;
-      case 'pending': return <Clock size={16} color="#D97706" />;
-      default: return <AlertCircle size={16} color={colors.secondaryText} />;
+      case 'accepted':
+      case 'completed':
+        return <CheckCircle size={16} color="#16A34A" />;
+      case 'rejected':
+      case 'withdrawn':
+        return <XCircle size={16} color="#DC2626" />;
+      case 'applied':
+        return <Clock size={16} color="#D97706" />;
+      case 'under_review':
+        return <Clock size={16} color="#2563EB" />;
+      case 'shortlisted':
+        return <AlertCircle size={16} color="#7C3AED" />;
+      case 'interview':
+        return <AlertCircle size={16} color="#2563EB" />;
+      default:
+        return <AlertCircle size={16} color={colors.secondaryText} />;
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: ApplicationStatus) => {
     switch (status) {
-      case 'accepted': return { bg: '#DCFCE7', text: '#16A34A' };
-      case 'rejected': return { bg: '#FEE2E2', text: '#DC2626' };
-      case 'pending': return { bg: '#FEF3C7', text: '#D97706' };
-      default: return { bg: colors.background, text: colors.secondaryText };
+      case 'accepted':
+      case 'completed':
+        return { bg: '#DCFCE7', text: '#16A34A' };
+      case 'rejected':
+      case 'withdrawn':
+        return { bg: '#FEE2E2', text: '#DC2626' };
+      case 'applied':
+        return { bg: '#FEF3C7', text: '#D97706' };
+      case 'under_review':
+        return { bg: '#DBEAFE', text: '#2563EB' };
+      case 'shortlisted':
+        return { bg: '#EDE9FE', text: '#7C3AED' };
+      case 'interview':
+        return { bg: '#DBEAFE', text: '#2563EB' };
+      default:
+        return { bg: colors.background, text: colors.secondaryText };
     }
+  };
+
+  const formatStatus = (status: string) => {
+    return status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   };
 
   return (
@@ -69,7 +110,7 @@ export default function TutorApplications() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
         {[
           { label: 'Total', value: stats.total, color: colors.primary, bg: colors.primaryLight },
-          { label: 'Pending', value: stats.pending, bg: '#FEF3C7', text: '#D97706' },
+          { label: 'In Progress', value: stats.inProgress, bg: '#FEF3C7', text: '#D97706' },
           { label: 'Accepted', value: stats.accepted, bg: '#DCFCE7', text: '#16A34A' },
           { label: 'Rejected', value: stats.rejected, bg: '#FEE2E2', text: '#DC2626' },
         ].map((stat) => (
@@ -92,21 +133,31 @@ export default function TutorApplications() {
       <div style={{
         backgroundColor: colors.card, borderRadius: '12px', padding: '12px',
         marginBottom: '20px', border: `1px solid ${colors.border}`,
-        display: 'flex', gap: '8px'
+        display: 'flex', gap: '8px', flexWrap: 'wrap'
       }}>
-        {['all', 'pending', 'accepted', 'rejected'].map((status) => (
+        {[
+          { value: 'all', label: 'All' },
+          { value: 'applied', label: 'Applied' },
+          { value: 'under_review', label: 'Under Review' },
+          { value: 'shortlisted', label: 'Shortlisted' },
+          { value: 'interview', label: 'Interview' },
+          { value: 'accepted', label: 'Accepted' },
+          { value: 'completed', label: 'Completed' },
+          { value: 'rejected', label: 'Rejected' },
+          { value: 'withdrawn', label: 'Withdrawn' },
+        ].map((filter) => (
           <button
-            key={status}
-            onClick={() => setStatusFilter(status)}
+            key={filter.value}
+            onClick={() => setStatusFilter(filter.value)}
             style={{
               padding: '8px 16px', borderRadius: '8px', border: 'none',
-              backgroundColor: statusFilter === status ? colors.primary : 'transparent',
-              color: statusFilter === status ? '#fff' : colors.secondaryText,
+              backgroundColor: statusFilter === filter.value ? colors.primary : 'transparent',
+              color: statusFilter === filter.value ? '#fff' : colors.secondaryText,
               fontSize: '13px', fontWeight: '500', cursor: 'pointer',
               textTransform: 'capitalize'
             }}
           >
-            {status === 'all' ? 'All' : status}
+            {filter.label}
           </button>
         ))}
       </div>
@@ -123,12 +174,12 @@ export default function TutorApplications() {
               No Applications Yet
             </h3>
             <p style={{ fontSize: '14px', color: colors.secondaryText }}>
-              {statusFilter === 'all' ? 'Start applying to vacancies to see them here' : `No ${statusFilter} applications`}
+              {statusFilter === 'all' ? 'Start applying to vacancies to see them here' : `No ${formatStatus(statusFilter)} applications`}
             </p>
           </div>
         ) : (
           filteredApplications.map((app) => {
-            const statusColor = getStatusColor(app.status);
+            const statusColor = getStatusColor(app.status as ApplicationStatus);
             return (
               <div
                 key={app.id}
@@ -144,16 +195,16 @@ export default function TutorApplications() {
                       {app.vacancy?.title || 'Vacancy'}
                     </h3>
                     <p style={{ fontSize: '13px', color: colors.secondaryText }}>
-                      Applied {new Date(app.createdAt).toLocaleDateString()}
+                      Applied {new Date(app.appliedAt).toLocaleDateString()}
                     </p>
                   </div>
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: '6px',
                     padding: '6px 12px', borderRadius: '8px',
                     backgroundColor: statusColor.bg, color: statusColor.text,
-                    fontSize: '13px', fontWeight: '500', textTransform: 'capitalize'
+                    fontSize: '13px', fontWeight: '500'
                   }}>
-                    {getStatusIcon(app.status)} {app.status}
+                    {getStatusIcon(app.status as ApplicationStatus)} {formatStatus(app.status)}
                   </div>
                 </div>
 
@@ -164,31 +215,19 @@ export default function TutorApplications() {
                       backgroundColor: colors.primaryLight, color: colors.primary,
                       fontSize: '12px', fontWeight: '500'
                     }}>
-                      {app.vacancy.subjects?.join(', ') || app.vacancy.subject}
+                      {app.vacancy.subjects?.join(', ') || ''}
                     </span>
                     {app.vacancy.location && (
                       <span style={{ fontSize: '13px', color: colors.secondaryText, display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <MapPin size={12} /> {app.vacancy.location}
                       </span>
                     )}
-                    {app.vacancy.rate && (
+                    {app.vacancy.salary && (
                       <span style={{ fontSize: '13px', color: colors.secondaryText, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <DollarSign size={12} /> {app.vacancy.rate}/hr
+                        <DollarSign size={12} /> {app.vacancy.salary}
                       </span>
                     )}
                   </div>
-                )}
-
-                {app.message && (
-                  <p style={{ fontSize: '14px', color: colors.secondaryText, lineHeight: '1.5', padding: '12px', backgroundColor: colors.background, borderRadius: '8px' }}>
-                    "{app.message}"
-                  </p>
-                )}
-
-                {app.reviewerNote && (
-                  <p style={{ fontSize: '13px', color: colors.secondaryText, marginTop: '8px', fontStyle: 'italic' }}>
-                    Note from reviewer: {app.reviewerNote}
-                  </p>
                 )}
               </div>
             );

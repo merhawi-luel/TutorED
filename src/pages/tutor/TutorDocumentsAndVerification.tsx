@@ -2,17 +2,17 @@ import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useData } from '../../context/DataContext';
-import { tutorApi } from '../../lib/api';
+import { uploadApi } from '../../lib/api';
 import { 
   FileText, Upload, CheckCircle, Clock, XCircle, AlertTriangle,
-  ChevronDown, ChevronUp, Eye, Download, Trash2, Shield
+  ChevronDown, ChevronUp, Eye, Download, Shield
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function TutorDocumentsAndVerification() {
   const { user } = useAuth();
   const { colors } = useTheme();
-  const { documents, profile, refreshData } = useData();
+  const { documents, tutorProfile, addDocument, requestVerification } = useData();
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
@@ -20,17 +20,18 @@ export default function TutorDocumentsAndVerification() {
 
   const userDocuments = documents.filter(d => d.tutorId === user?.id);
   
+  // Map real DocumentType values to checklist items
   const verificationChecklist = [
-    { id: 'id', label: 'Government ID', required: true, uploaded: userDocuments.some(d => d.type === 'id') },
-    { id: 'qualification', label: 'Teaching Qualification', required: true, uploaded: userDocuments.some(d => d.type === 'qualification') },
-    { id: 'background_check', label: 'Background Check', required: true, uploaded: userDocuments.some(d => d.type === 'background_check') },
-    { id: 'resume', label: 'Resume/CV', required: false, uploaded: userDocuments.some(d => d.type === 'resume') },
-    { id: 'reference', label: 'Reference Letter', required: false, uploaded: userDocuments.some(d => d.type === 'reference') },
+    { type: 'government_id', label: 'Government ID', required: true, uploaded: userDocuments.some(d => d.type === 'government_id') },
+    { type: 'teaching_certificate', label: 'Teaching Qualification', required: true, uploaded: userDocuments.some(d => d.type === 'teaching_certificate') },
+    { type: 'degree_certificate', label: 'Degree Certificate', required: true, uploaded: userDocuments.some(d => d.type === 'degree_certificate') },
+    { type: 'professional_certification', label: 'Professional Certification', required: false, uploaded: userDocuments.some(d => d.type === 'professional_certification') },
+    { type: 'transcript', label: 'Academic Transcript', required: false, uploaded: userDocuments.some(d => d.type === 'transcript') },
   ];
 
   const completedRequired = verificationChecklist.filter(c => c.required && c.uploaded).length;
   const totalRequired = verificationChecklist.filter(c => c.required).length;
-  const verificationProgress = (completedRequired / totalRequired) * 100;
+  const verificationProgress = totalRequired > 0 ? (completedRequired / totalRequired) * 100 : 0;
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -55,18 +56,25 @@ export default function TutorDocumentsAndVerification() {
   const handleUpload = async (file: File) => {
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', 'document');
-      formData.append('name', file.name);
+      // 1. Get a presigned upload URL
+      const { signedUrl, fileKey } = await uploadApi.presign(file.name, file.type);
       
-      await tutorApi.uploadDocument({
-        name: file.name,
-        type: 'document',
-        file: file,
+      // 2. Upload the file to the presigned URL
+      await fetch(signedUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type },
       });
       
-      await refreshData();
+      // 3. Create the document record via context
+      await addDocument({
+        tutorId: user?.id || '',
+        type: 'government_id' as const,
+        title: file.name,
+        fileName: file.name,
+        fileKey,
+      });
+
       toast.success('Document uploaded successfully');
       setShowUploadForm(false);
     } catch (error) {
@@ -85,8 +93,7 @@ export default function TutorDocumentsAndVerification() {
 
   const handleRequestVerification = async () => {
     try {
-      await tutorApi.requestVerification();
-      await refreshData();
+      await requestVerification();
       toast.success('Verification request submitted');
     } catch (error) {
       console.error('Error requesting verification:', error);
@@ -96,9 +103,11 @@ export default function TutorDocumentsAndVerification() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'approved': return <CheckCircle size={16} color="#16A34A" />;
+      case 'verified': return <CheckCircle size={16} color="#16A34A" />;
       case 'pending': return <Clock size={16} color="#D97706" />;
+      case 'under_review': return <Clock size={16} color="#2563EB" />;
       case 'rejected': return <XCircle size={16} color="#DC2626" />;
+      case 'expired': return <XCircle size={16} color="#6B7280" />;
       default: return <FileText size={16} color={colors.secondaryText} />;
     }
   };
@@ -131,8 +140,8 @@ export default function TutorDocumentsAndVerification() {
               Verification Status
             </h2>
             <p style={{ fontSize: '14px', color: colors.secondaryText }}>
-              {profile?.verificationLevel === 'full' ? 'Fully Verified' : 
-               profile?.verificationLevel === 'basic' ? 'Basic Verification' : 'Not Verified'}
+              {tutorProfile?.verificationLevel === 'verified' ? 'Fully Verified' : 
+               tutorProfile?.verificationLevel === 'partial' ? 'Partial Verification' : 'Not Verified'}
             </p>
           </div>
         </div>
@@ -160,7 +169,7 @@ export default function TutorDocumentsAndVerification() {
         {/* Checklist */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
           {verificationChecklist.map((item) => (
-            <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div key={item.type} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               {item.uploaded ? (
                 <CheckCircle size={16} color="#16A34A" />
               ) : (
@@ -181,7 +190,7 @@ export default function TutorDocumentsAndVerification() {
         </div>
 
         {/* Request Verification Button */}
-        {verificationProgress === 100 && profile?.verificationLevel !== 'full' && (
+        {verificationProgress === 100 && tutorProfile?.verificationLevel !== 'verified' && (
           <button
             onClick={handleRequestVerification}
             style={{
@@ -305,23 +314,27 @@ export default function TutorDocumentsAndVerification() {
                     {getStatusIcon(doc.status)}
                     <div>
                       <p style={{ fontSize: '15px', fontWeight: '500', color: colors.primaryText }}>
-                        {doc.name}
+                        {doc.title || doc.fileName}
                       </p>
                       <p style={{ fontSize: '12px', color: colors.secondaryText }}>
-                        Uploaded {new Date(doc.uploadedAt).toLocaleDateString()}
+                        Uploaded {new Date(doc.submittedAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <span style={{
                       padding: '4px 10px', borderRadius: '6px',
-                      backgroundColor: doc.status === 'approved' ? '#DCFCE7' : 
-                                       doc.status === 'pending' ? '#FEF3C7' : '#FEE2E2',
-                      color: doc.status === 'approved' ? '#16A34A' : 
-                             doc.status === 'pending' ? '#D97706' : '#DC2626',
+                      backgroundColor: doc.status === 'verified' ? '#DCFCE7' : 
+                                       doc.status === 'under_review' ? '#DBEAFE' :
+                                       doc.status === 'pending' ? '#FEF3C7' : 
+                                       doc.status === 'rejected' ? '#FEE2E2' : '#F3F4F6',
+                      color: doc.status === 'verified' ? '#16A34A' : 
+                             doc.status === 'under_review' ? '#2563EB' :
+                             doc.status === 'pending' ? '#D97706' : 
+                             doc.status === 'rejected' ? '#DC2626' : '#6B7280',
                       fontSize: '12px', fontWeight: '500', textTransform: 'capitalize'
                     }}>
-                      {doc.status}
+                      {doc.status.replace('_', ' ')}
                     </span>
                     {expandedDoc === doc.id ? <ChevronUp size={16} color={colors.secondaryText} /> : <ChevronDown size={16} color={colors.secondaryText} />}
                   </div>
