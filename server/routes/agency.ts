@@ -350,6 +350,12 @@ router.get("/applicants/:vacancyId", requireAuth, requireRole("agency"), async (
         return {
           ...a,
           tutorName: tutorUser?.name ?? "Unknown",
+          name: tutorUser?.name ?? "Unknown",
+          email: tutorUser?.email ?? "",
+          phone: "",
+          subject: profile?.subjects?.[0] ?? "",
+          experience: profile?.experience ?? 0,
+          education: profile?.education ?? "",
           tutorProfile: profile ?? null,
           educationEntries: tutorEducationEntries,
         };
@@ -415,6 +421,12 @@ router.get("/applicants", requireAuth, requireRole("agency"), async (req, res) =
         return {
           ...a,
           tutorName: tutorUser?.name ?? "Unknown",
+          name: tutorUser?.name ?? "Unknown",
+          email: tutorUser?.email ?? "",
+          phone: "",
+          subject: profile?.subjects?.[0] ?? "",
+          experience: profile?.experience ?? 0,
+          education: profile?.education ?? "",
           tutorProfile: profile ?? null,
           vacancyTitle: vacancy?.title ?? "Unknown",
           educationEntries: tutorEducationEntries,

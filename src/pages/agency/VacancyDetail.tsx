@@ -801,7 +801,7 @@ export default function VacancyDetail() {
                           className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold shrink-0"
                           style={{ background: colors.accent, color: colors.bgPage }}
                         >
-                          {applicant.name.split(" ").map((n: string) => n[0]).join("")}
+                          {(applicant.name || applicant.tutorName || "U").split(" ").map((n: string) => n[0]).join("")}
                         </div>
                         {/* Info */}
                         <div className="flex-1 min-w-0">
@@ -810,7 +810,7 @@ export default function VacancyDetail() {
                               className="text-sm font-semibold truncate"
                               style={{ color: isSelected ? colors.accent : colors.textPrimary }}
                             >
-                              {applicant.name}
+                              {applicant.name || applicant.tutorName || "Unknown"}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 mt-1">
@@ -870,11 +870,11 @@ export default function VacancyDetail() {
                   className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold"
                   style={{ background: colors.accent, color: colors.bgPage }}
                 >
-                  {selectedApplicant.name.split(" ").map((n: string) => n[0]).join("")}
+                  {(selectedApplicant.name || selectedApplicant.tutorName || "U").split(" ").map((n: string) => n[0]).join("")}
                 </div>
                 <div>
                   <h2 className="text-lg font-bold" style={{ color: colors.textPrimary }}>
-                    {selectedApplicant.name}
+                    {selectedApplicant.name || selectedApplicant.tutorName || "Unknown"}
                   </h2>
                   <span
                     className="text-xs px-2 py-0.5 rounded-full font-medium capitalize"
@@ -937,8 +937,8 @@ export default function VacancyDetail() {
                     <Briefcase size={12} style={{ color: colors.accent }} />
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase tracking-wider" style={{ color: colors.textFaint }}>Subject</div>
-                    <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>{selectedApplicant.subject}</p>
+                    <div className="text-[10px] uppercase tracking-wider" style={{ color: colors.textFaint }}>Subjects</div>
+                    <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>{selectedApplicant.subject || "—"}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
