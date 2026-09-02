@@ -150,22 +150,35 @@ router.get("/documents/:id/preview", requireAuth, requireRole("tutor"), async (r
       return res.status(404).json({ error: "File not available for preview" });
     }
 
-    // Generate signed URL with longer expiry for preview
-    const { data, error } = await supabase.storage
+    // Fetch the file from storage and stream it back with inline headers
+    const { data: fileData, error: downloadError } = await supabase.storage
       .from(BUCKET_NAME)
-      .createSignedUrl(doc.fileKey, 7200); // 2 hours
+      .download(doc.fileKey);
 
-    if (error) {
-      console.error("Supabase preview URL error:", error);
-      return res.status(500).json({ error: "Failed to generate preview URL" });
+    if (downloadError || !fileData) {
+      console.error("Supabase download error:", downloadError);
+      return res.status(500).json({ error: "Failed to fetch file for preview" });
     }
 
-    res.json({ 
-      previewUrl: data.signedUrl, 
-      fileName: doc.fileName,
-      type: doc.type,
-      title: doc.title 
-    });
+    // Determine content type from file extension
+    const ext = doc.fileName.split('.').pop()?.toLowerCase() || '';
+    const contentTypes: Record<string, string> = {
+      pdf: 'application/pdf',
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      doc: 'application/msword',
+      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    };
+    const contentType = contentTypes[ext] || 'application/octet-stream';
+
+    // Set Content-Disposition to inline so browser renders it
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `inline; filename="${doc.fileName}"`);
+
+    // Stream the file buffer
+    const buffer = Buffer.from(await fileData.arrayBuffer());
+    res.send(buffer);
   } catch (error) {
     console.error("Preview document error:", error);
     res.status(500).json({ error: "Internal server error" });

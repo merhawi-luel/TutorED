@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useData } from '../../context/DataContext';
 import { uploadApi, tutorApi } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
 import { 
   FileText, Upload, CheckCircle, Clock, XCircle, AlertTriangle,
   ChevronDown, ChevronUp, Eye, Download, Shield, Trash2
@@ -434,8 +435,16 @@ export default function TutorDocumentsAndVerification() {
                         onClick={async (e) => {
                           e.stopPropagation();
                           try {
-                            const { previewUrl } = await tutorApi.previewDocument(doc.id);
-                            window.open(previewUrl, '_blank');
+                            const { data: { session } } = await supabase.auth.getSession();
+                            const token = session?.access_token;
+                            const API_BASE = import.meta.env.VITE_API_URL || '/api';
+                            const res = await fetch(`${API_BASE}/tutor/documents/${doc.id}/preview`, {
+                              headers: { Authorization: `Bearer ${token}` },
+                            });
+                            if (!res.ok) throw new Error('Preview failed');
+                            const blob = await res.blob();
+                            const url = URL.createObjectURL(blob);
+                            window.open(url, '_blank');
                           } catch (err) {
                             toast.error('Failed to preview document');
                           }
