@@ -48,16 +48,15 @@ export default function AdminDocuments() {
   const [docs, setDocs] = useState(allDocuments);
 
   useEffect(() => {
-    // Fetch fresh documents from verification data
-    adminApi.getVerifications().then((data) => {
-      const allDocs = data.flatMap((vr: any) => (vr.documents || []).map((d: any) => ({
+    adminApi.getDocuments().then((data) => {
+      const allDocs = data.map((d: any) => ({
         ...d,
         tutorId: d.tutorId || d.tutor_id,
         fileName: d.fileName || d.file_name,
         submittedAt: d.submittedAt || d.submitted_at,
         reviewedAt: d.reviewedAt || d.reviewed_at,
         reviewerNote: d.reviewerNote || d.reviewer_note,
-      })));
+      }));
       setDocs(allDocs);
     }).catch(() => {});
   }, []);

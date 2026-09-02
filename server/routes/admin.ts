@@ -21,6 +21,23 @@ const storageClient = createClient(
 );
 const BUCKET_NAME = "documents";
 
+// ─── GET /api/admin/documents ────────────────────────────────
+// Fetch all documents across all tutors
+
+router.get("/documents", requireAuth, requireRole("admin"), async (_req, res) => {
+  try {
+    const allDocs = await db
+      .select()
+      .from(documents)
+      .orderBy(desc(documents.submittedAt));
+
+    res.json(allDocs);
+  } catch (error) {
+    console.error("Get all documents error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // ─── GET /api/admin/verifications ────────────────────────────
 
 router.get("/verifications", requireAuth, requireRole("admin"), async (_req, res) => {

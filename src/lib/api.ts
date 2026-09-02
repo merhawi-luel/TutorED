@@ -125,6 +125,7 @@ export const agencyApi = {
 // ─── Admin ─────────────────────────────────────────────────────
 
 export const adminApi = {
+  getDocuments: () => request<any[]>("/admin/documents"),
   getVerifications: () => request<any[]>("/admin/verifications"),
   approveVerification: (id: string) =>
     request<any>(`/admin/verifications/${id}/approve`, { method: "PUT" }),
