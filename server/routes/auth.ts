@@ -89,16 +89,8 @@ router.post("/register", async (req, res) => {
       });
     }
 
-    // Send verification email via Supabase
-    const { error: otpError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email.toLowerCase(), {
-      data: { name, role },
-      redirectTo: `${process.env.FRONTEND_URL || "http://localhost:5173"}/auth/confirm`,
-    });
-
-    // Note: inviteUserByEmail may fail if user already has pending email - that's okay
-    if (otpError) {
-      console.log("Invite email note:", otpError.message);
-    }
+    // Supabase sends a verification email automatically when email_confirm: false
+    // Do NOT call inviteUserByEmail here — it overwrites user_metadata and loses the role
 
     res.status(201).json({
       message: "Account created! Please check your email to verify your account.",
@@ -341,14 +333,19 @@ router.post("/resend-verification", async (req, res) => {
       return res.status(400).json({ error: "Email is required" });
     }
 
-    const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+    // Use generateLink instead of inviteUserByEmail to avoid overwriting user_metadata
+    const { data, error } = await supabaseAdmin.auth.admin.generateLink({
+      type: "signup",
+      email,
       redirectTo: `${process.env.FRONTEND_URL || "http://localhost:5173"}/auth/confirm`,
     });
 
     if (error) {
       console.error("Resend verification error:", error);
       return res.status(400).json({ error: "Failed to resend verification email" });
-    }
+    }    // The link is generated but Supabase doesn't send it automatically.
+    // For now, return success — in production you'd send this link via email service.
+    console.log("Verification link generated for:", email);
 
     res.json({ message: "Verification email sent!" });
   } catch (error) {

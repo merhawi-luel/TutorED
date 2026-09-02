@@ -35,9 +35,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       if (session?.user) {
+        // Always re-fetch profile on session changes (login, token refresh, etc.)
         fetchUserProfile(session.user);
       } else {
         setUser(null);

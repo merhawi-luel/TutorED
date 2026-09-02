@@ -18,6 +18,23 @@ export default function Confirm() {
       if (!token_hash) {
         const { data } = await supabase.auth.getSession();
         if (data.session) {
+          // Fetch role from database, not from user_metadata (which may be stale)
+          try {
+            const API_BASE = import.meta.env.VITE_API_URL || "/api";
+            const res = await fetch(`${API_BASE}/auth/me`, {
+              headers: { Authorization: `Bearer ${data.session.access_token}` },
+            });
+            if (res.ok) {
+              const profile = await res.json();
+              setStatus("success");
+              setTimeout(() => {
+                const redirect = profile.role === "tutor" ? "/tutor" : profile.role === "agency" ? "/agency" : profile.role === "parent" ? "/parent" : "/admin";
+                navigate(redirect, { replace: true });
+              }, 2000);
+              return;
+            }
+          } catch {}
+          // Fallback: use auth metadata if backend unavailable
           setStatus("success");
           setTimeout(() => {
             const role = data.session!.user.user_metadata?.role || "tutor";
@@ -31,7 +48,28 @@ export default function Confirm() {
         const email = searchParams.get("email") || "";
         const { error } = await supabase.auth.verifyOtp({ email, token: token_hash, type: type as any });
         if (error) { setStatus("error"); setError(error.message); }
-        else { setStatus("success"); setTimeout(() => navigate("/login", { replace: true }), 3000); }
+        else {
+          // OTP verified — now fetch role from database and redirect
+          const { data: sessionData } = await supabase.auth.getSession();
+          if (sessionData.session) {
+            try {
+              const API_BASE = import.meta.env.VITE_API_URL || "/api";
+              const res = await fetch(`${API_BASE}/auth/me`, {
+                headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
+              });
+              if (res.ok) {
+                const profile = await res.json();
+                setStatus("success");
+                setTimeout(() => {
+                  const redirect = profile.role === "tutor" ? "/tutor" : profile.role === "agency" ? "/agency" : profile.role === "parent" ? "/parent" : "/admin";
+                  navigate(redirect, { replace: true });
+                }, 2000);
+                return;
+              }
+            } catch {}
+          }
+          setStatus("success"); setTimeout(() => navigate("/login", { replace: true }), 3000);
+        }
       } catch { setStatus("error"); setError("Failed to verify email"); }
     };
     handleConfirm();
