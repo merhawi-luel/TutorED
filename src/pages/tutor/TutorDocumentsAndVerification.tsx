@@ -6,7 +6,7 @@ import { uploadApi, tutorApi } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 import { 
   FileText, Upload, CheckCircle, Clock, XCircle, AlertTriangle,
-  ChevronDown, ChevronUp, Eye, Download, Shield, Trash2
+  ChevronDown, ChevronUp, Download, Shield, Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { DocumentType } from '../../types';
@@ -431,45 +431,13 @@ export default function TutorDocumentsAndVerification() {
                 {expandedDoc === doc.id && (
                   <div style={{ padding: '16px', borderTop: `1px solid ${colors.border}`, backgroundColor: colors.background }}>
                     <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+
                       <button
                         onClick={async (e) => {
                           e.stopPropagation();
                           try {
-                            const { data: { session } } = await supabase.auth.getSession();
-                            const token = session?.access_token;
-                            const API_BASE = import.meta.env.VITE_API_URL || '/api';
-                            const res = await fetch(`${API_BASE}/tutor/documents/${doc.id}/preview`, {
-                              headers: { Authorization: `Bearer ${token}` },
-                            });
-                            if (!res.ok) throw new Error('Preview failed');
-                            const blob = await res.blob();
-                            const url = URL.createObjectURL(blob);
-                            window.open(url, '_blank');
-                          } catch (err) {
-                            toast.error('Failed to preview document');
-                          }
-                        }}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: '6px',
-                          padding: '8px 14px', borderRadius: '8px',
-                          border: `1px solid ${colors.border}`, backgroundColor: colors.card,
-                          color: colors.primaryText, fontSize: '13px', fontWeight: '500',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <Eye size={14} /> View
-                      </button>
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          try {
-                            const { downloadUrl, fileName } = await tutorApi.downloadDocument(doc.id);
-                            const a = document.createElement('a');
-                            a.href = downloadUrl;
-                            a.download = fileName;
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
+                            const { downloadUrl } = await tutorApi.downloadDocument(doc.id);
+                            window.open(downloadUrl, '_blank');
                           } catch (err) {
                             toast.error('Failed to download document');
                           }
