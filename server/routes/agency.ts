@@ -490,8 +490,8 @@ router.get("/requests", requireAuth, requireRole("agency"), async (req, res) => 
     const requests = await db
       .select({
         id: recruitmentRequests.id,
-        subject: recruitmentRequests.subject,
-        grade: recruitmentRequests.grade,
+        subjects: recruitmentRequests.subjects,
+        grades: recruitmentRequests.grades,
         location: recruitmentRequests.location,
         notes: recruitmentRequests.notes,
         status: recruitmentRequests.status,

@@ -226,7 +226,7 @@ export default function AgencyApplicants() {
                       className="w-11 h-11 rounded-xl flex items-center justify-center text-black font-bold text-sm shrink-0"
                       style={{ background: "var(--accent)" }}
                     >
-                      {applicant.tutorName.split(" ").map((n: string) => n[0]).join("")}
+                      {(applicant.tutorName || "U").split(" ").map((n: string) => n[0]).join("")}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">

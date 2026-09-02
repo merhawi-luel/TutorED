@@ -170,7 +170,7 @@ export default function AgencyTutors() {
                       className="w-12 h-12 rounded-xl flex items-center justify-center text-black font-bold text-sm shrink-0"
                       style={{ background: "var(--accent)" }}
                     >
-                      {tutor.name.split(" ").map((n: string) => n[0]).join("")}
+                      {(tutor.name || "U").split(" ").map((n: string) => n[0]).join("")}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">

@@ -31,8 +31,8 @@ const ACTIONS: { status: string; label: string; color: string }[] = [
 
 interface Request {
   id: string;
-  subject: string;
-  grade: string;
+  subjects: string[];
+  grades: string[];
   location: string;
   notes: string;
   status: string;
@@ -57,8 +57,8 @@ export default function AgencyRequests() {
       setRequests(
         data.map((r: any) => ({
           id: r.id,
-          subject: r.subject,
-          grade: r.grade,
+          subjects: r.subjects || (r.subject ? [r.subject] : []),
+          grades: r.grades || (r.grade ? [r.grade] : []),
           location: r.location || "",
           notes: r.notes || "",
           status: r.status,
@@ -204,7 +204,7 @@ export default function AgencyRequests() {
                       </div>
                       <div className="text-xs text-[var(--text-muted)] mt-0.5">
                         <BookOpen size={11} className="inline mr-1" />
-                        {req.subject} — {req.grade}
+                        {(req.subjects || []).join(", ")} — {(req.grades || []).join(", ")}
                         {req.location && (
                           <>
                             <span className="mx-1.5">·</span>
@@ -260,11 +260,11 @@ export default function AgencyRequests() {
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                       <div className="rounded-lg px-3 py-2" style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}>
                         <div className="text-[10px] text-[var(--text-faint)] uppercase">Subject</div>
-                        <div className="text-[var(--text-primary)]">{req.subject}</div>
+                        <div className="text-[var(--text-primary)]">{(req.subjects || []).join(", ") || "—"}</div>
                       </div>
                       <div className="rounded-lg px-3 py-2" style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}>
-                        <div className="text-[10px] text-[var(--text-faint)] uppercase">Grade</div>
-                        <div className="text-[var(--text-primary)]">{req.grade}</div>
+                        <div className="text-[10px] text-[var(--text-faint)] uppercase">Grades</div>
+                        <div className="text-[var(--text-primary)]">{(req.grades || []).join(", ") || "—"}</div>
                       </div>
                       <div className="rounded-lg px-3 py-2" style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}>
                         <div className="text-[10px] text-[var(--text-faint)] uppercase">Location</div>
@@ -272,7 +272,7 @@ export default function AgencyRequests() {
                       </div>
                       <div className="rounded-lg px-3 py-2" style={{ background: "var(--bg-input)", border: "1px solid var(--border-color)" }}>
                         <div className="text-[10px] text-[var(--text-faint)] uppercase">Received</div>
-                        <div className="text-[var(--text-primary)]">{req.createdAt.split("T")[0] || "—"}</div>
+                        <div className="text-[var(--text-primary)]">{req.createdAt ? req.createdAt.split("T")[0] : "—"}</div>
                       </div>
                     </div>
 

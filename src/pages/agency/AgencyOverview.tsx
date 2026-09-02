@@ -114,7 +114,7 @@ export default function AgencyOverview({ onTabChange }: OverviewProps) {
                       className="w-10 h-10 rounded-lg flex items-center justify-center text-black font-bold text-xs shrink-0"
                       style={{ background: "var(--accent)" }}
                     >
-                      {app.tutorName.split(" ").map((n: string) => n[0]).join("")}
+                      {(app.tutorName || "U").split(" ").map((n: string) => n[0]).join("")}
                     </div>
                     <div>
                       <div className="text-sm font-medium text-[var(--text-primary)]">{app.tutorName || app.tutor_name || "Unknown"}</div>
