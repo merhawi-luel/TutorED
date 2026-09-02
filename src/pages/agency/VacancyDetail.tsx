@@ -1,6 +1,6 @@
 import { useTheme } from "@/context/ThemeContext";
 import { supabase } from "@/lib/supabase";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -15,11 +15,35 @@ import {
   X,
   CheckCircle,
   Loader2,
+  GraduationCap,
+  Star,
+  Mail,
+  Phone,
+  Calendar,
 } from "lucide-react";
 import { ALL_SUBJECTS, ALL_GRADES } from "@/data/constants";
-import type { TeachingMode } from "@/types";
+import type { ApplicationStatus, TeachingMode } from "@/types";
 
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
+
+// ─── Status Config (matches AgencyApplicants.tsx) ─────────────
+const STATUS_CONFIG: Record<string, { color: string; label: string; bg: string }> = {
+  applied: { color: "var(--text-secondary)", label: "Applied", bg: "var(--bg-input)" },
+  under_review: { color: "var(--badge-info-color)", label: "Under Review", bg: "var(--badge-info-bg)" },
+  shortlisted: { color: "var(--accent)", label: "Shortlisted", bg: "var(--accent-bg)" },
+  interview: { color: "var(--badge-purple-color)", label: "Interview", bg: "var(--badge-purple-bg)" },
+  accepted: { color: "var(--accent)", label: "Accepted", bg: "var(--accent-bg)" },
+  completed: { color: "var(--accent)", label: "Completed", bg: "var(--accent-bg)" },
+  rejected: { color: "var(--danger-color)", label: "Rejected", bg: "var(--danger-bg)" },
+  withdrawn: { color: "var(--text-muted)", label: "Withdrawn", bg: "var(--bg-input)" },
+};
+
+const ACTIONS: { status: ApplicationStatus; label: string; color: string }[] = [
+  { status: "shortlisted", label: "Shortlist", color: "var(--accent)" },
+  { status: "interview", label: "Interview", color: "var(--badge-purple-color)" },
+  { status: "accepted", label: "Accept", color: "var(--accent)" },
+  { status: "rejected", label: "Reject", color: "var(--danger-color)" },
+];
 
 interface Applicant {
   id: string;
@@ -82,6 +106,7 @@ export default function VacancyDetail() {
     deadline: "",
   });
 
+  // ─── Fetch Data ─────────────────────────────────────────────
   useEffect(() => {
     const fetchVacancyAndApplicants = async () => {
       try {
@@ -95,7 +120,6 @@ export default function VacancyDetail() {
         if (vacancyResponse.ok) {
           const vacancyData = await vacancyResponse.json();
           setVacancy(vacancyData);
-          // Initialize edit form
           setEditForm({
             title: vacancyData.title || "",
             description: vacancyData.description || "",
@@ -114,7 +138,6 @@ export default function VacancyDetail() {
         const applicantsResponse = await fetch(`${API_BASE}/agency/applicants/${vacancyId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        // token already declared above
 
         if (applicantsResponse.ok) {
           const applicantsData = await applicantsResponse.json();
@@ -132,6 +155,55 @@ export default function VacancyDetail() {
     }
   }, [vacancyId]);
 
+  // ─── Status Change Handler ──────────────────────────────────
+  const handleStatusChange = useCallback(async (applicantId: string, newStatus: ApplicationStatus) => {
+    // Optimistic update
+    setApplicants((prev) =>
+      prev.map((a) => (a.id === applicantId ? { ...a, status: newStatus } : a))
+    );
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const res = await fetch(`${API_BASE}/agency/applications/${applicantId}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update status");
+
+      const label = STATUS_CONFIG[newStatus]?.label ?? newStatus;
+      setToast({ type: "success", message: `Marked as ${label}` });
+      setTimeout(() => setToast(null), 3000);
+
+      // Update selectedApplicant if it's the same one
+      setSelectedApplicant((prev) =>
+        prev && prev.id === applicantId ? { ...prev, status: newStatus } : prev
+      );
+    } catch (err) {
+      console.error("Failed to update status:", err);
+      setToast({ type: "error", message: "Failed to update status" });
+      setTimeout(() => setToast(null), 3000);
+      // Revert on failure - refetch applicants
+      if (vacancyId) {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        const applicantsResponse = await fetch(`${API_BASE}/agency/applicants/${vacancyId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (applicantsResponse.ok) {
+          const applicantsData = await applicantsResponse.json();
+          setApplicants(applicantsData);
+        }
+      }
+    }
+  }, [vacancyId]);
+
+  // ─── Edit Handlers ──────────────────────────────────────────
   const handleSave = async () => {
     if (!vacancyId || !editForm.title || editForm.subjects.length === 0 || editForm.grades.length === 0) return;
 
@@ -185,12 +257,25 @@ export default function VacancyDetail() {
     setEditing(false);
   };
 
+  // ─── Modal Escape Key ───────────────────────────────────────
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && showProfile) {
+        setShowProfile(false);
+        setSelectedApplicant(null);
+      }
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [showProfile]);
+
   const inputStyle = {
     background: colors.bgInput,
     border: `1px solid ${colors.borderColor}`,
     color: colors.textPrimary,
   };
 
+  // ─── Loading State ──────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center" style={{ background: colors.bgPage }}>
@@ -205,6 +290,7 @@ export default function VacancyDetail() {
     );
   }
 
+  // ─── Not Found State ────────────────────────────────────────
   if (!vacancy) {
     return (
       <div className="space-y-6">
@@ -225,16 +311,18 @@ export default function VacancyDetail() {
     );
   }
 
+  const statusCfg = STATUS_CONFIG[vacancy.status] ?? STATUS_CONFIG.applied;
+
   return (
     <div className="space-y-6">
-      {/* Toast */}
+      {/* ─── Toast ──────────────────────────────────────────── */}
       {toast && (
         <div
           className="fixed top-6 right-6 z-50 px-5 py-3 rounded-xl flex items-center gap-3 shadow-xl"
           style={{
-            background: toast.type === "success" ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)",
-            border: `1px solid ${toast.type === "success" ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)"}`,
-            color: toast.type === "success" ? "rgb(34,197,94)" : "rgb(239,68,68)",
+            background: toast.type === "success" ? colors.accentBg : colors.dangerBg,
+            border: `1px solid ${toast.type === "success" ? colors.accentBorder : colors.dangerBorder}`,
+            color: toast.type === "success" ? colors.accent : colors.dangerColor,
           }}
         >
           <CheckCircle size={18} />
@@ -242,26 +330,26 @@ export default function VacancyDetail() {
         </div>
       )}
 
-      {/* Back Button */}
+      {/* ─── Back Button ────────────────────────────────────── */}
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-sm font-medium"
+        className="flex items-center gap-2 text-sm font-medium transition-colors hover:opacity-80"
         style={{ color: colors.accent }}
       >
         <ArrowLeft size={16} /> Back to My Posts
       </button>
 
-      {/* Main Content */}
+      {/* ─── Main Content ───────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Vacancy Details - Left Column */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* ─── Left Column: Vacancy Details ─────────────────── */}
+        <div className="lg:col-span-2 space-y-5">
           {/* Header Card */}
           <div
             className="rounded-2xl p-6 border"
             style={{ backgroundColor: colors.bgCard, borderColor: colors.borderColor }}
           >
             {/* Title & Status & Edit Button */}
-            <div className="flex items-start justify-between gap-4 mb-4">
+            <div className="flex items-start justify-between gap-4 mb-5">
               <div className="flex-1 min-w-0">
                 {editing ? (
                   <input
@@ -273,29 +361,49 @@ export default function VacancyDetail() {
                   />
                 ) : (
                   <>
-                    <h1 className="text-3xl font-bold mb-2" style={{ color: colors.textPrimary }}>
+                    <h1 className="text-3xl font-bold mb-3" style={{ color: colors.textPrimary }}>
                       {vacancy.title}
                     </h1>
-                    <p style={{ color: colors.textSecondary }}>
-                      {(vacancy.subjects?.join(', ') || '—')}{vacancy.grades?.length ? ' • ' + vacancy.grades.join(', ') : ''}
-                    </p>
+                    {/* Subjects & Grades Tags */}
+                    <div className="flex flex-wrap gap-1.5 mb-1">
+                      {(vacancy.subjects || []).map((s) => (
+                        <span
+                          key={s}
+                          className="px-2.5 py-1 rounded-lg text-xs font-medium"
+                          style={{ background: colors.accentBg, color: colors.accent }}
+                        >
+                          {s}
+                        </span>
+                      ))}
+                      {(vacancy.grades || []).map((g) => (
+                        <span
+                          key={g}
+                          className="px-2.5 py-1 rounded-lg text-xs font-medium"
+                          style={{ background: colors.badgeInfoBg, color: colors.badgeInfoColor }}
+                        >
+                          {g}
+                        </span>
+                      ))}
+                    </div>
                   </>
                 )}
               </div>
               <div className="flex items-center gap-2 shrink-0">
+                {/* Status Badge */}
                 <span
-                  className="px-3 py-1 rounded-full text-sm font-medium capitalize whitespace-nowrap"
+                  className="px-3.5 py-1.5 rounded-full text-xs font-bold capitalize whitespace-nowrap"
                   style={{
-                    backgroundColor: vacancy.status === "open" ? "rgba(34,197,94,0.1)" : "rgba(107,114,128,0.1)",
-                    color: vacancy.status === "open" ? "rgb(34,197,94)" : colors.textMuted,
+                    backgroundColor: statusCfg.bg,
+                    color: statusCfg.color,
+                    border: `1.5px solid ${statusCfg.color}30`,
                   }}
                 >
-                  {vacancy.status}
+                  {statusCfg.label}
                 </span>
                 {!editing ? (
                   <button
                     onClick={() => setEditing(true)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
                     style={{ background: colors.bgInput, border: `1px solid ${colors.borderColor}`, color: colors.textPrimary }}
                   >
                     <Pencil size={14} /> Edit
@@ -323,151 +431,231 @@ export default function VacancyDetail() {
               </div>
             </div>
 
-            {/* Key Info Grid */}
+            {/* Salary & Key Info Row */}
             <div
-              className="grid grid-cols-2 gap-4 py-4"
+              className="flex items-center gap-6 py-4 mb-1"
               style={{ borderTop: `1px solid ${colors.borderColor}`, borderBottom: `1px solid ${colors.borderColor}` }}
             >
-              {/* Subject & Grade (edit mode) */}
-              {editing && (
-                <>
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs mb-1.5" style={{ color: colors.textMuted }}>Subjects *</label>
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                      {editForm.subjects.map((s) => (
-                        <span key={s} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium" style={{ background: colors.primaryLight, color: colors.primary }}>
-                          {s}
-                          <button type="button" onClick={() => setEditForm({ ...editForm, subjects: editForm.subjects.filter((x) => x !== s) })} className="hover:opacity-70"><X size={12} /></button>
-                        </span>
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 p-2 rounded-xl" style={{ background: colors.bgInput, border: `1px solid ${colors.borderColor}` }}>
-                      {ALL_SUBJECTS.map((s) => {
-                        const checked = editForm.subjects.includes(s);
-                        return (
-                          <button key={s} type="button" onClick={() => setEditForm({ ...editForm, subjects: checked ? editForm.subjects.filter((x) => x !== s) : [...editForm.subjects, s] })} className="flex items-center gap-1.5 px-2 py-1.5 rounded text-[11px] transition-all text-left" style={{ background: checked ? colors.primaryLight : 'transparent', color: checked ? colors.primary : colors.textMuted }}>
-                            <div className="w-3 h-3 rounded flex items-center justify-center shrink-0" style={{ border: `1.5px solid ${checked ? colors.primary : colors.borderColor}`, background: checked ? colors.primary : 'transparent' }}>
-                              {checked && <svg width="7" height="7" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-                            </div>
-                            {s}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs mb-1.5" style={{ color: colors.textMuted }}>Grades *</label>
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                      {editForm.grades.map((g) => (
-                        <span key={g} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium" style={{ background: colors.primaryLight, color: colors.primary }}>
-                          {g}
-                          <button type="button" onClick={() => setEditForm({ ...editForm, grades: editForm.grades.filter((x) => x !== g) })} className="hover:opacity-70"><X size={12} /></button>
-                        </span>
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 p-2 rounded-xl" style={{ background: colors.bgInput, border: `1px solid ${colors.borderColor}` }}>
-                      {ALL_GRADES.map((g) => {
-                        const checked = editForm.grades.includes(g);
-                        return (
-                          <button key={g} type="button" onClick={() => setEditForm({ ...editForm, grades: checked ? editForm.grades.filter((x) => x !== g) : [...editForm.grades, g] })} className="flex items-center gap-1.5 px-2 py-1.5 rounded text-[11px] transition-all text-left" style={{ background: checked ? colors.primaryLight : 'transparent', color: checked ? colors.primary : colors.textMuted }}>
-                            <div className="w-3 h-3 rounded flex items-center justify-center shrink-0" style={{ border: `1.5px solid ${checked ? colors.primary : colors.borderColor}`, background: checked ? colors.primary : 'transparent' }}>
-                              {checked && <svg width="7" height="7" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-                            </div>
-                            {g}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </>
+              {/* Salary Highlight */}
+              {vacancy.salary && (
+                <div
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl"
+                  style={{ background: colors.accentBg, border: `1px solid ${colors.accentBorder}` }}
+                >
+                  <DollarSign size={18} style={{ color: colors.accent }} />
+                  <span className="text-lg font-bold" style={{ color: colors.accent }}>
+                    {vacancy.salary}
+                  </span>
+                </div>
               )}
 
-              {/* Location */}
-              <div>
-                <label className="block text-xs mb-1.5" style={{ color: colors.textMuted }}>Location</label>
-                {editing ? (
-                  <input
-                    value={editForm.location}
-                    onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl text-sm focus:outline-none"
-                    style={inputStyle}
-                  />
-                ) : (
-                  <div className="flex items-center gap-2" style={{ color: colors.textPrimary }}>
-                    <MapPin size={16} />
-                    <span className="font-medium">{vacancy.location}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Teaching Mode */}
-              <div>
-                <label className="block text-xs mb-1.5" style={{ color: colors.textMuted }}>Teaching Mode</label>
-                {editing ? (
-                  <select
-                    value={editForm.teachingMode}
-                    onChange={(e) => setEditForm({ ...editForm, teachingMode: e.target.value as TeachingMode })}
-                    className="w-full px-3 py-2 rounded-xl text-sm focus:outline-none"
-                    style={inputStyle}
+              {/* Key Info Grid */}
+              <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {/* Location */}
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ background: colors.bgInput }}
                   >
-                    <option value="in-person">In-person</option>
-                    <option value="online">Online</option>
-                    <option value="hybrid">Hybrid</option>
-                  </select>
-                ) : (
-                  <div className="flex items-center gap-2" style={{ color: colors.textPrimary }}>
-                    <Briefcase size={16} />
-                    <span className="font-medium capitalize">{vacancy.teachingMode}</span>
+                    <MapPin size={14} style={{ color: colors.textMuted }} />
                   </div>
-                )}
-              </div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider" style={{ color: colors.textFaint }}>Location</div>
+                    {editing ? (
+                      <input
+                        value={editForm.location}
+                        onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+                        className="w-full px-2 py-1 rounded-lg text-xs focus:outline-none"
+                        style={inputStyle}
+                      />
+                    ) : (
+                      <div className="text-xs font-medium" style={{ color: colors.textPrimary }}>{vacancy.location}</div>
+                    )}
+                  </div>
+                </div>
 
-              {/* Required Experience */}
-              <div>
-                <label className="block text-xs mb-1.5" style={{ color: colors.textMuted }}>Experience (years)</label>
-                {editing ? (
-                  <input
-                    type="number"
-                    min={0}
-                    value={editForm.requiredExperience}
-                    onChange={(e) => setEditForm({ ...editForm, requiredExperience: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl text-sm focus:outline-none"
-                    style={inputStyle}
-                  />
-                ) : (
-                  <div className="flex items-center gap-2" style={{ color: colors.textPrimary }}>
-                    <User size={16} />
-                    <span className="font-medium">{vacancy.requiredExperience}+ years</span>
+                {/* Teaching Mode */}
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ background: colors.badgePurpleBg }}
+                  >
+                    <Briefcase size={14} style={{ color: colors.badgePurpleColor }} />
                   </div>
-                )}
-              </div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider" style={{ color: colors.textFaint }}>Mode</div>
+                    {editing ? (
+                      <select
+                        value={editForm.teachingMode}
+                        onChange={(e) => setEditForm({ ...editForm, teachingMode: e.target.value as TeachingMode })}
+                        className="w-full px-2 py-1 rounded-lg text-xs focus:outline-none"
+                        style={inputStyle}
+                      >
+                        <option value="in-person">In-person</option>
+                        <option value="online">Online</option>
+                        <option value="hybrid">Hybrid</option>
+                      </select>
+                    ) : (
+                      <div className="text-xs font-medium capitalize" style={{ color: colors.textPrimary }}>{vacancy.teachingMode}</div>
+                    )}
+                  </div>
+                </div>
 
-              {/* Deadline */}
-              <div>
-                <label className="block text-xs mb-1.5" style={{ color: colors.textMuted }}>Deadline</label>
-                {editing ? (
-                  <input
-                    type="date"
-                    value={editForm.deadline}
-                    onChange={(e) => setEditForm({ ...editForm, deadline: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl text-sm focus:outline-none"
-                    style={inputStyle}
-                  />
-                ) : (
-                  <div className="flex items-center gap-2" style={{ color: colors.textPrimary }}>
-                    <Clock size={16} />
-                    <span className="font-medium">
-                      {vacancy.deadline ? new Date(vacancy.deadline).toLocaleDateString() : "No deadline"}
-                    </span>
+                {/* Experience */}
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ background: colors.badgeInfoBg }}
+                  >
+                    <User size={14} style={{ color: colors.badgeInfoColor }} />
                   </div>
-                )}
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider" style={{ color: colors.textFaint }}>Experience</div>
+                    {editing ? (
+                      <input
+                        type="number"
+                        min={0}
+                        value={editForm.requiredExperience}
+                        onChange={(e) => setEditForm({ ...editForm, requiredExperience: Number(e.target.value) })}
+                        className="w-full px-2 py-1 rounded-lg text-xs focus:outline-none"
+                        style={inputStyle}
+                      />
+                    ) : (
+                      <div className="text-xs font-medium" style={{ color: colors.textPrimary }}>{vacancy.requiredExperience}+ years</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Deadline */}
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ background: colors.badgePendingBg }}
+                  >
+                    <Clock size={14} style={{ color: colors.badgePendingColor }} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider" style={{ color: colors.textFaint }}>Deadline</div>
+                    {editing ? (
+                      <input
+                        type="date"
+                        value={editForm.deadline}
+                        onChange={(e) => setEditForm({ ...editForm, deadline: e.target.value })}
+                        className="w-full px-2 py-1 rounded-lg text-xs focus:outline-none"
+                        style={inputStyle}
+                      />
+                    ) : (
+                      <div className="text-xs font-medium" style={{ color: colors.textPrimary }}>
+                        {vacancy.deadline ? new Date(vacancy.deadline).toLocaleDateString() : "No deadline"}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Salary */}
-            <div className="mt-4">
-              <label className="block text-xs mb-1.5" style={{ color: colors.textMuted }}>Salary</label>
-              {editing ? (
+            {/* Subject & Grade selectors in edit mode */}
+            {editing && (
+              <div className="space-y-4 pt-4">
+                <div>
+                  <label className="block text-xs mb-1.5 font-medium" style={{ color: colors.textMuted }}>Subjects *</label>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {editForm.subjects.map((s) => (
+                      <span key={s} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium" style={{ background: colors.primaryLight, color: colors.primary }}>
+                        {s}
+                        <button type="button" onClick={() => setEditForm({ ...editForm, subjects: editForm.subjects.filter((x) => x !== s) })} className="hover:opacity-70"><X size={12} /></button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 p-2 rounded-xl" style={{ background: colors.bgInput, border: `1px solid ${colors.borderColor}` }}>
+                    {ALL_SUBJECTS.map((s) => {
+                      const checked = editForm.subjects.includes(s);
+                      return (
+                        <button key={s} type="button" onClick={() => setEditForm({ ...editForm, subjects: checked ? editForm.subjects.filter((x) => x !== s) : [...editForm.subjects, s] })} className="flex items-center gap-1.5 px-2 py-1.5 rounded text-[11px] transition-all text-left" style={{ background: checked ? colors.primaryLight : 'transparent', color: checked ? colors.primary : colors.textMuted }}>
+                          <div className="w-3 h-3 rounded flex items-center justify-center shrink-0" style={{ border: `1.5px solid ${checked ? colors.primary : colors.borderColor}`, background: checked ? colors.primary : 'transparent' }}>
+                            {checked && <svg width="7" height="7" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                          </div>
+                          {s}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs mb-1.5 font-medium" style={{ color: colors.textMuted }}>Grades *</label>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {editForm.grades.map((g) => (
+                      <span key={g} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium" style={{ background: colors.primaryLight, color: colors.primary }}>
+                        {g}
+                        <button type="button" onClick={() => setEditForm({ ...editForm, grades: editForm.grades.filter((x) => x !== g) })} className="hover:opacity-70"><X size={12} /></button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 p-2 rounded-xl" style={{ background: colors.bgInput, border: `1px solid ${colors.borderColor}` }}>
+                    {ALL_GRADES.map((g) => {
+                      const checked = editForm.grades.includes(g);
+                      return (
+                        <button key={g} type="button" onClick={() => setEditForm({ ...editForm, grades: checked ? editForm.grades.filter((x) => x !== g) : [...editForm.grades, g] })} className="flex items-center gap-1.5 px-2 py-1.5 rounded text-[11px] transition-all text-left" style={{ background: checked ? colors.primaryLight : 'transparent', color: checked ? colors.primary : colors.textMuted }}>
+                          <div className="w-3 h-3 rounded flex items-center justify-center shrink-0" style={{ border: `1.5px solid ${checked ? colors.primary : colors.borderColor}`, background: checked ? colors.primary : 'transparent' }}>
+                            {checked && <svg width="7" height="7" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                          </div>
+                          {g}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Required Education & Availability (non-edit) */}
+            {!editing && (
+              <div className="grid grid-cols-2 gap-4 pt-4">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: colors.textFaint }}>Required Education</div>
+                  <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>
+                    {vacancy.requiredEducation || "Not specified"}
+                  </p>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: colors.textFaint }}>Availability</div>
+                  <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>
+                    {vacancy.availability || "Not specified"}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Edit mode: education & availability inputs */}
+            {editing && (
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div>
+                  <label className="block text-xs mb-1.5 font-medium" style={{ color: colors.textMuted }}>Required Education</label>
+                  <input
+                    value={editForm.requiredEducation}
+                    onChange={(e) => setEditForm({ ...editForm, requiredEducation: e.target.value })}
+                    placeholder="e.g. Bachelor's degree"
+                    className="w-full px-3 py-2 rounded-xl text-sm focus:outline-none"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1.5 font-medium" style={{ color: colors.textMuted }}>Availability</label>
+                  <input
+                    value={editForm.availability}
+                    onChange={(e) => setEditForm({ ...editForm, availability: e.target.value })}
+                    placeholder="e.g. Weekends, Evenings"
+                    className="w-full px-3 py-2 rounded-xl text-sm focus:outline-none"
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Salary (edit mode) */}
+            {editing && (
+              <div className="pt-4">
+                <label className="block text-xs mb-1.5 font-medium" style={{ color: colors.textMuted }}>Salary</label>
                 <input
                   value={editForm.salary}
                   onChange={(e) => setEditForm({ ...editForm, salary: e.target.value })}
@@ -475,109 +663,81 @@ export default function VacancyDetail() {
                   className="w-full px-3 py-2 rounded-xl text-sm focus:outline-none"
                   style={inputStyle}
                 />
-              ) : vacancy.salary ? (
-                <div className="flex items-center gap-2 text-lg font-bold" style={{ color: colors.accent }}>
-                  <DollarSign size={20} /> {vacancy.salary}
-                </div>
-              ) : (
-                <p className="text-sm" style={{ color: colors.textMuted }}>Not specified</p>
-              )}
-            </div>
-
-            {/* Required Education */}
-            <div className="mt-4">
-              <label className="block text-xs mb-1.5" style={{ color: colors.textMuted }}>Required Education</label>
-              {editing ? (
-                <input
-                  value={editForm.requiredEducation}
-                  onChange={(e) => setEditForm({ ...editForm, requiredEducation: e.target.value })}
-                  placeholder="e.g. Bachelor's degree"
-                  className="w-full px-3 py-2 rounded-xl text-sm focus:outline-none"
-                  style={inputStyle}
-                />
-              ) : (
-                <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>
-                  {vacancy.requiredEducation || "Not specified"}
-                </p>
-              )}
-            </div>
-
-            {/* Availability */}
-            <div className="mt-4">
-              <label className="block text-xs mb-1.5" style={{ color: colors.textMuted }}>Availability</label>
-              {editing ? (
-                <input
-                  value={editForm.availability}
-                  onChange={(e) => setEditForm({ ...editForm, availability: e.target.value })}
-                  placeholder="e.g. Weekends, Evenings"
-                  className="w-full px-3 py-2 rounded-xl text-sm focus:outline-none"
-                  style={inputStyle}
-                />
-              ) : (
-                <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>
-                  {vacancy.availability || "Not specified"}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Description */}
-          <div
-            className="rounded-2xl p-6 border"
-            style={{ backgroundColor: colors.bgCard, borderColor: colors.borderColor }}
-          >
-            <h2 className="text-lg font-bold mb-4" style={{ color: colors.textPrimary }}>
-              Job Description
-            </h2>
-            {editing ? (
-              <textarea
-                value={editForm.description}
-                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                rows={5}
-                placeholder="Describe the role, requirements, and what you're looking for..."
-                className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none resize-none"
-                style={inputStyle}
-              />
-            ) : (
-              <p style={{ color: colors.textSecondary }} className="leading-relaxed">
-                {vacancy.description || "No description provided."}
-              </p>
+              </div>
             )}
           </div>
 
-          {/* Requirements (read-only summary) */}
+          {/* ─── Description Card ──────────────────────────── */}
+          <div
+            className="rounded-2xl border overflow-hidden"
+            style={{ backgroundColor: colors.bgCard, borderColor: colors.borderColor }}
+          >
+            <div className="px-6 py-4 flex items-center gap-3" style={{ borderBottom: `1px solid ${colors.borderColor}` }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: colors.accentBg }}>
+                <FileTextIcon color={colors.accent} />
+              </div>
+              <h2 className="text-base font-bold" style={{ color: colors.textPrimary }}>Job Description</h2>
+            </div>
+            <div className="p-6">
+              {editing ? (
+                <textarea
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  rows={5}
+                  placeholder="Describe the role, requirements, and what you're looking for..."
+                  className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none resize-none"
+                  style={inputStyle}
+                />
+              ) : (
+                <p style={{ color: colors.textSecondary }} className="leading-relaxed text-sm">
+                  {vacancy.description || "No description provided."}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* ─── Requirements Card ─────────────────────────── */}
           {!editing && (
             <div
-              className="rounded-2xl p-6 border"
+              className="rounded-2xl border overflow-hidden"
               style={{ backgroundColor: colors.bgCard, borderColor: colors.borderColor }}
             >
-              <h2 className="text-lg font-bold mb-4" style={{ color: colors.textPrimary }}>
-                Requirements
-              </h2>
-              <div className="space-y-2">
+              <div className="px-6 py-4 flex items-center gap-3" style={{ borderBottom: `1px solid ${colors.borderColor}` }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: colors.badgeInfoBg }}>
+                  <CheckCircle size={16} style={{ color: colors.badgeInfoColor }} />
+                </div>
+                <h2 className="text-base font-bold" style={{ color: colors.textPrimary }}>Requirements</h2>
+              </div>
+              <div className="p-6 space-y-3">
                 {vacancy.requiredEducation && (
-                  <div className="flex gap-3">
-                    <span className="text-lg" style={{ color: colors.accent }}>✓</span>
-                    <p style={{ color: colors.textSecondary }}>
-                      <span style={{ color: colors.textPrimary }} className="font-medium">Education:</span>{" "}
-                      {vacancy.requiredEducation}
-                    </p>
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: colors.accentBg }}>
+                      <GraduationCap size={12} style={{ color: colors.accent }} />
+                    </div>
+                    <div>
+                      <span className="text-xs font-medium" style={{ color: colors.textMuted }}>Education</span>
+                      <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>{vacancy.requiredEducation}</p>
+                    </div>
                   </div>
                 )}
-                <div className="flex gap-3">
-                  <span className="text-lg" style={{ color: colors.accent }}>✓</span>
-                  <p style={{ color: colors.textSecondary }}>
-                    <span style={{ color: colors.textPrimary }} className="font-medium">Experience:</span>{" "}
-                    Minimum {vacancy.requiredExperience} years
-                  </p>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: colors.badgePurpleBg }}>
+                    <Briefcase size={12} style={{ color: colors.badgePurpleColor }} />
+                  </div>
+                  <div>
+                    <span className="text-xs font-medium" style={{ color: colors.textMuted }}>Experience</span>
+                    <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>Minimum {vacancy.requiredExperience} years</p>
+                  </div>
                 </div>
                 {vacancy.availability && (
-                  <div className="flex gap-3">
-                    <span className="text-lg" style={{ color: colors.accent }}>✓</span>
-                    <p style={{ color: colors.textSecondary }}>
-                      <span style={{ color: colors.textPrimary }} className="font-medium">Availability:</span>{" "}
-                      {vacancy.availability}
-                    </p>
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: colors.badgePendingBg }}>
+                      <Clock size={12} style={{ color: colors.badgePendingColor }} />
+                    </div>
+                    <div>
+                      <span className="text-xs font-medium" style={{ color: colors.textMuted }}>Availability</span>
+                      <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>{vacancy.availability}</p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -585,188 +745,299 @@ export default function VacancyDetail() {
           )}
         </div>
 
-        {/* Applicants Sidebar - Right Column */}
+        {/* ─── Right Column: Applicants Sidebar ───────────── */}
         <div className="lg:col-span-1">
           <div
-            className="rounded-2xl p-6 border sticky top-6"
+            className="rounded-2xl border sticky top-6 overflow-hidden"
             style={{ backgroundColor: colors.bgCard, borderColor: colors.borderColor }}
           >
-            <div className="flex items-center gap-2 mb-6">
-              <Users size={20} style={{ color: colors.accent }} />
-              <h3 className="text-lg font-bold" style={{ color: colors.textPrimary }}>
+            {/* Sidebar Header */}
+            <div
+              className="px-5 py-4 flex items-center gap-2"
+              style={{ borderBottom: `1px solid ${colors.borderColor}` }}
+            >
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: colors.accentBg }}>
+                <Users size={16} style={{ color: colors.accent }} />
+              </div>
+              <h3 className="text-base font-bold" style={{ color: colors.textPrimary }}>
                 Applicants
               </h3>
               <span
-                className="ml-auto px-2.5 py-0.5 rounded-full text-sm font-bold"
+                className="ml-auto px-2.5 py-0.5 rounded-full text-xs font-bold"
                 style={{ backgroundColor: colors.accent, color: colors.bgPage }}
               >
                 {applicants.length}
               </span>
             </div>
 
+            {/* Applicant List */}
             {applicants.length === 0 ? (
-              <div className="text-center py-8">
-                <Users size={32} style={{ color: colors.textMuted }} className="mx-auto mb-3 opacity-50" />
-                <p style={{ color: colors.textMuted }} className="text-sm">No applicants yet</p>
+              <div className="text-center py-12 px-6">
+                <Users size={32} style={{ color: colors.textFaint }} className="mx-auto mb-3" />
+                <p style={{ color: colors.textMuted }} className="text-sm font-medium">No applicants yet</p>
+                <p style={{ color: colors.textFaint }} className="text-xs mt-1">Applicants will appear here once they apply.</p>
               </div>
             ) : (
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {applicants.map((applicant) => (
-                  <button
-                    key={applicant.id}
-                    onClick={() => {
-                      setSelectedApplicant(applicant);
-                      setShowProfile(true);
-                    }}
-                    className="w-full text-left p-3 rounded-lg transition-all hover:shadow-sm"
-                    style={{
-                      backgroundColor: selectedApplicant?.id === applicant.id ? colors.accentBg : colors.bgInput,
-                      border: `1px solid ${selectedApplicant?.id === applicant.id ? colors.accent : colors.borderColor}`,
-                    }}
-                  >
-                    <div
-                      className="font-medium text-sm"
-                      style={{ color: selectedApplicant?.id === applicant.id ? colors.accent : colors.textPrimary }}
+              <div className="max-h-[32rem] overflow-y-auto">
+                {applicants.map((applicant) => {
+                  const appStatusCfg = STATUS_CONFIG[applicant.status] ?? STATUS_CONFIG.applied;
+                  const isSelected = selectedApplicant?.id === applicant.id;
+                  return (
+                    <button
+                      key={applicant.id}
+                      onClick={() => {
+                        setSelectedApplicant(applicant);
+                        setShowProfile(true);
+                      }}
+                      className="w-full text-left px-5 py-3.5 transition-all border-b last:border-b-0"
+                      style={{
+                        background: isSelected ? colors.accentBg : "transparent",
+                        borderColor: colors.borderSubtle,
+                      }}
                     >
-                      {applicant.name}
-                    </div>
-                    <div
-                      className="text-xs mt-1"
-                      style={{ color: selectedApplicant?.id === applicant.id ? colors.textSecondary : colors.textMuted }}
-                    >
-                      {applicant.subject}
-                    </div>
-                  </button>
-                ))}
+                      <div className="flex items-center gap-3">
+                        {/* Avatar */}
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold shrink-0"
+                          style={{ background: colors.accent, color: colors.bgPage }}
+                        >
+                          {applicant.name.split(" ").map((n: string) => n[0]).join("")}
+                        </div>
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="text-sm font-semibold truncate"
+                              style={{ color: isSelected ? colors.accent : colors.textPrimary }}
+                            >
+                              {applicant.name}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span
+                              className="text-[11px] truncate"
+                              style={{ color: colors.textMuted }}
+                            >
+                              {applicant.subject}
+                            </span>
+                            <span style={{ color: colors.textFaint }}>·</span>
+                            <span
+                              className="text-[11px]"
+                              style={{ color: colors.textMuted }}
+                            >
+                              {applicant.experience}y exp
+                            </span>
+                          </div>
+                        </div>
+                        {/* Status Badge */}
+                        <span
+                          className="px-2 py-0.5 rounded text-[10px] font-bold capitalize shrink-0"
+                          style={{
+                            background: `${appStatusCfg.color}18`,
+                            color: appStatusCfg.color,
+                          }}
+                        >
+                          {appStatusCfg.label}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Applicant Profile Modal */}
+      {/* ─── Applicant Detail Modal ──────────────────────── */}
       {showProfile && selectedApplicant && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-          onClick={() => setShowProfile(false)}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          onClick={() => { setShowProfile(false); setSelectedApplicant(null); }}
         >
           <div
-            className="rounded-2xl p-6 max-w-md w-full max-h-96 overflow-y-auto border"
+            className="rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto border"
             style={{ backgroundColor: colors.bgCard, borderColor: colors.borderColor }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold" style={{ color: colors.textPrimary }}>
-                Applicant Profile
-              </h2>
-              <button onClick={() => setShowProfile(false)} style={{ color: colors.textMuted }} className="hover:opacity-75">
-                ✕
+            {/* Modal Header */}
+            <div
+              className="px-6 py-4 flex items-center justify-between sticky top-0 z-10"
+              style={{ backgroundColor: colors.bgCard, borderBottom: `1px solid ${colors.borderColor}` }}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold"
+                  style={{ background: colors.accent, color: colors.bgPage }}
+                >
+                  {selectedApplicant.name.split(" ").map((n: string) => n[0]).join("")}
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold" style={{ color: colors.textPrimary }}>
+                    {selectedApplicant.name}
+                  </h2>
+                  <span
+                    className="text-xs px-2 py-0.5 rounded-full font-medium capitalize"
+                    style={{
+                      background: `${STATUS_CONFIG[selectedApplicant.status]?.color ?? colors.textMuted}18`,
+                      color: STATUS_CONFIG[selectedApplicant.status]?.color ?? colors.textMuted,
+                    }}
+                  >
+                    {STATUS_CONFIG[selectedApplicant.status]?.label ?? selectedApplicant.status}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => { setShowProfile(false); setSelectedApplicant(null); }}
+                className="p-2 rounded-lg transition-colors hover:opacity-75"
+                style={{ color: colors.textMuted }}
+              >
+                <X size={18} />
               </button>
             </div>
 
-            <div className="space-y-4">
+            {/* Modal Body */}
+            <div className="p-6 space-y-5">
+              {/* Contact Info */}
               <div
-                className="rounded-lg p-4"
-                style={{ backgroundColor: colors.bgInput, border: `1px solid ${colors.borderColor}` }}
+                className="rounded-xl p-4 space-y-3"
+                style={{ background: colors.bgInput, border: `1px solid ${colors.borderColor}` }}
               >
-                <h3 className="text-lg font-bold mb-2" style={{ color: colors.textPrimary }}>
-                  {selectedApplicant.name}
-                </h3>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span style={{ color: colors.textMuted }} className="text-xs">Email:</span>
-                    <a
-                      href={`mailto:${selectedApplicant.email}`}
-                      style={{ color: colors.accent }}
-                      className="text-sm font-medium hover:underline"
-                    >
-                      {selectedApplicant.email}
-                    </a>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span style={{ color: colors.textMuted }} className="text-xs">Phone:</span>
+                <div className="flex items-center gap-3">
+                  <Mail size={14} style={{ color: colors.textMuted }} />
+                  <a
+                    href={`mailto:${selectedApplicant.email}`}
+                    className="text-sm font-medium hover:underline"
+                    style={{ color: colors.accent }}
+                  >
+                    {selectedApplicant.email}
+                  </a>
+                </div>
+                {selectedApplicant.phone && (
+                  <div className="flex items-center gap-3">
+                    <Phone size={14} style={{ color: colors.textMuted }} />
                     <a
                       href={`tel:${selectedApplicant.phone}`}
-                      style={{ color: colors.accent }}
                       className="text-sm font-medium hover:underline"
+                      style={{ color: colors.accent }}
                     >
                       {selectedApplicant.phone}
                     </a>
                   </div>
-                </div>
+                )}
               </div>
 
+              {/* Professional Info */}
               <div
-                className="rounded-lg p-4"
-                style={{ backgroundColor: colors.bgInput, border: `1px solid ${colors.borderColor}` }}
+                className="rounded-xl p-4 space-y-3"
+                style={{ background: colors.bgInput, border: `1px solid ${colors.borderColor}` }}
               >
-                <p style={{ color: colors.textMuted }} className="text-xs font-medium mb-2 uppercase">
-                  Professional Info
-                </p>
-                <div className="space-y-2">
-                  <div>
-                    <span style={{ color: colors.textMuted }} className="text-xs">Subject:</span>
-                    <p style={{ color: colors.textPrimary }} className="font-medium">{selectedApplicant.subject}</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: colors.accentBg }}>
+                    <Briefcase size={12} style={{ color: colors.accent }} />
                   </div>
                   <div>
-                    <span style={{ color: colors.textMuted }} className="text-xs">Experience:</span>
-                    <p style={{ color: colors.textPrimary }} className="font-medium">
-                      {selectedApplicant.experience} years
+                    <div className="text-[10px] uppercase tracking-wider" style={{ color: colors.textFaint }}>Subject</div>
+                    <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>{selectedApplicant.subject}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: colors.badgePurpleBg }}>
+                    <Star size={12} style={{ color: colors.badgePurpleColor }} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider" style={{ color: colors.textFaint }}>Experience</div>
+                    <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>{selectedApplicant.experience} years</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: colors.badgeInfoBg }}>
+                    <GraduationCap size={12} style={{ color: colors.badgeInfoColor }} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider" style={{ color: colors.textFaint }}>Education</div>
+                    <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>{selectedApplicant.education}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: colors.badgePendingBg }}>
+                    <Calendar size={12} style={{ color: colors.badgePendingColor }} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider" style={{ color: colors.textFaint }}>Applied</div>
+                    <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>
+                      {new Date(selectedApplicant.appliedAt).toLocaleDateString()}
                     </p>
                   </div>
-                  <div>
-                    <span style={{ color: colors.textMuted }} className="text-xs">Education:</span>
-                    <p style={{ color: colors.textPrimary }} className="font-medium">
-                      {selectedApplicant.education}
-                    </p>
-                  </div>
                 </div>
               </div>
 
+              {/* Status Action Buttons */}
+              <div>
+                <div className="text-[10px] uppercase tracking-wider mb-2 font-medium" style={{ color: colors.textFaint }}>
+                  Change Status
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {ACTIONS.map((action) => {
+                    const isActive = selectedApplicant.status === action.status;
+                    return (
+                      <button
+                        key={action.status}
+                        onClick={() => handleStatusChange(selectedApplicant.id, action.status)}
+                        className="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all"
+                        style={{
+                          background: isActive ? `${action.color}25` : `${action.color}10`,
+                          color: action.color,
+                          border: `1.5px solid ${isActive ? action.color : `${action.color}40`}`,
+                          opacity: isActive ? 1 : 0.85,
+                        }}
+                      >
+                        {action.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Quick Actions */}
               <div
-                className="rounded-lg p-4"
-                style={{ backgroundColor: colors.bgInput, border: `1px solid ${colors.borderColor}` }}
+                className="flex gap-3 pt-4"
+                style={{ borderTop: `1px solid ${colors.borderColor}` }}
               >
-                <p style={{ color: colors.textMuted }} className="text-xs font-medium mb-2 uppercase">
-                  Application
-                </p>
-                <div className="flex items-center justify-between">
-                  <span style={{ color: colors.textMuted }} className="text-xs">Applied:</span>
-                  <span style={{ color: colors.textPrimary }} className="text-sm font-medium">
-                    {new Date(selectedApplicant.appliedAt).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between mt-2">
-                  <span style={{ color: colors.textMuted }} className="text-xs">Status:</span>
-                  <span
-                    className="text-xs px-2 py-1 rounded-full font-medium capitalize"
-                    style={{ backgroundColor: `${colors.accent}20`, color: colors.accent }}
-                  >
-                    {selectedApplicant.status}
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 pt-4 border-t" style={{ borderColor: colors.borderColor }}>
                 <a
                   href={`mailto:${selectedApplicant.email}`}
-                  className="py-2 px-3 rounded-lg text-center text-sm font-medium transition-colors"
-                  style={{ backgroundColor: colors.accent, color: colors.bgPage }}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                  style={{ background: colors.accent, color: colors.bgPage }}
                 >
-                  Send Email
+                  <Mail size={14} /> Send Email
                 </a>
-                <a
-                  href={`tel:${selectedApplicant.phone}`}
-                  className="py-2 px-3 rounded-lg text-center text-sm font-medium border transition-colors"
-                  style={{ borderColor: colors.accent, color: colors.accent, backgroundColor: "transparent" }}
-                >
-                  Call
-                </a>
+                {selectedApplicant.phone && (
+                  <a
+                    href={`tel:${selectedApplicant.phone}`}
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border transition-colors"
+                    style={{ borderColor: colors.accent, color: colors.accent, backgroundColor: "transparent" }}
+                  >
+                    <Phone size={14} /> Call
+                  </a>
+                )}
               </div>
             </div>
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+// ─── Tiny helper component for section icon ─────────────────────
+function FileTextIcon({ color }: { color: string }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+      <polyline points="10 9 9 9 8 9" />
+    </svg>
   );
 }

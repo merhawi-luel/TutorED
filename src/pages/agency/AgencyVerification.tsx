@@ -50,7 +50,7 @@ export default function AgencyVerification() {
 
         if (data.isVerified) {
           setStatus("verified");
-          setMessage("✅ Your organization is verified! You can post vacancies now.");
+          setMessage("Your organization is verified! You can post vacancies now.");
         } else if (data.verificationStatus === "pending") {
           setStatus("pending");
           setMessage(
@@ -77,11 +77,11 @@ export default function AgencyVerification() {
     if (selectedFile) {
       const validTypes = ["image/png", "image/jpeg", "image/jpg", "application/pdf"];
       if (!validTypes.includes(selectedFile.type)) {
-        setMessage("❌ Please upload a PNG, JPG, or PDF file.");
+        setMessage(" Please upload a PNG, JPG, or PDF file.");
         return;
       }
       if (selectedFile.size > 5 * 1024 * 1024) {
-        setMessage("❌ File must be smaller than 5MB.");
+        setMessage(" File must be smaller than 5MB.");
         return;
       }
       setFile(selectedFile);
@@ -91,12 +91,12 @@ export default function AgencyVerification() {
 
   const handleUpload = async () => {
     if (!file) {
-      setMessage("❌ Please select a file first.");
+      setMessage(" Please select a file first.");
       return;
     }
 
     if (!orgInfo.email || !orgInfo.phone) {
-      setMessage("❌ Please fill in email and phone number.");
+      setMessage(" Please fill in email and phone number.");
       return;
     }
 
@@ -123,7 +123,7 @@ export default function AgencyVerification() {
         }
 
         setStatus("pending");
-        setMessage("✅ Receipt uploaded! Our team will review it within 24 hours.");
+        setMessage(" Receipt uploaded! Our team will review it within 24 hours.");
         setFile(null);
         setOrgInfo({ ...orgInfo, email: "", phone: "", bankAccount: "" });
         setUploading(false);
@@ -139,7 +139,7 @@ export default function AgencyVerification() {
             const checkData = await checkResponse.json();
             if (checkData.isVerified) {
               setStatus("verified");
-              setMessage("✅ Your organization is verified! You can now post vacancies.");
+              setMessage(" Your organization is verified! You can now post vacancies.");
               clearInterval(interval);
             }
           }
