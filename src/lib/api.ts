@@ -204,6 +204,16 @@ export const parentApi = {
     request<any[]>("/parent/reviews/mine"),
 };
 
+// ─── Assistant ─────────────────────────────────────────────────
+
+export const assistantApi = {
+  chat: (messages: { role: string; content: string }[]) =>
+    request<{ reply: string }>("/assistant/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages }),
+    }),
+};
+
 // ─── Upload ────────────────────────────────────────────────────
 
 export const uploadApi = {

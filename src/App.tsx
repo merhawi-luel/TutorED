@@ -17,6 +17,7 @@ import Confirm from "@/pages/auth/Confirm";
 import PaymentStatus from "@/pages/agency/PaymentStatus";
 import VacancyDetail from "@/pages/agency/VacancyDetail";
 import { Toaster } from "sonner";
+import AIAssistant from "@/components/AIAssistant";
 import type { ReactNode } from "react";
 
 // ─── Protected Route ───────────────────────────────────────────
@@ -144,6 +145,7 @@ function App() {
           <ThemeProvider>
             <DataProvider>
               <AppRoutes />
+              <AIAssistant />
             </DataProvider>
             <Toaster position="top-right" richColors />
           </ThemeProvider>

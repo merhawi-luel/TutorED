@@ -21,6 +21,7 @@ import adminRoutes from "./routes/admin";
 import uploadRoutes from "./routes/upload";
 import parentRoutes from "./routes/parent";
 import paymentRoutes from "./routes/payment";
+import assistantRoutes from "./routes/assistant";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -89,6 +90,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/parent", parentRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/assistant", assistantRoutes);
 
 // ─── Debug endpoint ──────────────────────────────────────────
 
