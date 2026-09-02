@@ -7,14 +7,12 @@ import { useInView } from "@/hooks/useInView";
 import { ALL_SUBJECTS, ALL_GRADES } from "@/data/constants";
 import {
   Building2,
-  User,
   Send,
   CheckCircle,
   MapPin,
   AlertCircle,
   Loader2,
   ArrowRight,
-  BookOpen,
   ChevronDown,
   X,
 } from "lucide-react";
@@ -34,8 +32,7 @@ export default function ParentRecruitment() {
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [loadingAgencies, setLoadingAgencies] = useState(true);
 
-  const [mode, setMode] = useState<"agency" | "self">("agency");
-  const [selectedAgency, setSelectedAgency] = useState<string>("");
+  const [selectedAgency, setSelectedAgency] = useState("");
   const [subjects, setSubjects] = useState<string[]>([]);
   const [grades, setGrades] = useState<string[]>([]);
   const [location, setLocation] = useState("");
@@ -45,7 +42,6 @@ export default function ParentRecruitment() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Pre-fill contact info from user profile
   useEffect(() => {
     if (user) {
       setPhone("");
@@ -88,7 +84,7 @@ export default function ParentRecruitment() {
 
   const handleSubmit = async () => {
     if (subjects.length === 0 || grades.length === 0) return;
-    if (mode === "agency" && !selectedAgency) {
+    if (!selectedAgency) {
       setError("Please select an agency.");
       return;
     }
@@ -98,7 +94,7 @@ export default function ParentRecruitment() {
 
     try {
       await parentApi.contactAgency({
-        organizationId: mode === "agency" ? selectedAgency : undefined,
+        organizationId: selectedAgency,
         subjects,
         grades,
         location,
@@ -108,7 +104,6 @@ export default function ParentRecruitment() {
         parentPhone: phone,
       });
       setSent(true);
-      // Reset form
       setSubjects([]);
       setGrades([]);
       setLocation("");
@@ -132,10 +127,10 @@ export default function ParentRecruitment() {
     <div ref={ref as React.RefObject<HTMLDivElement>} className="space-y-8">
       <div className={`fade-up ${inView ? "in-view" : ""}`}>
         <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
-          Find a Tutor
+          Find a Recruiter
         </h1>
         <p className="text-sm text-[var(--text-secondary)] mt-1">
-          Choose how you'd like to find the right tutor for your child.
+          Let a verified agency handle the entire recruitment process for you.
         </p>
       </div>
 
@@ -153,9 +148,7 @@ export default function ParentRecruitment() {
           <div className="flex-1">
             <span className="font-medium">Request sent successfully!</span>
             <span className="text-[var(--text-secondary)] ml-2">
-              {mode === "agency"
-                ? `${selectedAgencyData?.name || "The agency"} will review your request.`
-                : "Your request is now visible to agencies."}
+              {selectedAgencyData?.name || "The agency"} will review your request.
             </span>
           </div>
           <Link
@@ -182,210 +175,110 @@ export default function ParentRecruitment() {
         </div>
       )}
 
-      {/* Mode Selector */}
-      <div
-        className={`grid grid-cols-1 sm:grid-cols-2 gap-4 fade-up delay-100 ${inView ? "in-view" : ""}`}
-      >
-        <button
-          onClick={() => setMode("agency")}
-          className="text-left rounded-xl p-5 transition-all"
-          style={{
-            background:
-              mode === "agency" ? "rgba(59,130,246,0.1)" : "var(--bg-card)",
-            border: `1px solid ${mode === "agency" ? "var(--badge-info-color)" : "var(--border-color)"}`,
-          }}
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <Building2
-              size={20}
-              style={{
-                color:
-                  mode === "agency"
-                    ? "var(--badge-info-color)"
-                    : "var(--text-muted)",
-              }}
-            />
-            <span
-              className="text-sm font-medium"
-              style={{
-                color:
-                  mode === "agency"
-                    ? "var(--badge-info-color)"
-                    : "var(--text-secondary)",
-              }}
-            >
-              Agency-Assisted
-            </span>
-          </div>
-          <p className="text-xs text-[var(--text-muted)]">
-            Let a verified agency handle the entire recruitment process for you.
-          </p>
-        </button>
-
-        <button
-          onClick={() => setMode("self")}
-          className="text-left rounded-xl p-5 transition-all"
-          style={{
-            background:
-              mode === "self" ? "var(--accent-bg)" : "var(--bg-card)",
-            border: `1px solid ${mode === "self" ? "var(--accent-border)" : "var(--border-color)"}`,
-          }}
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <User
-              size={20}
-              style={{
-                color:
-                  mode === "self" ? "var(--accent)" : "var(--text-muted)",
-              }}
-            />
-            <span
-              className="text-sm font-medium"
-              style={{
-                color:
-                  mode === "self"
-                    ? "var(--accent)"
-                    : "var(--text-secondary)",
-              }}
-            >
-              Self-Recruitment
-            </span>
-          </div>
-          <p className="text-xs text-[var(--text-muted)]">
-            Browse profiles and vacancies yourself. Contact and hire tutors
-            directly.
-          </p>
-        </button>
-      </div>
-
       {/* Form */}
       <div
-        className={`rounded-xl p-6 space-y-5 fade-up delay-200 ${inView ? "in-view" : ""}`}
+        className={`rounded-xl p-6 space-y-5 fade-up delay-100 ${inView ? "in-view" : ""}`}
         style={{
           background: "var(--bg-card)",
           border: "1px solid var(--border-color)",
         }}
       >
-        {mode === "agency" && (
-          <>
-            <h3 className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2">
-              <Building2 size={16} style={{ color: "var(--badge-info-color)" }} />
-              Select an Agency
-            </h3>
+        {/* Agency Selection */}
+        <div>
+          <h3 className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2 mb-4">
+            <Building2 size={16} style={{ color: "var(--badge-info-color)" }} />
+            Select an Agency
+          </h3>
 
-            {loadingAgencies ? (
-              <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)] py-4">
-                <Loader2 size={16} className="animate-spin" />
-                Loading agencies...
-              </div>
-            ) : agencies.length === 0 ? (
-              <div className="text-sm text-[var(--text-muted)] py-4">
-                No verified agencies found. Try again later.
-              </div>
-            ) : (
-              <div className="relative">
-                <select
-                  value={selectedAgency}
-                  onChange={(e) => setSelectedAgency(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl text-sm text-[var(--text-primary)] focus:outline-none focus:border-blue-500/50 transition-colors appearance-none cursor-pointer"
-                  style={inputStyle}
+          {loadingAgencies ? (
+            <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)] py-4">
+              <Loader2 size={16} className="animate-spin" />
+              Loading agencies...
+            </div>
+          ) : agencies.length === 0 ? (
+            <div className="text-sm text-[var(--text-muted)] py-4">
+              No verified agencies found. Try again later.
+            </div>
+          ) : (
+            <div className="relative">
+              <select
+                value={selectedAgency}
+                onChange={(e) => setSelectedAgency(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl text-sm text-[var(--text-primary)] focus:outline-none focus:border-blue-500/50 transition-colors appearance-none cursor-pointer"
+                style={inputStyle}
+              >
+                <option value="">Choose an agency...</option>
+                {agencies.map((agency) => (
+                  <option key={agency.id} value={agency.id}>
+                    {agency.name}
+                    {agency.isVerified ? " ✓ Verified" : ""}
+                    {agency.location ? ` — ${agency.location}` : ""}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                size={16}
+                className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-muted)]"
+              />
+
+              {/* Show selected agency details */}
+              {selectedAgencyData && (
+                <div
+                  className="mt-3 rounded-xl p-4"
+                  style={{
+                    background: "rgba(59,130,246,0.06)",
+                    border: "1px solid rgba(59,130,246,0.15)",
+                  }}
                 >
-                  <option value="">Choose an agency...</option>
-                  {agencies.map((agency) => (
-                    <option key={agency.id} value={agency.id}>
-                      {agency.name}
-                      {agency.isVerified ? " ✓ Verified" : ""}
-                      {agency.location ? ` — ${agency.location}` : ""}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown
-                  size={16}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-muted)]"
-                />
-
-                {/* Show selected agency details */}
-                {selectedAgencyData && (
-                  <div
-                    className="mt-3 rounded-xl p-4"
-                    style={{
-                      background: "rgba(59,130,246,0.06)",
-                      border: "1px solid rgba(59,130,246,0.15)",
-                    }}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-[var(--text-primary)]">
-                        {selectedAgencyData.name}
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-medium text-[var(--text-primary)]">
+                      {selectedAgencyData.name}
+                    </span>
+                    {selectedAgencyData.isVerified && (
+                      <span
+                        className="px-1.5 py-0.5 rounded text-[10px] font-medium"
+                        style={{
+                          background: "var(--accent-bg)",
+                          color: "var(--accent)",
+                        }}
+                      >
+                        ✓ Verified
                       </span>
-                      {selectedAgencyData.isVerified && (
+                    )}
+                  </div>
+                  <div className="text-xs text-[var(--text-muted)] mt-0.5">
+                    {selectedAgencyData.description}
+                  </div>
+                  <div className="flex items-center gap-1 mt-2 text-xs text-[var(--text-faint)]">
+                    <MapPin size={12} />
+                    {selectedAgencyData.location || "Location not set"}
+                  </div>
+                  {selectedAgencyData.subjects.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {selectedAgencyData.subjects.slice(0, 6).map((s) => (
                         <span
-                          className="px-1.5 py-0.5 rounded text-[10px] font-medium"
+                          key={s}
+                          className="px-1.5 py-0.5 rounded text-[10px]"
                           style={{
-                            background: "var(--accent-bg)",
-                            color: "var(--accent)",
+                            background: "rgba(59,130,246,0.1)",
+                            color: "var(--badge-info-color)",
                           }}
                         >
-                          ✓ Verified
+                          {s}
+                        </span>
+                      ))}
+                      {selectedAgencyData.subjects.length > 6 && (
+                        <span className="text-[10px] text-[var(--text-faint)]">
+                          +{selectedAgencyData.subjects.length - 6}
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-[var(--text-muted)] mt-0.5">
-                      {selectedAgencyData.description}
-                    </div>
-                    <div className="flex items-center gap-1 mt-2 text-xs text-[var(--text-faint)]">
-                      <MapPin size={12} />
-                      {selectedAgencyData.location || "Location not set"}
-                    </div>
-                    {selectedAgencyData.subjects.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {selectedAgencyData.subjects.slice(0, 6).map((s) => (
-                          <span
-                            key={s}
-                            className="px-1.5 py-0.5 rounded text-[10px]"
-                            style={{
-                              background: "rgba(59,130,246,0.1)",
-                              color: "var(--badge-info-color)",
-                            }}
-                          >
-                            {s}
-                          </span>
-                        ))}
-                        {selectedAgencyData.subjects.length > 6 && (
-                          <span className="text-[10px] text-[var(--text-faint)]">
-                            +{selectedAgencyData.subjects.length - 6}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        )}
-
-        {mode === "self" && (
-          <div
-            className="rounded-xl p-4 flex items-center gap-3"
-            style={{
-              background: "rgba(34,197,94,0.06)",
-              border: "1px solid var(--accent-bg)",
-            }}
-          >
-            <BookOpen size={16} style={{ color: "var(--accent)" }} />
-            <div className="text-xs text-[var(--text-secondary)]">
-              Fill in your requirements below, then browse{" "}
-              <Link
-                to="/parent/vacancies"
-                className="font-medium"
-                style={{ color: "var(--accent)" }}
-              >
-                available vacancies
-              </Link>{" "}
-              to find a tutor directly.
+                  )}
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Subjects — Checkbox Grid */}
         <div>
@@ -649,14 +542,11 @@ export default function ParentRecruitment() {
               sent ||
               subjects.length === 0 ||
               grades.length === 0 ||
-              (mode === "agency" && !selectedAgency)
+              !selectedAgency
             }
             className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2 disabled:opacity-50"
             style={{
-              background:
-                mode === "agency"
-                  ? "var(--badge-info-color)"
-                  : "var(--accent)",
+              background: "var(--badge-info-color)",
               color: "white",
             }}
           >
@@ -671,9 +561,7 @@ export default function ParentRecruitment() {
               ? "Sending..."
               : sent
                 ? "Request Sent!"
-                : mode === "agency"
-                  ? "Send to Agency"
-                  : "Post Request"}
+                : "Send to Agency"}
           </button>
         </div>
       </div>

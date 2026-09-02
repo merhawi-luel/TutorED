@@ -36,8 +36,8 @@ interface SidebarProps {
 const NAV_ITEMS: { tab: ParentTab; label: string; icon: typeof LayoutDashboard }[] = [
   { tab: "overview", label: "Overview", icon: LayoutDashboard },
   { tab: "profile", label: "My Profile", icon: User },
-  { tab: "recruitment", label: "Find a Tutor", icon: Building2 },
-  { tab: "vacancies", label: "Browse Vacancies", icon: Briefcase },
+  { tab: "recruitment", label: "Find a Recruiter", icon: Building2 },
+  { tab: "vacancies", label: "Vacancies", icon: Briefcase },
   { tab: "applicants", label: "Applicants", icon: Users },
   { tab: "reviews", label: "Leave Review", icon: Star },
   { tab: "requests", label: "My Requests", icon: FileText },
