@@ -91,7 +91,8 @@ interface TutorDocument {
 
 interface Applicant {
   id: string;
-  userId: string;
+  tutorId: string;
+  userId?: string;
   name: string;
   email: string;
   phone: string;
@@ -229,7 +230,8 @@ export default function VacancyDetail() {
   // Fetch documents when an applicant is selected
   useEffect(() => {
     if (selectedApplicant && showProfile) {
-      fetchTutorDocuments(selectedApplicant.userId);
+      const tutorId = selectedApplicant.tutorId || selectedApplicant.userId || selectedApplicant.id;
+      fetchTutorDocuments(tutorId);
     }
   }, [selectedApplicant, showProfile, fetchTutorDocuments]);
 
@@ -351,6 +353,42 @@ export default function VacancyDetail() {
     background: colors.bgInput,
     border: `1px solid ${colors.borderColor}`,
     color: colors.textPrimary,
+  };
+
+  // ─── Document Download/Preview Handlers ───────────────────
+  const handleDownloadDoc = async (docId: string, fileName: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const res = await fetch(`${API_BASE}/agency/documents/${docId}/download`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Download failed");
+      const { downloadUrl } = await res.json();
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Download error:", err);
+    }
+  };
+
+  const handlePreviewDoc = async (docId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const res = await fetch(`${API_BASE}/agency/documents/${docId}/preview`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Preview failed");
+      const { previewUrl } = await res.json();
+      window.open(previewUrl, "_blank");
+    } catch (err) {
+      console.error("Preview error:", err);
+    }
   };
 
   // ─── Helper: get tutor display name ─────────────────────────
@@ -1123,7 +1161,7 @@ export default function VacancyDetail() {
                     {tutorDocuments.map((doc) => (
                       <div
                         key={doc.id}
-                        className="rounded-xl p-3 flex items-center justify-between"
+                        className="rounded-xl p-3 flex items-center justify-between gap-2"
                         style={{ background: colors.bgInput, border: `1px solid ${colors.borderColor}` }}
                       >
                         <div className="flex items-center gap-3 min-w-0">
@@ -1133,15 +1171,31 @@ export default function VacancyDetail() {
                             <p className="text-[10px]" style={{ color: colors.textFaint }}>{doc.fileName}</p>
                           </div>
                         </div>
-                        <span
-                          className="px-2 py-0.5 rounded text-[10px] font-bold capitalize shrink-0 ml-2"
-                          style={{
-                            background: doc.status === "verified" ? `${colors.accent}18` : doc.status === "rejected" ? `${colors.dangerColor}18` : `${colors.textMuted}18`,
-                            color: doc.status === "verified" ? colors.accent : doc.status === "rejected" ? colors.dangerColor : colors.textMuted,
-                          }}
-                        >
-                          {doc.status}
-                        </span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span
+                            className="px-2 py-0.5 rounded text-[10px] font-bold capitalize"
+                            style={{
+                              background: doc.status === "verified" ? `${colors.accent}18` : doc.status === "rejected" ? `${colors.dangerColor}18` : `${colors.textMuted}18`,
+                              color: doc.status === "verified" ? colors.accent : doc.status === "rejected" ? colors.dangerColor : colors.textMuted,
+                            }}
+                          >
+                            {doc.status}
+                          </span>
+                          <button
+                            onClick={() => handlePreviewDoc(doc.id)}
+                            className="p-1.5 rounded-lg transition-colors hover:opacity-75"
+                            title="Preview"
+                          >
+                            <Eye size={14} style={{ color: colors.textMuted }} />
+                          </button>
+                          <button
+                            onClick={() => handleDownloadDoc(doc.id, doc.fileName)}
+                            className="p-1.5 rounded-lg transition-colors hover:opacity-75"
+                            title="Download"
+                          >
+                            <Download size={14} style={{ color: colors.textMuted }} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
