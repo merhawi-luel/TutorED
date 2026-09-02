@@ -7,7 +7,6 @@ import {
   Briefcase,
   Send,
   Building2,
-  Search,
   Settings,
   LogOut,
   ChevronLeft,
@@ -26,7 +25,6 @@ export type AgencyTab =
   | "applicants"
   | "requests"
   | "verification"
-  | "tutors"
   | "organization"
   | "settings";
 
@@ -43,7 +41,6 @@ const NAV_ITEMS: { tab: AgencyTab; label: string; icon: typeof LayoutDashboard }
   { tab: "applicants", label: "Applicants", icon: Send },
   { tab: "requests", label: "Recruit Requests", icon: Inbox },
   { tab: "verification", label: "Verify Organization", icon: ShieldCheck },
-  { tab: "tutors", label: "Find Tutors", icon: Search },
   { tab: "organization", label: "Organization", icon: Building2 },
 ];
 

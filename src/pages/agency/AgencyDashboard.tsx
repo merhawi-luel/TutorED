@@ -6,7 +6,6 @@ import AgencyVacancies from "./AgencyVacancies";
 import AgencyMyPosts from "./AgencyMyPosts";
 import AgencyVerification from "./AgencyVerification";
 import AgencyApplicants from "./AgencyApplicants";
-import AgencyTutors from "./AgencyTutors";
 import AgencyOrganization from "./AgencyOrganization";
 import AgencyRequests from "./AgencyRequests";
 import AgencySettings from "./AgencySettings";
@@ -20,7 +19,6 @@ const TAB_COMPONENTS: Record<AgencyTab, React.ComponentType<{ onTabChange?: (tab
   verification: AgencyVerification,
   applicants: AgencyApplicants,
   requests: AgencyRequests,
-  tutors: AgencyTutors,
   organization: AgencyOrganization,
   settings: AgencySettings,
 };
