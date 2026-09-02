@@ -78,14 +78,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // Fallback: User not in database or API unavailable (OAuth user)
-      // Create a basic user from auth metadata
-      const role = (authUser.user_metadata?.role as UserRole) || "tutor";
-      
+      // Create a basic user from auth metadata — do NOT default to "tutor" silently
+      const role = (authUser.user_metadata?.role as UserRole) || null;
+
+      if (!role) {
+        // Role not in metadata — this is a problem, but we still need to render something
+        // The backend OAuth callback should have created the user with the correct role
+        console.warn("User role not found in auth metadata or database");
+      }
+
       setUser({
         id: authUser.id,
         name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split("@")[0] || "User",
         email: authUser.email || "",
-        role: role,
+        role: (role || "tutor") as UserRole,
         createdAt: authUser.created_at || new Date().toISOString(),
       });
     } catch (err) {
@@ -149,6 +155,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Login with Google OAuth
   const loginWithGoogle = async (role: UserRole = "tutor"): Promise<string | null> => {
     try {
+      // IMPORTANT: save the role BEFORE starting OAuth (redirect happens immediately)
+      localStorage.setItem("pending_oauth_role", role);
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -157,20 +166,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             access_type: "offline",
             prompt: "consent",
           },
-          // Store role in session state so we can retrieve it after callback
           skipBrowserRedirect: false,
         },
       });
 
       if (error) {
+        localStorage.removeItem("pending_oauth_role");
         return error.message;
       }
 
-      // Store role in localStorage temporarily so callback can use it
-      localStorage.setItem("pending_oauth_role", role);
-
       return null;
     } catch (err) {
+      localStorage.removeItem("pending_oauth_role");
       return "Failed to start Google login";
     }
   };

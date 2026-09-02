@@ -22,7 +22,7 @@ export default function Callback() {
           const response = await fetch(`${API_BASE}/auth/callback`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ access_token: data.session.access_token, refresh_token: data.session.refresh_token }),
+            body: JSON.stringify({ access_token: data.session.access_token, refresh_token: data.session.refresh_token, role: pendingRole }),
           });
           
           if (!response.ok) { 

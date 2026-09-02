@@ -195,7 +195,7 @@ router.post("/oauth", async (req, res) => {
 router.post("/callback", async (req, res) => {
   try {
     console.log("🔐 OAuth Callback: Received callback request");
-    const { access_token, refresh_token } = req.body;
+    const { access_token, refresh_token, role: requestedRole } = req.body;
 
     if (!access_token) {
       console.log("❌ OAuth Callback: No access token provided");
@@ -228,7 +228,9 @@ router.post("/callback", async (req, res) => {
 
     if (found.length === 0) {
       // New user from OAuth - create in our database
-      const role = (authUser.user_metadata?.role as string) || "tutor";
+      // Prefer the role sent from the frontend (selected during registration)
+      const validRoles = ["tutor", "agency", "parent"] as const;
+      const role = validRoles.includes(requestedRole) ? requestedRole : "tutor";
       const name = authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split("@")[0] || "User";
 
       console.log(`🆕 Creating new user from OAuth: ${name} (${role})`);
