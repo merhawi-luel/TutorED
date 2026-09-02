@@ -77,7 +77,7 @@ app.use(cors({
 }));
 
 // Handle OPTIONS requests explicitly to prevent 500 errors
-app.options('*', cors());
+app.options('/{*splat}', cors());
 
 app.use(express.json({ limit: "10mb" }));
 // ─── Routes ──────────────────────────────────────────────────
