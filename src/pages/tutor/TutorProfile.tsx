@@ -156,7 +156,7 @@ export default function TutorProfile() {
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <h2 style={{ fontSize: '18px', fontWeight: '700', color: colors.primaryText, marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {formData.headline || 'Add a headline to introduce yourself'}
+              {formData.headline || 'Your Profile'}
             </h2>
             <p style={{ fontSize: '14px', color: colors.secondaryText, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {formData.email}
