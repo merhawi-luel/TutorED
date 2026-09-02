@@ -389,6 +389,21 @@ router.post("/create-admin", requireAuth, requireRole("admin"), async (req, res)
 
     if (authError) {
       console.error("Supabase create admin error:", authError);
+
+      const msg = (authError.message || "").toLowerCase();
+      const isDuplicate =
+        (authError as any).code === "email_exists" ||
+        msg.includes("already been registered") ||
+        msg.includes("already exists") ||
+        msg.includes("already registered");
+
+      if (isDuplicate) {
+        return res.status(400).json({
+          error:
+            "An account with this email already exists. Please use a different email address.",
+        });
+      }
+
       return res.status(400).json({ error: authError.message });
     }
 
