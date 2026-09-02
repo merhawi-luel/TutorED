@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useData } from '../../context/DataContext';
-import { tutorApi } from '../../lib/api';
 import { User, Mail, Phone, MapPin, Save, X, Check, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -24,7 +23,7 @@ interface SubjectTag {
 export default function TutorProfile() {
   const { user } = useAuth();
   const { colors } = useTheme();
-  const { profile, refreshData } = useData();
+  const { profile, updateProfile } = useData();
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -62,7 +61,7 @@ export default function TutorProfile() {
     setLoading(true);
     try {
       const subjectsStr = selectedSubjects.map(s => `${s.subject} - ${s.level}`);
-      await tutorApi.updateProfile({
+      await updateProfile({
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
@@ -70,7 +69,6 @@ export default function TutorProfile() {
         bio: formData.bio,
         subjects: subjectsStr,
       });
-      await refreshData();
       setEditMode(false);
       toast.success('Profile updated successfully');
     } catch (error) {

@@ -2,14 +2,13 @@ import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useData } from '../../context/DataContext';
-import { tutorApi } from '../../lib/api';
 import { GraduationCap, Plus, Trash2, Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function TutorEducation() {
   const { user } = useAuth();
   const { colors } = useTheme();
-  const { educationEntries, refreshData } = useData();
+  const { educationEntries, addEducationEntry, removeEducationEntry } = useData();
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -29,12 +28,11 @@ export default function TutorEducation() {
     }
     setLoading(true);
     try {
-      await tutorApi.createEducationEntry({
+      await addEducationEntry({
         name: `${user?.firstName} ${user?.lastName}`,
         title: formData.title,
         description: formData.description,
       });
-      await refreshData();
       setShowAddForm(false);
       setFormData({ name: '', title: '', description: '' });
       toast.success('Education entry submitted for review');
@@ -49,8 +47,7 @@ export default function TutorEducation() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this entry?')) return;
     try {
-      await tutorApi.deleteEducationEntry(id);
-      await refreshData();
+      await removeEducationEntry(id);
       toast.success('Education entry deleted');
     } catch (error) {
       console.error('Error deleting entry:', error);

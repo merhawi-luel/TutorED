@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 export default function TutorSettings() {
   const { user, logout } = useAuth();
   const { colors, theme, setTheme } = useTheme();
-  const { profile, refreshData } = useData();
+  const { profile } = useData();
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({
     emailNotifications: true,

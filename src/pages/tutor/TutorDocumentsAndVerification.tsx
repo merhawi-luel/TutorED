@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 export default function TutorDocumentsAndVerification() {
   const { user } = useAuth();
   const { colors } = useTheme();
-  const { documents, profile, refreshData } = useData();
+  const { documents, profile, refetchDocuments } = useData();
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
@@ -66,7 +66,7 @@ export default function TutorDocumentsAndVerification() {
         file: file,
       });
       
-      await refreshData();
+      await refetchDocuments();
       toast.success('Document uploaded successfully');
       setShowUploadForm(false);
     } catch (error) {
@@ -86,7 +86,7 @@ export default function TutorDocumentsAndVerification() {
   const handleRequestVerification = async () => {
     try {
       await tutorApi.requestVerification();
-      await refreshData();
+      await refetchDocuments();
       toast.success('Verification request submitted');
     } catch (error) {
       console.error('Error requesting verification:', error);
