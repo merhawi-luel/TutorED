@@ -145,7 +145,7 @@ export const documents = pgTable("documents", {
   tutorId: uuid("tutor_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  type: documentTypeEnum("type").notNull(),
+  type: varchar("type", { length: 100 }).notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   fileName: varchar("file_name", { length: 255 }).notNull(),
   fileKey: text("file_key"), // R2/Supabase Storage key

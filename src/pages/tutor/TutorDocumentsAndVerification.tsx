@@ -5,18 +5,32 @@ import { useData } from '../../context/DataContext';
 import { uploadApi } from '../../lib/api';
 import { 
   FileText, Upload, CheckCircle, Clock, XCircle, AlertTriangle,
-  ChevronDown, ChevronUp, Eye, Download, Shield
+  ChevronDown, ChevronUp, Eye, Download, Shield, Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
+import type { DocumentType } from '../../types';
+
+const DOCUMENT_TYPES: { value: DocumentType; label: string }[] = [
+  { value: 'government_id', label: 'Government ID' },
+  { value: 'teaching_certificate', label: 'Teaching Certificate' },
+  { value: 'degree_certificate', label: 'Degree Certificate' },
+  { value: 'professional_certification', label: 'Professional Certification' },
+  { value: 'transcript', label: 'Academic Transcript' },
+  { value: 'diploma', label: 'Diploma' },
+  { value: 'experience_letter', label: 'Experience Letter' },
+];
 
 export default function TutorDocumentsAndVerification() {
   const { user } = useAuth();
   const { colors } = useTheme();
-  const { documents, tutorProfile, addDocument, requestVerification } = useData();
+  const { documents, tutorProfile, addDocument, removeDocument, requestVerification } = useData();
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
+  const [selectedDocType, setSelectedDocType] = useState<DocumentType>('government_id');
+  const [customDocType, setCustomDocType] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const userDocuments = documents.filter(d => d.tutorId === user?.id);
   
@@ -53,7 +67,18 @@ export default function TutorDocumentsAndVerification() {
     }
   };
 
+  const getSelectedDocTypeLabel = (): string => {
+    if (selectedDocType === ('other' as any) && customDocType.trim()) {
+      return customDocType.trim();
+    }
+    const found = DOCUMENT_TYPES.find(d => d.value === selectedDocType);
+    return found?.label || selectedDocType;
+  };
+
   const handleUpload = async (file: File) => {
+    const docType = selectedDocType === ('other' as any) ? 'other' : selectedDocType;
+    const title = getSelectedDocTypeLabel();
+
     setUploading(true);
     try {
       // 1. Get a presigned upload URL
@@ -69,14 +94,16 @@ export default function TutorDocumentsAndVerification() {
       // 3. Create the document record via context
       await addDocument({
         tutorId: user?.id || '',
-        type: 'government_id' as const,
-        title: file.name,
+        type: docType as DocumentType,
+        title,
         fileName: file.name,
         fileKey,
       });
 
       toast.success('Document uploaded successfully');
       setShowUploadForm(false);
+      setSelectedDocType('government_id');
+      setCustomDocType('');
     } catch (error) {
       console.error('Error uploading:', error);
       toast.error('Failed to upload document');
@@ -88,6 +115,17 @@ export default function TutorDocumentsAndVerification() {
   const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       await handleUpload(e.target.files[0]);
+    }
+  };
+
+  const handleDeleteDocument = async (docId: string) => {
+    try {
+      await removeDocument(docId);
+      toast.success('Document deleted');
+      setConfirmDeleteId(null);
+    } catch (error) {
+      console.error('Error deleting:', error);
+      toast.error('Failed to delete document');
     }
   };
 
@@ -231,43 +269,92 @@ export default function TutorDocumentsAndVerification() {
         </div>
 
         {showUploadForm && (
-          <div
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-            style={{
-              border: `2px dashed ${dragActive ? colors.primary : colors.border}`,
-              borderRadius: '12px', padding: '40px', textAlign: 'center',
-              backgroundColor: dragActive ? colors.primaryLight : colors.background,
-              transition: 'all 0.2s'
-            }}
-          >
-            <Upload size={48} color={colors.border} style={{ marginBottom: '16px' }} />
-            <p style={{ fontSize: '16px', fontWeight: '500', color: colors.primaryText, marginBottom: '8px' }}>
-              Drag & drop your file here
-            </p>
-            <p style={{ fontSize: '14px', color: colors.secondaryText, marginBottom: '16px' }}>
-              or click to browse
-            </p>
-            <label style={{
-              display: 'inline-flex', alignItems: 'center', gap: '8px',
-              padding: '10px 20px', borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              backgroundColor: colors.card, color: colors.primaryText,
-              fontSize: '14px', fontWeight: '500', cursor: 'pointer'
-            }}>
-              <FileText size={16} /> Choose File
-              <input
-                type="file"
-                onChange={handleFileInput}
-                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                style={{ display: 'none' }}
-              />
-            </label>
-            <p style={{ fontSize: '12px', color: colors.secondaryText, marginTop: '12px' }}>
-              PDF, DOC, DOCX, JPG, PNG up to 10MB
-            </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Document Type Selector */}
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: colors.secondaryText, marginBottom: '6px' }}>
+                Document Type
+              </label>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                <select
+                  value={selectedDocType}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === 'other') {
+                      setSelectedDocType(val as any);
+                    } else {
+                      setSelectedDocType(val as DocumentType);
+                      setCustomDocType('');
+                    }
+                  }}
+                  style={{
+                    flex: 1, padding: '10px 14px', borderRadius: '10px',
+                    border: `1px solid ${colors.border}`, backgroundColor: colors.card,
+                    color: colors.primaryText, fontSize: '14px', cursor: 'pointer',
+                    outline: 'none'
+                  }}
+                >
+                  {DOCUMENT_TYPES.map(dt => (
+                    <option key={dt.value} value={dt.value}>{dt.label}</option>
+                  ))}
+                  <option value="other">Other (type name)</option>
+                </select>
+              </div>
+              {selectedDocType === ('other' as any) && (
+                <input
+                  type="text"
+                  value={customDocType}
+                  onChange={(e) => setCustomDocType(e.target.value)}
+                  placeholder="Enter document name..."
+                  style={{
+                    width: '100%', padding: '10px 14px', borderRadius: '10px',
+                    border: `1px solid ${colors.border}`, backgroundColor: colors.card,
+                    color: colors.primaryText, fontSize: '14px', outline: 'none',
+                    marginTop: '8px'
+                  }}
+                />
+              )}
+            </div>
+
+            {/* Drop Zone */}
+            <div
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              style={{
+                border: `2px dashed ${dragActive ? colors.primary : colors.border}`,
+                borderRadius: '12px', padding: '40px', textAlign: 'center',
+                backgroundColor: dragActive ? colors.primaryLight : colors.background,
+                transition: 'all 0.2s'
+              }}
+            >
+              <Upload size={48} color={colors.border} style={{ marginBottom: '16px' }} />
+              <p style={{ fontSize: '16px', fontWeight: '500', color: colors.primaryText, marginBottom: '8px' }}>
+                Drag & drop your file here
+              </p>
+              <p style={{ fontSize: '14px', color: colors.secondaryText, marginBottom: '16px' }}>
+                or click to browse
+              </p>
+              <label style={{
+                display: 'inline-flex', alignItems: 'center', gap: '8px',
+                padding: '10px 20px', borderRadius: '10px',
+                border: `1px solid ${colors.border}`,
+                backgroundColor: colors.card, color: colors.primaryText,
+                fontSize: '14px', fontWeight: '500', cursor: 'pointer'
+              }}>
+                <FileText size={16} /> Choose File
+                <input
+                  type="file"
+                  onChange={handleFileInput}
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  style={{ display: 'none' }}
+                />
+              </label>
+              <p style={{ fontSize: '12px', color: colors.secondaryText, marginTop: '12px' }}>
+                PDF, DOC, DOCX, JPG, PNG up to 10MB
+              </p>
+            </div>
           </div>
         )}
       </div>
@@ -342,7 +429,7 @@ export default function TutorDocumentsAndVerification() {
                 
                 {expandedDoc === doc.id && (
                   <div style={{ padding: '16px', borderTop: `1px solid ${colors.border}`, backgroundColor: colors.background }}>
-                    <div style={{ display: 'flex', gap: '12px' }}>
+                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                       <button style={{
                         display: 'flex', alignItems: 'center', gap: '6px',
                         padding: '8px 14px', borderRadius: '8px',
@@ -361,6 +448,53 @@ export default function TutorDocumentsAndVerification() {
                       }}>
                         <Download size={14} /> Download
                       </button>
+                      {doc.status === 'rejected' && (
+                        <>
+                          {confirmDeleteId === doc.id ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ fontSize: '13px', color: '#DC2626', fontWeight: '500' }}>
+                                Delete this document?
+                              </span>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDeleteDocument(doc.id); }}
+                                style={{
+                                  display: 'flex', alignItems: 'center', gap: '4px',
+                                  padding: '6px 12px', borderRadius: '8px',
+                                  border: 'none', backgroundColor: '#DC2626', color: '#fff',
+                                  fontSize: '12px', fontWeight: '600', cursor: 'pointer'
+                                }}
+                              >
+                                Yes, Delete
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
+                                style={{
+                                  display: 'flex', alignItems: 'center', gap: '4px',
+                                  padding: '6px 12px', borderRadius: '8px',
+                                  border: `1px solid ${colors.border}`, backgroundColor: colors.card,
+                                  color: colors.secondaryText, fontSize: '12px', fontWeight: '500',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(doc.id); }}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: '6px',
+                                padding: '8px 14px', borderRadius: '8px',
+                                border: '1px solid #FEE2E2', backgroundColor: '#FEF2F2',
+                                color: '#DC2626', fontSize: '13px', fontWeight: '500',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <Trash2 size={14} /> Delete
+                            </button>
+                          )}
+                        </>
+                      )}
                     </div>
                     {doc.reviewerNote && (
                       <p style={{ fontSize: '13px', color: colors.secondaryText, marginTop: '12px', fontStyle: 'italic' }}>
