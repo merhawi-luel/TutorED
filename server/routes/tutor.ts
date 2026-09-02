@@ -217,8 +217,8 @@ router.delete("/documents/:id", requireAuth, requireRole("tutor"), async (req, r
       return res.status(404).json({ error: "Document not found" });
     }
 
-    if (doc.status !== "pending") {
-      return res.status(400).json({ error: "Can only delete pending documents" });
+    if (doc.status !== "pending" && doc.status !== "rejected" && doc.status !== "expired") {
+      return res.status(400).json({ error: "Can only delete pending, rejected, or expired documents" });
     }
 
     await db.delete(documents).where(eq(documents.id, id));
