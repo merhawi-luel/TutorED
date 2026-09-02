@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { db } from "../db";
 import { parentProfiles, vacancies, organizations, recruitmentRequests, users, applications, tutorProfiles, documents, educationEntries, tutorReviews } from "../db/schema";
 import { requireAuth } from "../middleware/auth";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, inArray } from "drizzle-orm";
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -688,13 +688,13 @@ router.post("/reviews", requireAuth, async (req, res) => {
         and(
           eq(applications.id, applicationId),
           eq(vacancies.parentId, userId),
-          eq(applications.status, "completed")
+          inArray(applications.status, ["accepted", "completed"])
         )
       )
       .limit(1);
 
     if (!app) {
-      return res.status(404).json({ error: "Completed application not found or not authorized" });
+      return res.status(404).json({ error: "Application not found or not authorized" });
     }
 
     // Check if review already exists for this application
@@ -736,6 +736,23 @@ router.post("/reviews", requireAuth, async (req, res) => {
     res.json(review);
   } catch (error) {
     console.error("Create review error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── GET /api/parent/reviews/mine ──────────────────────────
+// Get all reviews this parent has submitted (for "already reviewed" state)
+router.get("/reviews/mine", requireAuth, async (req, res) => {
+  try {
+    const myReviews = await db
+      .select()
+      .from(tutorReviews)
+      .where(eq(tutorReviews.parentId, req.user!.userId))
+      .orderBy(desc(tutorReviews.createdAt));
+
+    res.json(myReviews);
+  } catch (error) {
+    console.error("Get my reviews error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

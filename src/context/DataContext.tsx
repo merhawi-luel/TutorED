@@ -360,13 +360,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const fetchParentData = useCallback(async () => {
     try {
-      const [vacanciesData, agenciesData] = await Promise.allSettled([
+      const [vacanciesData, agenciesData, myReviews] = await Promise.allSettled([
         parentApi.getVacancies(),
         parentApi.getAgencies(),
+        parentApi.getMyReviews(),
       ]);
 
       if (vacanciesData.status === "fulfilled") setVacancies(vacanciesData.value.map(mapVacancy));
       if (agenciesData.status === "fulfilled") setAllOrganizations(agenciesData.value.map(mapOrganization));
+      if (myReviews.status === "fulfilled") setReviews(myReviews.value.map((r: any) => ({
+        id: r.id,
+        applicationId: r.applicationId || r.application_id,
+        parentId: r.parentId || r.parent_id,
+        tutorId: r.tutorId || r.tutor_id,
+        rating: r.rating,
+        description: r.description || "",
+        createdAt: r.createdAt || r.created_at,
+        parentName: r.parentName || r.parent_name || undefined,
+      })));
     } catch (err) {
       console.error("Failed to fetch parent data:", err);
     }

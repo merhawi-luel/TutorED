@@ -33,6 +33,7 @@ export default function ParentReviews() {
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewDescription, setReviewDescription] = useState("");
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
 
   const hasReviewed = (applicationId: string) => {
     return reviews.some((r) => r.applicationId === applicationId);
@@ -66,6 +67,7 @@ export default function ParentReviews() {
   const handleSubmitReview = async () => {
     if (reviewRating === 0) return;
     setReviewSubmitting(true);
+    setReviewError(null);
     try {
       await submitReview({
         applicationId: reviewModal.applicationId,
@@ -76,8 +78,9 @@ export default function ParentReviews() {
       setReviewRating(0);
       setReviewDescription("");
       fetchReviewableTutors();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to submit review:", err);
+      setReviewError(err?.message || "Failed to submit review. Please try again.");
     } finally {
       setReviewSubmitting(false);
     }
@@ -87,6 +90,7 @@ export default function ParentReviews() {
     setReviewModal({ isOpen: false, applicationId: "", tutorName: "" });
     setReviewRating(0);
     setReviewDescription("");
+    setReviewError(null);
   };
 
   return (
@@ -269,6 +273,15 @@ export default function ParentReviews() {
                 }}
               />
             </div>
+
+            {reviewError && (
+              <div
+                className="mb-4 px-4 py-2.5 rounded-xl text-xs font-medium"
+                style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)" }}
+              >
+                {reviewError}
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex gap-2 justify-end">

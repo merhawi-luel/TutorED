@@ -199,6 +199,8 @@ export const parentApi = {
   // Reviews
   submitReview: (data: { applicationId: string; rating: number; description?: string }) =>
     request<any>("/parent/reviews", { method: "POST", body: JSON.stringify(data) }),
+  getMyReviews: () =>
+    request<any[]>("/parent/reviews/mine"),
 };
 
 // ─── Upload ────────────────────────────────────────────────────

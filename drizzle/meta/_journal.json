@@ -29,6 +29,34 @@
       "when": 1788116644160,
       "tag": "0003_high_exiles",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788500000000,
+      "tag": "0004_education_verification",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788500100000,
+      "tag": "0005_tutor_reviews",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788500200000,
+      "tag": "0006_remove_chapa_add_verification",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788500300000,
+      "tag": "0007_multi_subject_grade",
+      "breakpoints": true
     }
   ]
 }

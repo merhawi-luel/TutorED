@@ -463,17 +463,19 @@
           "notNull": false,
           "default": "''"
         },
-        "subject": {
-          "name": "subject",
-          "type": "varchar(255)",
+        "subjects": {
+          "name": "subjects",
+          "type": "text[]",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false,
+          "default": "'{}'"
         },
-        "grade": {
-          "name": "grade",
-          "type": "varchar(100)",
+        "grades": {
+          "name": "grades",
+          "type": "text[]",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false,
+          "default": "'{}'"
         },
         "location": {
           "name": "location",
@@ -761,17 +763,19 @@
           "notNull": false,
           "default": "''"
         },
-        "subject": {
-          "name": "subject",
-          "type": "varchar(255)",
+        "subjects": {
+          "name": "subjects",
+          "type": "text[]",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false,
+          "default": "'{}'"
         },
-        "grade": {
-          "name": "grade",
-          "type": "varchar(100)",
+        "grades": {
+          "name": "grades",
+          "type": "text[]",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false,
+          "default": "'{}'"
         },
         "required_education": {
           "name": "required_education",
