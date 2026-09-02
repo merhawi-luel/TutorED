@@ -1,0 +1,1 @@
+ALTER TABLE "tutor_profiles" ADD COLUMN "phone" varchar(50) DEFAULT '';

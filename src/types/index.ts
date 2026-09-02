@@ -25,6 +25,7 @@ export interface TutorProfile {
   grades: string[];
   experience: number; // years
   education: string;
+  phone: string;
   location: string;
   teachingMode: TeachingMode;
   availability: string;

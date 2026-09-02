@@ -97,6 +97,7 @@ export const tutorProfiles = pgTable("tutor_profiles", {
   grades: text("grades").array().default([]),
   experience: integer("experience").default(0),
   education: varchar("education", { length: 255 }).default(""),
+  phone: varchar("phone", { length: 50 }).default(""),
   location: varchar("location", { length: 255 }).default(""),
   teachingMode: teachingModeEnum("teaching_mode").default("in-person"),
   availability: varchar("availability", { length: 255 }).default(""),

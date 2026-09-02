@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useData } from '../../context/DataContext';
-import { User, Mail, MapPin, Save, X, Plus } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Save, X, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 const subjects = [
@@ -29,6 +29,7 @@ export default function TutorProfile() {
   const [formData, setFormData] = useState({
     headline: tutorProfile?.headline || '',
     email: user?.email || '',
+    phone: tutorProfile?.phone || '',
     location: tutorProfile?.location || '',
     bio: tutorProfile?.bio || '',
   });
@@ -44,6 +45,7 @@ export default function TutorProfile() {
       setFormData({
         headline: tutorProfile.headline || '',
         email: user?.email || '',
+        phone: tutorProfile.phone || '',
         location: tutorProfile.location || '',
         bio: tutorProfile.bio || '',
       });
@@ -59,6 +61,7 @@ export default function TutorProfile() {
       const subjectsStr = selectedSubjects.map(s => `${s.subject} - ${s.level}`);
       await updateProfile({
         headline: formData.headline,
+        phone: formData.phone,
         location: formData.location,
         bio: formData.bio,
         subjects: subjectsStr,
@@ -202,7 +205,32 @@ export default function TutorProfile() {
             </div>
           </div>
 
-          <div style={{ gridColumn: 'span 2' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.secondaryText, marginBottom: '8px' }}>
+              <Phone size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+              Phone
+            </label>
+            {editMode ? (
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="e.g. +1 234 567 890"
+                style={{
+                  width: '100%', padding: '12px 16px', borderRadius: '12px',
+                  border: `1px solid ${colors.border}`, backgroundColor: colors.background,
+                  color: colors.primaryText, fontSize: '15px', outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
+            ) : (
+              <div style={{ padding: '12px 0', color: colors.primaryText, fontSize: '15px' }}>
+                {formData.phone || 'Not set'}
+              </div>
+            )}
+          </div>
+
+          <div>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: colors.secondaryText, marginBottom: '8px' }}>
               <MapPin size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
               Location

@@ -20,6 +20,9 @@ import {
   Mail,
   Phone,
   Calendar,
+  FileText,
+  Download,
+  Eye,
 } from "lucide-react";
 import { ALL_SUBJECTS, ALL_GRADES } from "@/data/constants";
 import type { ApplicationStatus, TeachingMode } from "@/types";
@@ -45,6 +48,47 @@ const ACTIONS: { status: ApplicationStatus; label: string; color: string }[] = [
   { status: "rejected", label: "Reject", color: "var(--danger-color)" },
 ];
 
+interface TutorProfileData {
+  userId: string;
+  headline: string;
+  bio: string;
+  subjects: string[];
+  grades: string[];
+  experience: number;
+  education: string;
+  location: string;
+  teachingMode: string;
+  availability: string;
+  rating: number;
+  applicationCount: number;
+  verificationLevel: string;
+}
+
+interface EducationEntry {
+  id: string;
+  tutorId: string;
+  name: string;
+  title: string;
+  description: string;
+  status: string;
+  submittedAt: string;
+  reviewedAt?: string;
+  reviewerNote?: string;
+}
+
+interface TutorDocument {
+  id: string;
+  tutorId: string;
+  type: string;
+  title: string;
+  fileName: string;
+  fileKey?: string;
+  status: string;
+  submittedAt: string;
+  reviewedAt?: string;
+  reviewerNote?: string;
+}
+
 interface Applicant {
   id: string;
   userId: string;
@@ -57,6 +101,8 @@ interface Applicant {
   status: string;
   appliedAt: string;
   profileImage?: string;
+  tutorProfile?: TutorProfileData;
+  educationEntries?: EducationEntry[];
 }
 
 interface VacancyDetail {
@@ -87,6 +133,10 @@ export default function VacancyDetail() {
   const [loading, setLoading] = useState(true);
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
   const [showProfile, setShowProfile] = useState(false);
+
+  // Tutor detail data fetched on demand
+  const [tutorDocuments, setTutorDocuments] = useState<TutorDocument[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
 
   // Edit mode state
   const [editing, setEditing] = useState(false);
@@ -154,6 +204,34 @@ export default function VacancyDetail() {
       fetchVacancyAndApplicants();
     }
   }, [vacancyId]);
+
+  // ─── Fetch tutor documents when applicant is selected ──────
+  const fetchTutorDocuments = useCallback(async (tutorId: string) => {
+    setLoadingDocs(true);
+    setTutorDocuments([]);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const res = await fetch(`${API_BASE}/agency/tutors/${tutorId}/documents`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const docs = await res.json();
+        setTutorDocuments(docs);
+      }
+    } catch (error) {
+      console.error("Error fetching tutor documents:", error);
+    } finally {
+      setLoadingDocs(false);
+    }
+  }, []);
+
+  // Fetch documents when an applicant is selected
+  useEffect(() => {
+    if (selectedApplicant && showProfile) {
+      fetchTutorDocuments(selectedApplicant.userId);
+    }
+  }, [selectedApplicant, showProfile, fetchTutorDocuments]);
 
   // ─── Status Change Handler ──────────────────────────────────
   const handleStatusChange = useCallback(async (applicantId: string, newStatus: ApplicationStatus) => {
@@ -273,6 +351,12 @@ export default function VacancyDetail() {
     background: colors.bgInput,
     border: `1px solid ${colors.borderColor}`,
     color: colors.textPrimary,
+  };
+
+  // ─── Helper: get tutor display name ─────────────────────────
+  const getTutorDisplayName = (applicant: Applicant) => {
+    if (applicant.tutorProfile?.headline) return applicant.tutorProfile.headline;
+    return applicant.name || "Unknown";
   };
 
   // ─── Loading State ──────────────────────────────────────────
@@ -801,7 +885,7 @@ export default function VacancyDetail() {
                           className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold shrink-0"
                           style={{ background: colors.accent, color: colors.bgPage }}
                         >
-                          {(applicant.name || applicant.tutorName || "U").split(" ").map((n: string) => n[0]).join("")}
+                          {(applicant.name || "U").split(" ").map((n: string) => n[0]).join("")}
                         </div>
                         {/* Info */}
                         <div className="flex-1 min-w-0">
@@ -810,7 +894,7 @@ export default function VacancyDetail() {
                               className="text-sm font-semibold truncate"
                               style={{ color: isSelected ? colors.accent : colors.textPrimary }}
                             >
-                              {applicant.name || applicant.tutorName || "Unknown"}
+                              {applicant.name || "Unknown"}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 mt-1">
@@ -870,11 +954,11 @@ export default function VacancyDetail() {
                   className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold"
                   style={{ background: colors.accent, color: colors.bgPage }}
                 >
-                  {(selectedApplicant.name || selectedApplicant.tutorName || "U").split(" ").map((n: string) => n[0]).join("")}
+                  {(selectedApplicant.name || "U").split(" ").map((n: string) => n[0]).join("")}
                 </div>
                 <div>
                   <h2 className="text-lg font-bold" style={{ color: colors.textPrimary }}>
-                    {selectedApplicant.name || selectedApplicant.tutorName || "Unknown"}
+                    {getTutorDisplayName(selectedApplicant)}
                   </h2>
                   <span
                     className="text-xs px-2 py-0.5 rounded-full font-medium capitalize"
@@ -913,6 +997,16 @@ export default function VacancyDetail() {
                     {selectedApplicant.email}
                   </a>
                 </div>
+                {/* Location from tutor profile */}
+                {selectedApplicant.tutorProfile?.location && (
+                  <div className="flex items-center gap-3">
+                    <MapPin size={14} style={{ color: colors.textMuted }} />
+                    <span className="text-sm font-medium" style={{ color: colors.textPrimary }}>
+                      {selectedApplicant.tutorProfile.location}
+                    </span>
+                  </div>
+                )}
+                {/* Phone - currently not stored in schema */}
                 {selectedApplicant.phone && (
                   <div className="flex items-center gap-3">
                     <Phone size={14} style={{ color: colors.textMuted }} />
@@ -938,7 +1032,9 @@ export default function VacancyDetail() {
                   </div>
                   <div>
                     <div className="text-[10px] uppercase tracking-wider" style={{ color: colors.textFaint }}>Subjects</div>
-                    <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>{selectedApplicant.subject || "—"}</p>
+                    <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>
+                      {selectedApplicant.tutorProfile?.subjects?.join(", ") || selectedApplicant.subject || "—"}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -947,7 +1043,9 @@ export default function VacancyDetail() {
                   </div>
                   <div>
                     <div className="text-[10px] uppercase tracking-wider" style={{ color: colors.textFaint }}>Experience</div>
-                    <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>{selectedApplicant.experience} years</p>
+                    <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>
+                      {selectedApplicant.tutorProfile?.experience ?? selectedApplicant.experience} years
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -956,7 +1054,9 @@ export default function VacancyDetail() {
                   </div>
                   <div>
                     <div className="text-[10px] uppercase tracking-wider" style={{ color: colors.textFaint }}>Education</div>
-                    <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>{selectedApplicant.education}</p>
+                    <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>
+                      {selectedApplicant.tutorProfile?.education || selectedApplicant.education || "—"}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -970,6 +1070,82 @@ export default function VacancyDetail() {
                     </p>
                   </div>
                 </div>
+              </div>
+
+              {/* Verified Education Entries */}
+              {selectedApplicant.educationEntries && selectedApplicant.educationEntries.length > 0 && (
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider mb-2 font-medium" style={{ color: colors.textFaint }}>
+                    Verified Education
+                  </div>
+                  <div className="space-y-2">
+                    {selectedApplicant.educationEntries
+                      .filter((e) => e.status === "approved")
+                      .map((entry) => (
+                        <div
+                          key={entry.id}
+                          className="rounded-xl p-3 flex items-start gap-3"
+                          style={{ background: colors.bgInput, border: `1px solid ${colors.borderColor}` }}
+                        >
+                          <CheckCircle size={14} className="mt-0.5 shrink-0" style={{ color: colors.accent }} />
+                          <div>
+                            <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>{entry.title}</p>
+                            {entry.description && (
+                              <p className="text-xs mt-0.5" style={{ color: colors.textMuted }}>{entry.description}</p>
+                            )}
+                            <p className="text-[10px] mt-1" style={{ color: colors.textFaint }}>
+                              Verified on {entry.reviewedAt ? new Date(entry.reviewedAt).toLocaleDateString() : "—"}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    {selectedApplicant.educationEntries.filter((e) => e.status === "approved").length === 0 && (
+                      <p className="text-xs" style={{ color: colors.textMuted }}>No verified education entries</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Documents */}
+              <div>
+                <div className="text-[10px] uppercase tracking-wider mb-2 font-medium" style={{ color: colors.textFaint }}>
+                  Documents
+                </div>
+                {loadingDocs ? (
+                  <div className="flex items-center gap-2 py-3">
+                    <Loader2 size={14} className="animate-spin" style={{ color: colors.textMuted }} />
+                    <span className="text-xs" style={{ color: colors.textMuted }}>Loading documents...</span>
+                  </div>
+                ) : tutorDocuments.length === 0 ? (
+                  <p className="text-xs" style={{ color: colors.textMuted }}>No documents uploaded</p>
+                ) : (
+                  <div className="space-y-2">
+                    {tutorDocuments.map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="rounded-xl p-3 flex items-center justify-between"
+                        style={{ background: colors.bgInput, border: `1px solid ${colors.borderColor}` }}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <FileText size={14} className="shrink-0" style={{ color: colors.textMuted }} />
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate" style={{ color: colors.textPrimary }}>{doc.title}</p>
+                            <p className="text-[10px]" style={{ color: colors.textFaint }}>{doc.fileName}</p>
+                          </div>
+                        </div>
+                        <span
+                          className="px-2 py-0.5 rounded text-[10px] font-bold capitalize shrink-0 ml-2"
+                          style={{
+                            background: doc.status === "verified" ? `${colors.accent}18` : doc.status === "rejected" ? `${colors.dangerColor}18` : `${colors.textMuted}18`,
+                            color: doc.status === "verified" ? colors.accent : doc.status === "rejected" ? colors.dangerColor : colors.textMuted,
+                          }}
+                        >
+                          {doc.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Status Action Buttons */}

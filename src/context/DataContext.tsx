@@ -149,6 +149,7 @@ function mapProfile(raw: any): TutorProfile {
     grades: raw.grades || [],
     experience: raw.experience || 0,
     education: raw.education || "",
+    phone: raw.phone || "",
     location: raw.location || "",
     teachingMode: raw.teachingMode || raw.teaching_mode || "in-person",
     availability: raw.availability || "",
