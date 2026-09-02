@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useData } from '../../context/DataContext';
-import { uploadApi } from '../../lib/api';
+import { uploadApi, tutorApi } from '../../lib/api';
 import { 
   FileText, Upload, CheckCircle, Clock, XCircle, AlertTriangle,
   ChevronDown, ChevronUp, Eye, Download, Shield, Trash2
@@ -430,22 +430,49 @@ export default function TutorDocumentsAndVerification() {
                 {expandedDoc === doc.id && (
                   <div style={{ padding: '16px', borderTop: `1px solid ${colors.border}`, backgroundColor: colors.background }}>
                     <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                      <button style={{
-                        display: 'flex', alignItems: 'center', gap: '6px',
-                        padding: '8px 14px', borderRadius: '8px',
-                        border: `1px solid ${colors.border}`, backgroundColor: colors.card,
-                        color: colors.primaryText, fontSize: '13px', fontWeight: '500',
-                        cursor: 'pointer'
-                      }}>
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            const { previewUrl } = await tutorApi.previewDocument(doc.id);
+                            window.open(previewUrl, '_blank');
+                          } catch (err) {
+                            toast.error('Failed to preview document');
+                          }
+                        }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '6px',
+                          padding: '8px 14px', borderRadius: '8px',
+                          border: `1px solid ${colors.border}`, backgroundColor: colors.card,
+                          color: colors.primaryText, fontSize: '13px', fontWeight: '500',
+                          cursor: 'pointer'
+                        }}
+                      >
                         <Eye size={14} /> View
                       </button>
-                      <button style={{
-                        display: 'flex', alignItems: 'center', gap: '6px',
-                        padding: '8px 14px', borderRadius: '8px',
-                        border: `1px solid ${colors.border}`, backgroundColor: colors.card,
-                        color: colors.primaryText, fontSize: '13px', fontWeight: '500',
-                        cursor: 'pointer'
-                      }}>
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            const { downloadUrl, fileName } = await tutorApi.downloadDocument(doc.id);
+                            const a = document.createElement('a');
+                            a.href = downloadUrl;
+                            a.download = fileName;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                          } catch (err) {
+                            toast.error('Failed to download document');
+                          }
+                        }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '6px',
+                          padding: '8px 14px', borderRadius: '8px',
+                          border: `1px solid ${colors.border}`, backgroundColor: colors.card,
+                          color: colors.primaryText, fontSize: '13px', fontWeight: '500',
+                          cursor: 'pointer'
+                        }}
+                      >
                         <Download size={14} /> Download
                       </button>
                       {doc.status === 'rejected' && (
