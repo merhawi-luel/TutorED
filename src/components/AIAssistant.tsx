@@ -11,7 +11,7 @@ interface Message {
 
 const GREETING: Message = {
   role: "assistant",
-  content: "Hi! I can help you find your way around TutorED. What do you need help with?",
+  content: "Hi! I can help you find your way around EduVerify. What do you need help with?",
 };
 
 export default function AIAssistant() {
@@ -89,7 +89,7 @@ export default function AIAssistant() {
             <div className="flex items-center gap-2">
               <Sparkles size={18} style={{ color: colors.accent }} />
               <span className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
-                TutorED Assistant
+                EduVerify Assistant
               </span>
             </div>
             <button
